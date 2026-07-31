@@ -1,0 +1,52 @@
+﻿@model Clinic.Application.UI.UIMetadata
+@{
+    
+}
+
+<!-- Admin User Form Template -->
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="mb-0 fw-bold">@Model.Title</h2>
+        <a href="/Admin/Users" class="btn btn-outline-secondary shadow-sm"><i class="bi bi-arrow-left me-2"></i>Back to Users</a>
+    </div>
+
+    <div class="card shadow-sm border-0" style="max-width: 600px; margin: 0 auto;">
+        <div class="card-header bg-white border-bottom-0 pt-4 pb-0">
+            <h5 class="fw-bold text-primary mb-0"><i class="bi bi-person-badge me-2"></i>User Details</h5>
+        </div>
+        <div class="card-body p-4">
+            <form>
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Username <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control" placeholder="Login ID">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Full Name <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control" placeholder="Display Name">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Password</label>
+                    <input type="password" class="form-control" placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Role</label>
+                    <select class="form-select">
+                        <option>Administrator</option>
+                        <option>Front Desk</option>
+                        <option>Nurse</option>
+                    </select>
+                </div>
+                <div class="mb-3 form-check form-switch">
+                    <input class="form-check-input" type="checkbox" id="isActive" checked>
+                    <label class="form-check-label fw-bold" for="isActive">Account is Active</label>
+                </div>
+                
+                <hr class="my-4">
+                <div class="d-flex justify-content-end gap-2">
+                    <a href="/Admin/Users" class="btn btn-secondary shadow-sm">Cancel</a>
+                    <a href="/Admin/Users" class="btn btn-primary shadow-sm"><i class="bi bi-save me-2"></i>Save User</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

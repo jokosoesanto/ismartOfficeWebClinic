@@ -1,0 +1,79 @@
+﻿@model Clinic.Application.UI.UIMetadata
+@{
+    
+}
+
+<!-- Scheduler Detail Template -->
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="mb-0 fw-bold">@Model.Title</h2>
+        <div>
+            <a href="/Appointment/Edit/1" class="btn btn-primary shadow-sm me-2"><i class="bi bi-pencil me-1"></i> Edit</a>
+            <a href="/Appointment" class="btn btn-outline-secondary shadow-sm"><i class="bi bi-arrow-left me-2"></i>Back to Schedule</a>
+        </div>
+    </div>
+
+    <div class="card shadow-sm border-0">
+        <div class="card-body p-5">
+            <div class="row">
+                <div class="col-md-6 border-end">
+                    <h5 class="fw-bold text-muted mb-4 text-uppercase">Patient Information</h5>
+                    <div class="d-flex align-items-center mb-4">
+                        <div class="bg-primary text-white rounded-circle d-flex justify-content-center align-items-center me-3 display-6" style="width: 80px; height: 80px;">JS</div>
+                        <div>
+                            <h3 class="mb-0 fw-bold">John Smith</h3>
+                            <p class="text-muted mb-0 fs-5">#PT-2601001</p>
+                        </div>
+                    </div>
+                    <ul class="list-unstyled mb-0 fs-5">
+                        <li class="mb-2"><i class="bi bi-telephone text-primary me-2"></i> 555-0101</li>
+                        <li class="mb-2"><i class="bi bi-envelope text-primary me-2"></i> john.smith@example.com</li>
+                        <li><i class="bi bi-person-badge text-primary me-2"></i> Male, 36 years old</li>
+                    </ul>
+                </div>
+                
+                <div class="col-md-6 ps-5">
+                    <h5 class="fw-bold text-muted mb-4 text-uppercase">Appointment Information</h5>
+                    <ul class="list-unstyled mb-0 fs-5">
+                        <li class="mb-3">
+                            <span class="text-muted d-block small fw-bold text-uppercase">Provider</span>
+                            <div class="d-flex align-items-center mt-1">
+                                <i class="bi bi-person-stethoscope text-info me-2"></i> Dr. Emily Chen
+                            </div>
+                        </li>
+                        <li class="mb-3">
+                            <span class="text-muted d-block small fw-bold text-uppercase">Schedule</span>
+                            <div class="d-flex align-items-center mt-1">
+                                <i class="bi bi-calendar-event text-info me-2"></i> 31 July 2026, 09:00 AM - 10:00 AM
+                            </div>
+                        </li>
+                        <li class="mb-3">
+                            <span class="text-muted d-block small fw-bold text-uppercase">Treatment/Reason</span>
+                            <div class="d-flex align-items-center mt-1 fw-bold">
+                                <i class="bi bi-clipboard2-pulse text-danger me-2"></i> Root Canal
+                            </div>
+                        </li>
+                        <li class="mb-3">
+                            <span class="text-muted d-block small fw-bold text-uppercase">Status</span>
+                            <div class="mt-1">
+                                <span class="badge bg-warning text-dark fs-6">Scheduled</span>
+                            </div>
+                        </li>
+                        <li>
+                            <span class="text-muted d-block small fw-bold text-uppercase">Notes</span>
+                            <div class="mt-1 bg-light p-3 rounded border">
+                                Patient requested morning schedule.
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            
+            <hr class="my-5">
+            
+            <div class="text-center">
+                <a href="/MedicalRecord/Create" class="btn btn-success btn-lg shadow-sm px-5 rounded-pill"><i class="bi bi-box-arrow-in-right me-2"></i>Check-in Patient</a>
+            </div>
+        </div>
+    </div>
+</div>

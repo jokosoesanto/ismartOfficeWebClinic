@@ -1,0 +1,295 @@
+/* Design Tokens (Theme Engine) */
+:root, [data-theme="medical-blue"] {
+    --primary-color: #0073e6;
+    --secondary-color: #6c757d;
+    --success-color: #198754;
+    --info-color: #0dcaf0;
+    --warning-color: #ffc107;
+    --danger-color: #dc3545;
+    
+    --bg-main: #f9fafb;
+    --bg-card: #ffffff;
+    --bg-sidebar: #0073e6;
+    --bg-header: #ffffff;
+    
+    --text-main: #1f2937;
+    --text-muted: #6c757d;
+    --border-color: #e5e7eb;
+    
+    --sidebar-width: 250px;
+    --header-height: 60px;
+    
+    --sidebar-text: #ffffff;
+    --sidebar-text-muted: rgba(255, 255, 255, 0.7);
+    --sidebar-hover-bg: rgba(255, 255, 255, 0.1);
+    --sidebar-active-bg: rgba(255, 255, 255, 0.2);
+    --sidebar-active-text: #ffffff;
+}
+
+[data-theme="medical-green"] {
+    --primary-color: #20c997;
+    --secondary-color: #6c757d;
+    --success-color: #198754;
+    --info-color: #0dcaf0;
+    --warning-color: #ffc107;
+    --danger-color: #dc3545;
+    
+    --bg-main: #f8f9fa;
+    --bg-card: #ffffff;
+    --bg-sidebar: #ffffff;
+    --bg-header: #ffffff;
+    
+    --text-main: #212529;
+    --text-muted: #6c757d;
+    --border-color: #dee2e6;
+    
+    --sidebar-text: #212529;
+    --sidebar-text-muted: #6c757d;
+    --sidebar-hover-bg: rgba(0, 0, 0, 0.05);
+    --sidebar-active-bg: rgba(0, 0, 0, 0.1);
+    --sidebar-active-text: #20c997;
+}
+
+[data-theme="corporate-indigo"] {
+    --primary-color: #6610f2;
+    --secondary-color: #6c757d;
+    --success-color: #198754;
+    --info-color: #0dcaf0;
+    --warning-color: #ffc107;
+    --danger-color: #dc3545;
+    
+    --bg-main: #f4f6f9;
+    --bg-card: #ffffff;
+    --bg-sidebar: #ffffff;
+    --bg-header: #ffffff;
+    
+    --text-main: #495057;
+    --text-muted: #6c757d;
+    --border-color: #e9ecef;
+    
+    --sidebar-text: #495057;
+    --sidebar-text-muted: #6c757d;
+    --sidebar-hover-bg: rgba(0, 0, 0, 0.05);
+    --sidebar-active-bg: rgba(0, 0, 0, 0.1);
+    --sidebar-active-text: #6610f2;
+}
+
+[data-theme="navy-professional"] {
+    --primary-color: #001f3f;
+    --secondary-color: #39cccc;
+    --success-color: #2ecc40;
+    --info-color: #7fdbff;
+    --warning-color: #ff851b;
+    --danger-color: #ff4136;
+    
+    --bg-main: #ecf0f5;
+    --bg-card: #ffffff;
+    --bg-sidebar: #222d32;
+    --bg-header: #3c8dbc;
+    
+    --text-main: #333333;
+    --text-muted: #777777;
+    --border-color: #d2d6de;
+    
+    --sidebar-text: #ffffff;
+    --sidebar-text-muted: #b8c7ce;
+    --sidebar-hover-bg: #1e282c;
+    --sidebar-active-bg: #1e282c;
+    --sidebar-active-text: #ffffff;
+}
+
+[data-theme="dark-mode"] {
+    --primary-color: #0d6efd;
+    --secondary-color: #6c757d;
+    --success-color: #198754;
+    --info-color: #0dcaf0;
+    --warning-color: #ffc107;
+    --danger-color: #dc3545;
+    
+    --bg-main: #212529;
+    --bg-card: #343a40;
+    --bg-sidebar: #343a40;
+    --bg-header: #343a40;
+    
+    --text-main: #f8f9fa;
+    --text-muted: #adb5bd;
+    --border-color: #495057;
+    
+    --sidebar-text: #f8f9fa;
+    --sidebar-text-muted: #adb5bd;
+    --sidebar-hover-bg: rgba(255, 255, 255, 0.05);
+    --sidebar-active-bg: rgba(255, 255, 255, 0.1);
+    --sidebar-active-text: #ffffff;
+}
+
+[data-theme="minimal-light"] {
+    --primary-color: #111111;
+    --secondary-color: #777777;
+    --success-color: #222222;
+    --info-color: #333333;
+    --warning-color: #555555;
+    --danger-color: #999999;
+    
+    --bg-main: #ffffff;
+    --bg-card: #ffffff;
+    --bg-sidebar: #fcfcfc;
+    --bg-header: #ffffff;
+    
+    --text-main: #111111;
+    --text-muted: #888888;
+    --border-color: #eeeeee;
+    
+    --sidebar-text: #111111;
+    --sidebar-text-muted: #888888;
+    --sidebar-hover-bg: rgba(0, 0, 0, 0.05);
+    --sidebar-active-bg: rgba(0, 0, 0, 0.1);
+    --sidebar-active-text: #111111;
+}
+
+/* Base styles applying the tokens */
+body {
+    background-color: var(--bg-main);
+    color: var(--text-main);
+}
+
+.card {
+    background-color: var(--bg-card);
+    border-color: var(--border-color);
+}
+
+.sidebar {
+    background-color: var(--bg-sidebar);
+    border-right: 1px solid var(--border-color);
+    width: var(--sidebar-width);
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    z-index: 100;
+    transition: width 0.3s ease;
+    color: var(--sidebar-text);
+}
+
+/* Sidebar Text Color Overrides for generic Bootstrap utilities */
+.sidebar .sidebar-brand h5,
+.sidebar .sidebar-brand .text-primary,
+.sidebar .text-main,
+.sidebar .text-muted,
+.sidebar .text-primary {
+    color: var(--sidebar-text) !important;
+}
+
+/* Base Nav Link Styles */
+.sidebar .nav-link {
+    color: var(--sidebar-text-muted) !important;
+    border-radius: 0.375rem;
+    margin: 0.2rem 1rem;
+    transition: all 0.2s ease;
+}
+
+/* Hover State */
+.sidebar .nav-link:hover,
+.sidebar .nav-link[aria-expanded="true"] {
+    background-color: var(--sidebar-hover-bg);
+    color: var(--sidebar-text) !important;
+}
+
+/* Active State */
+.sidebar .nav-link.fw-bold {
+    background-color: var(--sidebar-active-bg);
+    color: var(--sidebar-active-text) !important;
+    font-weight: 600 !important;
+}
+
+/* Child Link (Sub-menu) Overrides */
+.sidebar .collapse .nav-link {
+    margin: 0.1rem 1rem 0.1rem 2rem;
+    font-size: 0.9rem;
+    background-color: transparent !important;
+}
+
+.sidebar .collapse .nav-link:hover {
+    color: var(--sidebar-text) !important;
+    background-color: var(--sidebar-hover-bg) !important;
+}
+
+.sidebar .collapse .nav-link.fw-bold {
+    color: var(--sidebar-active-text) !important;
+    font-weight: 600 !important;
+}
+
+.header {
+    background-color: var(--bg-header);
+    border-bottom: 1px solid var(--border-color);
+    height: var(--header-height);
+    margin-left: var(--sidebar-width);
+    display: flex;
+    align-items: center;
+    padding: 0 1rem;
+    position: fixed;
+    top: 0;
+    right: 0;
+    left: 0;
+    z-index: 99;
+    transition: margin-left 0.3s ease;
+}
+
+.main-content {
+    margin-left: var(--sidebar-width);
+    margin-top: var(--header-height);
+    padding: 20px;
+    min-height: calc(100vh - var(--header-height));
+    transition: margin-left 0.3s ease;
+}
+
+.btn-primary {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+.text-primary {
+    color: var(--primary-color) !important;
+}
+
+/* Sidebar toggled state */
+body.sidebar-collapsed .sidebar {
+    width: 60px;
+    overflow-x: hidden;
+}
+
+body.sidebar-collapsed .sidebar .nav-link span,
+body.sidebar-collapsed .sidebar .nav-link .bi-chevron-down {
+    display: none !important;
+}
+
+body.sidebar-collapsed .sidebar .sidebar-brand h5 {
+    display: none !important;
+}
+
+body.sidebar-collapsed .sidebar .sidebar-brand::before {
+    content: "\F41B"; /* Bootstrap bi-heart-pulse-fill icon code */
+    font-family: "bootstrap-icons";
+    font-size: 1.5rem;
+    color: var(--sidebar-text);
+    display: block;
+    text-align: center;
+}
+
+body.sidebar-collapsed .sidebar .nav-link {
+    justify-content: center !important;
+    padding-left: 0;
+    padding-right: 0;
+    margin-left: 0.25rem;
+    margin-right: 0.25rem;
+}
+
+body.sidebar-collapsed .sidebar .nav-link i.me-2 {
+    margin-right: 0 !important;
+    font-size: 1.25rem;
+}
+
+body.sidebar-collapsed .header,
+body.sidebar-collapsed .main-content,
+body.sidebar-collapsed .footer {
+    margin-left: 60px;
+}

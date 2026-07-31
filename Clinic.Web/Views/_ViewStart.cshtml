@@ -1,0 +1,11 @@
+@{
+    var meta = ViewData.Model as Clinic.Application.UI.UIMetadata;
+    if (meta != null && meta.Mode == Clinic.Application.UI.RenderingMode.Metadata)
+    {
+        Layout = "_RegionLayout";
+    }
+    else
+    {
+        Layout = "_Layout";
+    }
+}

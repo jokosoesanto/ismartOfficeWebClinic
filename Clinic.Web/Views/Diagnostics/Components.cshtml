@@ -1,0 +1,68 @@
+@model List<Clinic.Web.Services.Diagnostics.ComponentManifest>
+@{
+    Layout = "_Layout";
+    ViewData["Title"] = "Component Diagnostics Dashboard";
+}
+
+<div class="container-fluid p-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h3 class="mb-1"><i class="bi bi-cpu text-primary me-2"></i> Component Diagnostics</h3>
+            <p class="text-muted mb-0">System-wide UI Component Registry Status</p>
+        </div>
+        <div>
+            <span class="badge bg-primary fs-6">@Model.Count Components Registered</span>
+        </div>
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover table-striped mb-0 align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Component Name</th>
+                            <th>Status</th>
+                            <th>Registration Source</th>
+                            <th>Namespace</th>
+                            <th>Assembly</th>
+                            <th>Expected View Path</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var comp in Model)
+                        {
+                            <tr>
+                                <td class="fw-bold">@comp.ComponentId</td>
+                                <td>
+                                    @if (comp.Status == Clinic.Web.Services.Diagnostics.ComponentResolutionStatus.Registered)
+                                    {
+                                        <span class="badge bg-success"><i class="bi bi-check-circle me-1"></i> Registered</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-danger"><i class="bi bi-exclamation-triangle me-1"></i> @comp.Status</span>
+                                    }
+                                </td>
+                                <td><code>@comp.RegistrationSource</code></td>
+                                <td class="font-monospace small">@comp.Namespace</td>
+                                <td>@comp.Assembly</td>
+                                <td class="font-monospace small text-muted">@comp.ExpectedViewPath</td>
+                            </tr>
+                        }
+                        
+                        @if (Model.Count == 0)
+                        {
+                            <tr>
+                                <td colspan="6" class="text-center py-4 text-muted">
+                                    <i class="bi bi-inbox fs-2 d-block mb-2"></i>
+                                    No components found in ApplicationPartManager.
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>

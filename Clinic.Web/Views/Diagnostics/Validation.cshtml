@@ -1,0 +1,90 @@
+@model Clinic.Web.Services.Diagnostics.RegistryCoverageReport
+@{
+    Layout = "_Layout";
+    ViewData["Title"] = "Registry Validation Report";
+}
+
+<div class="container-fluid p-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h3 class="mb-1"><i class="bi bi-shield-check text-success me-2"></i> Registry Validation Report</h3>
+            <p class="text-muted mb-0">System-wide UI Metadata to Registry Validation Coverage</p>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-md-6">
+            <div class="card shadow-sm h-100">
+                <div class="card-header bg-danger text-white">
+                    <h5 class="mb-0"><i class="bi bi-x-circle me-2"></i> Missing Component References (@Model.MissingComponentMetadata.Count)</h5>
+                </div>
+                <div class="card-body">
+                    @if (Model.MissingComponentMetadata.Count > 0)
+                    {
+                        <ul class="list-group list-group-flush">
+                            @foreach (var missing in Model.MissingComponentMetadata)
+                            {
+                                <li class="list-group-item px-0">
+                                    <strong>ComponentId:</strong> <code class="text-danger">@missing.ComponentId</code><br>
+                                    <span class="small text-muted">Module: @missing.Metadata.ModuleName | Title: @missing.Metadata.Title</span>
+                                </li>
+                            }
+                        </ul>
+                    }
+                    else
+                    {
+                        <p class="text-muted mb-0"><i class="bi bi-check2-all text-success"></i> All metadata point to valid components.</p>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="card shadow-sm h-100">
+                <div class="card-header bg-warning">
+                    <h5 class="mb-0"><i class="bi bi-exclamation-triangle me-2"></i> Unused Components (@Model.UnusedComponents.Count)</h5>
+                </div>
+                <div class="card-body">
+                    @if (Model.UnusedComponents.Count > 0)
+                    {
+                        <ul class="list-group list-group-flush">
+                            @foreach (var unused in Model.UnusedComponents)
+                            {
+                                <li class="list-group-item px-0">
+                                    <strong>@unused.ComponentId</strong><br>
+                                    <span class="small text-muted">Namespace: @unused.Namespace</span>
+                                </li>
+                            }
+                        </ul>
+                    }
+                    else
+                    {
+                        <p class="text-muted mb-0"><i class="bi bi-check2-all text-success"></i> No unused components found.</p>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-12">
+            <div class="card shadow-sm">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0"><i class="bi bi-info-circle me-2"></i> Valid Metadata Routes (@Model.ValidMetadata.Count)</h5>
+                </div>
+                <div class="card-body p-0">
+                    <ul class="list-group list-group-flush">
+                        @foreach (var valid in Model.ValidMetadata)
+                        {
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                <div>
+                                    <strong class="d-block">@valid.Title</strong>
+                                    <span class="small text-muted">Module: @valid.ModuleName</span>
+                                </div>
+                                <span class="badge bg-success rounded-pill">Valid</span>
+                            </li>
+                        }
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

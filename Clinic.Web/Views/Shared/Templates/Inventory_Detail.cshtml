@@ -1,0 +1,100 @@
+﻿@model Clinic.Application.UI.UIMetadata
+@{
+    
+}
+
+<!-- Inventory Detail Template -->
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="mb-0 fw-bold">@Model.Title</h2>
+        <div>
+            <a href="/Inventory/EditItem/1" class="btn btn-primary shadow-sm me-2"><i class="bi bi-pencil me-1"></i> Edit Item</a>
+            <a href="/Inventory" class="btn btn-outline-secondary shadow-sm"><i class="bi bi-arrow-left me-2"></i>Back to Inventory</a>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-md-4">
+            <div class="card shadow-sm border-0 h-100">
+                <div class="card-body p-4 text-center">
+                    <div class="bg-primary bg-opacity-10 text-primary rounded d-inline-flex justify-content-center align-items-center mb-3 display-1" style="width: 150px; height: 150px;">
+                        <i class="bi bi-box-seam"></i>
+                    </div>
+                    <h3 class="fw-bold mb-1">Composite Resin (Shade A2)</h3>
+                    <p class="text-muted mb-3 fs-5">ITM-001</p>
+                    
+                    <ul class="list-unstyled text-start mt-4 pt-3 border-top">
+                        <li class="mb-3 d-flex justify-content-between">
+                            <span class="text-muted"><i class="bi bi-folder text-primary me-2"></i> Group:</span> 
+                            <span class="fw-bold">Dental Supplies</span>
+                        </li>
+                        <li class="mb-3 d-flex justify-content-between">
+                            <span class="text-muted"><i class="bi bi-rulers text-primary me-2"></i> UoM:</span> 
+                            <span class="fw-bold">Box</span>
+                        </li>
+                        <li class="mb-3 d-flex justify-content-between">
+                            <span class="text-muted"><i class="bi bi-shield-exclamation text-primary me-2"></i> Safe Qty:</span> 
+                            <span class="fw-bold">5 Box</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-8">
+            <div class="card shadow-sm border-0 mb-4 border-start border-danger border-5">
+                <div class="card-body d-flex justify-content-between align-items-center">
+                    <div>
+                        <h5 class="fw-bold text-danger mb-1"><i class="bi bi-exclamation-triangle-fill me-2"></i> Low Stock Alert</h5>
+                        <p class="mb-0 text-muted">Current quantity is below the minimum safe threshold.</p>
+                    </div>
+                    <div class="text-center">
+                        <span class="d-block text-muted text-uppercase fw-bold small">Current Qty</span>
+                        <h2 class="text-danger fw-bold mb-0">2 <span class="fs-6 text-muted">Box</span></h2>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-white border-bottom-0 pt-4 pb-0 d-flex justify-content-between align-items-center">
+                    <h5 class="fw-bold text-muted text-uppercase mb-0"><i class="bi bi-arrow-left-right me-2"></i>Stock Movement History</h5>
+                    <button class="btn btn-sm btn-outline-success"><i class="bi bi-plus-circle me-1"></i> Adjust Stock</button>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Type</th>
+                                    <th>Reference</th>
+                                    <th class="text-end">Qty In</th>
+                                    <th class="text-end">Qty Out</th>
+                                    <th class="text-end">Balance</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>31/07/2026</td>
+                                    <td><span class="badge bg-danger">Usage</span></td>
+                                    <td>Treatment (PT-2601001)</td>
+                                    <td class="text-end">-</td>
+                                    <td class="text-end">1</td>
+                                    <td class="text-end fw-bold text-danger">2</td>
+                                </tr>
+                                <tr>
+                                    <td>15/07/2026</td>
+                                    <td><span class="badge bg-success">Received</span></td>
+                                    <td>PO-2607-042 (Supplier A)</td>
+                                    <td class="text-end">3</td>
+                                    <td class="text-end">-</td>
+                                    <td class="text-end fw-bold">3</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

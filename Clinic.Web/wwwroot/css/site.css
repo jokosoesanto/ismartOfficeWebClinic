@@ -1,0 +1,73 @@
+html {
+  font-size: 14px;
+}
+
+@media (min-width: 768px) {
+  html {
+    font-size: 16px;
+  }
+}
+
+.btn:focus, .btn:active:focus, .btn-link.nav-link:focus, .form-control:focus, .form-check-input:focus {
+  box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #258cfb;
+}
+
+html {
+  position: relative;
+  min-height: 100%;
+}
+
+body {
+  margin-bottom: 60px;
+}
+
+.form-floating > .form-control-plaintext::placeholder, .form-floating > .form-control::placeholder {
+  color: var(--bs-secondary-color);
+  text-align: end;
+}
+
+.form-floating > .form-control-plaintext:focus::placeholder, .form-floating > .form-control:focus::placeholder {
+  text-align: start;
+}
+/* Design System Standardization */
+.card {
+    border-radius: 0.625rem;
+    box-shadow: 0 1px 3px 0 rgba(0,0,0,0.1), 0 1px 2px -1px rgba(0,0,0,0.1);
+    border: 1px solid var(--border-color);
+}
+.card-header {
+    background-color: var(--bg-card);
+    border-bottom: 1px solid var(--border-color);
+    border-top-left-radius: 0.625rem !important;
+    border-top-right-radius: 0.625rem !important;
+}
+
+/* Fix DataTable/Table overflow when sidebar collapses */
+.table-responsive {
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+table.dataTable,
+.table {
+    margin-top: 0 !important;
+    margin-bottom: 0 !important;
+}
+
+/* Base button and form standard radius */
+.btn, .form-control, .form-select {
+    border-radius: 0.375rem;
+}
+
+
+/* Force Design Token Consistency overriding inline Bootstrap utilities */
+.card {
+    border-radius: 0.625rem !important;
+    box-shadow: 0 1px 3px 0 rgba(0,0,0,0.1), 0 1px 2px -1px rgba(0,0,0,0.1) !important;
+    border: 1px solid var(--border-color) !important;
+}
+.btn, .form-control, .form-select {
+    border-radius: 0.375rem !important;
+}
+

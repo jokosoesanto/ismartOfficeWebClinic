@@ -1,0 +1,90 @@
+@model Clinic.Application.UI.UIMetadata
+@{
+    
+}
+
+<!-- TransactionList Template -->
+<div class="template-transaction-list card shadow-sm">
+    <div class="card-header bg-white p-3 d-flex justify-content-between align-items-center">
+        <!-- Search -->
+        <div class="search-box w-50 input-group">
+            <span class="input-group-text bg-light border-end-0"><i class="bi bi-search"></i></span>
+            <input type="text" class="form-control border-start-0" placeholder="Search by Invoice No, Patient Name, or ID..." />
+        </div>
+        <!-- Filter -->
+        <div class="filter-actions d-flex gap-2">
+            <select class="form-select form-select-sm" style="width: 150px;">
+                <option value="">All Status</option>
+                <option value="Paid">Paid</option>
+                <option value="Unpaid">Unpaid</option>
+                <option value="Partial">Partial</option>
+            </select>
+            <button class="btn btn-sm btn-outline-success"><i class="bi bi-file-earmark-excel"></i> Export</button>
+            <a href="/Billing/Payment" class="btn btn-sm btn-primary"><i class="bi bi-plus-circle"></i> New Payment</a>
+        </div>
+    </div>
+    
+    <div class="card-body p-0">
+        <!-- Dummy Grid -->
+        <div class="table-responsive">
+            <table class="table table-hover table-striped mb-0 align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th class="ps-4">Invoice No</th>
+                        <th>Date</th>
+                        <th>Patient Name</th>
+                        <th>Total Amount</th>
+                        <th>Discount</th>
+                        <th>Outstanding</th>
+                        <th>Status</th>
+                        <th class="text-end pe-4">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td class="ps-4 fw-bold">INV-2607-001</td>
+                        <td>31/07/2026</td>
+                        <td>John Smith <span class="text-muted small">(#PT-2601001)</span></td>
+                        <td>$450.00</td>
+                        <td>$0.00</td>
+                        <td class="text-danger fw-bold">$450.00</td>
+                        <td><span class="badge bg-danger">Unpaid</span></td>
+                        <td class="text-end pe-4">
+                            <a href="/Billing/Payment" class="btn btn-sm btn-outline-success" title="Add Payment"><i class="bi bi-credit-card"></i> Pay</a>
+                            <a href="/Billing/Preview/1" class="btn btn-sm btn-outline-info ms-1" title="View Details"><i class="bi bi-eye"></i></a>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="ps-4 fw-bold">INV-2607-002</td>
+                        <td>30/07/2026</td>
+                        <td>Jane Doe <span class="text-muted small">(#PT-2601002)</span></td>
+                        <td>$1,200.00</td>
+                        <td>$120.00</td>
+                        <td class="text-success fw-bold">$0.00</td>
+                        <td><span class="badge bg-success">Paid</span></td>
+                        <td class="text-end pe-4">
+                            <a href="/Billing/Preview/2" class="btn btn-sm btn-outline-info ms-1" title="View Details"><i class="bi bi-eye"></i></a>
+                            <a href="/Billing/History" class="btn btn-sm btn-outline-secondary ms-1" title="Payment History"><i class="bi bi-clock-history"></i></a>
+                        </td>
+                    </tr>
+                    <!-- Empty State Placeholder (hidden by default, used when search fails) -->
+                    <tr id="emptyStateRow" class="d-none">
+                        <td colspan="8" class="text-center p-5 text-muted">
+                            <i class="bi bi-receipt display-4 d-block mb-3 text-secondary"></i>
+                            <h5 class="fw-bold">No Invoices Found</h5>
+                            <p class="mb-0">There are no billing records matching your criteria.</p>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <div class="card-footer bg-white p-3 d-flex justify-content-between">
+        <span class="text-muted small">Showing 0 of 0 transactions</span>
+        <ul class="pagination pagination-sm mb-0">
+            <li class="page-item disabled"><a class="page-link" href="#">Previous</a></li>
+            <li class="page-item active"><a class="page-link" href="#">1</a></li>
+            <li class="page-item disabled"><a class="page-link" href="#">Next</a></li>
+        </ul>
+    </div>
+</div>

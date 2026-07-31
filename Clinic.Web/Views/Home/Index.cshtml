@@ -1,0 +1,114 @@
+@{
+    ViewData["Title"] = "Dashboard";
+}
+
+<div class="row mb-4">
+    <div class="col-12">
+        <h2 class="fw-bold">Dashboard</h2>
+        <p class="text-muted">Welcome back! Here is today's overview.</p>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-3">
+        <clinic-card title="Total Patients" icon="bi-people">
+            <h3 class="fw-bold text-primary mb-0">1,245</h3>
+            <small class="text-success"><i class="bi bi-arrow-up"></i> 12% from last month</small>
+        </clinic-card>
+    </div>
+    <div class="col-md-3">
+        <clinic-card title="Appointments Today" icon="bi-calendar-check">
+            <h3 class="fw-bold text-primary mb-0">42</h3>
+            <small class="text-success"><i class="bi bi-arrow-up"></i> 5% from yesterday</small>
+        </clinic-card>
+    </div>
+    <div class="col-md-3">
+        <clinic-card title="Revenue Today" icon="bi-cash-coin">
+            <h3 class="fw-bold text-primary mb-0">$5,420</h3>
+            <small class="text-danger"><i class="bi bi-arrow-down"></i> 2% from yesterday</small>
+        </clinic-card>
+    </div>
+    <div class="col-md-3">
+        <clinic-card title="Low Stock Alerts" icon="bi-exclamation-triangle">
+            <h3 class="fw-bold text-danger mb-0">5</h3>
+            <small class="text-muted">Items below safety level</small>
+        </clinic-card>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <clinic-card title="Patient Visits (Weekly)" icon="bi-graph-up">
+            <canvas id="patientChart" height="100"></canvas>
+        </clinic-card>
+    </div>
+    <div class="col-md-4">
+        <clinic-card title="Recent Activities" icon="bi-activity">
+            <ul class="list-group list-group-flush">
+                <li class="list-group-item px-0">
+                    <div class="d-flex w-100 justify-content-between">
+                        <h6 class="mb-1">Dr. Smith checked in</h6>
+                        <small class="text-muted">3 mins ago</small>
+                    </div>
+                </li>
+                <li class="list-group-item px-0">
+                    <div class="d-flex w-100 justify-content-between">
+                        <h6 class="mb-1">Payment Received: $200</h6>
+                        <small class="text-muted">15 mins ago</small>
+                    </div>
+                </li>
+                <li class="list-group-item px-0">
+                    <div class="d-flex w-100 justify-content-between">
+                        <h6 class="mb-1">New Patient Registered</h6>
+                        <small class="text-muted">1 hour ago</small>
+                    </div>
+                </li>
+            </ul>
+        </clinic-card>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            var ctx = document.getElementById('patientChart').getContext('2d');
+            var primaryColor = getComputedStyle(document.documentElement).getPropertyValue('--primary-color').trim() || '#0d6efd';
+            
+            var chart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'],
+                    datasets: [{
+                        label: 'Patient Visits',
+                        data: [65, 59, 80, 81, 56, 40, 20],
+                        backgroundColor: primaryColor,
+                        borderRadius: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+
+            // Handle theme changes by updating chart color
+            document.querySelectorAll('#themeSwitcher .dropdown-item').forEach(item => {
+                item.addEventListener('click', function() {
+                    setTimeout(() => {
+                        chart.data.datasets[0].backgroundColor = getComputedStyle(document.documentElement).getPropertyValue('--primary-color').trim();
+                        chart.update();
+                    }, 50); // slight delay to allow CSS to apply
+                });
+            });
+        });
+    </script>
+}

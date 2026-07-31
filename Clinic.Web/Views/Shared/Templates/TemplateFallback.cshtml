@@ -1,0 +1,37 @@
+﻿@model Clinic.Application.UI.UIMetadata
+@{
+    
+    
+    // Extrapolate the requested view name for diagnostic purposes
+    // Since this is rendered as a fallback, we know the original was missing.
+    // The exact path isn't natively exposed to the view context unless passed via model, 
+    // but we can infer it's the current ModuleName template that failed.
+}
+
+<div class="alert alert-warning m-4 shadow-sm" role="alert">
+    <div class="d-flex align-items-center mb-3">
+        <i class="bi bi-exclamation-triangle-fill fs-2 me-3 text-warning"></i>
+        <div>
+            <h4 class="alert-heading mb-1">Runtime Fallback: Missing Template</h4>
+            <p class="mb-0 text-dark">The Controller successfully passed <strong>UIMetadata</strong>, but the specified physical Razor View template was not found.</p>
+        </div>
+    </div>
+    <hr>
+    <div class="row">
+        <div class="col-md-6">
+            <p class="mb-1 fw-bold">Diagnostic Info</p>
+            <ul class="list-unstyled mb-0 small text-muted">
+                <li><strong>Module:</strong> <code>@Model?.ModuleName</code></li>
+                <li><strong>Title:</strong> <code>@Model?.Title</code></li>
+                <li><strong>Status:</strong> <code>FALLBACK_INVOKED</code></li>
+            </ul>
+        </div>
+        <div class="col-md-6">
+            <p class="mb-1 fw-bold">Resolution Steps</p>
+            <ul class="mb-0 small text-muted">
+                <li>Check the <code>View("Templates/[Name]", metadata)</code> call in the Controller.</li>
+                <li>Ensure the `.cshtml` file exists in <code>Views/Shared/Templates/</code>.</li>
+            </ul>
+        </div>
+    </div>
+</div>

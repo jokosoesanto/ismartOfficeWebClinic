@@ -1,0 +1,217 @@
+@model Clinic.Application.UI.UIMetadata
+@{
+    
+}
+
+<div class="template-scheduler d-flex flex-column h-100" style="min-height: calc(100vh - 150px);">
+    <!-- Toolbar -->
+    <div class="scheduler-toolbar p-3 bg-white border-bottom mb-3 d-flex justify-content-between align-items-center rounded shadow-sm">
+        <div class="d-flex align-items-center gap-2">
+            <a href="/Appointment/Create" class="btn btn-primary shadow-sm"><i class="bi bi-plus-lg me-1"></i> New Appt</a>
+            
+            <div class="input-group" style="width: 250px;">
+                <span class="input-group-text bg-light border-end-0"><i class="bi bi-search text-muted"></i></span>
+                <input type="text" class="form-control border-start-0 bg-light" placeholder="Search Patient...">
+            </div>
+            
+            <div class="dropdown">
+                <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                    <i class="bi bi-funnel me-1"></i> Filter
+                </button>
+                <ul class="dropdown-menu p-3" style="width: 250px;">
+                    <li><h6 class="dropdown-header px-0">Providers</h6></li>
+                    <li><div class="form-check"><input class="form-check-input" type="checkbox" checked> <label class="form-check-label">Dr. Alan</label></div></li>
+                    <li><div class="form-check"><input class="form-check-input" type="checkbox" checked> <label class="form-check-label">Dr. Emily Chen</label></div></li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li><h6 class="dropdown-header px-0">Status</h6></li>
+                    <li><div class="form-check form-switch"><input class="form-check-input" type="checkbox" id="showCancelled"> <label class="form-check-label" for="showCancelled">Show Cancelled</label></div></li>
+                </ul>
+            </div>
+        </div>
+        
+        <div class="d-flex align-items-center gap-3">
+            <!-- Color Legend -->
+            <div class="d-flex gap-2 small">
+                <span class="badge bg-primary">Scheduled</span>
+                <span class="badge bg-success">Arrived</span>
+                <span class="badge bg-warning text-dark">In-Chair</span>
+                <span class="badge bg-info">Completed</span>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row g-3 flex-grow-1">
+        <!-- Calendar Region -->
+        <div class="col-md-9 d-flex flex-column">
+            <div class="card flex-grow-1 shadow-sm border-0 h-100">
+                <div class="card-body p-2 d-flex flex-column">
+                    <div id="calendar" class="flex-grow-1"></div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Waiting List / Side Panel -->
+        <div class="col-md-3 d-flex flex-column">
+            <div class="card flex-grow-1 shadow-sm border-0 h-100">
+                <div class="card-header bg-white border-bottom-0 pt-3 pb-2">
+                    <h5 class="fw-bold text-primary mb-0"><i class="bi bi-person-lines-fill me-2"></i>Waiting List</h5>
+                </div>
+                <div class="card-body p-0 overflow-auto">
+                    <ul class="list-group list-group-flush" id="waitingList">
+                        <li class="list-group-item p-3 border-bottom draggable-item" draggable="true" data-event='{"title":"Maria Doe (Walk-in)","duration":"00:30"}'>
+                            <div class="d-flex justify-content-between align-items-start mb-1">
+                                <h6 class="mb-0 fw-bold">Maria Doe</h6>
+                                <span class="badge bg-danger rounded-pill">15m wait</span>
+                            </div>
+                            <p class="mb-1 small text-muted">Consultation</p>
+                            <div class="d-flex gap-1 mt-2">
+                                <button class="btn btn-xs btn-outline-success py-0 px-2" style="font-size: 0.75rem;" onclick="checkInPatient('Maria Doe')">Check-In</button>
+                                <button class="btn btn-xs btn-outline-secondary py-0 px-2" style="font-size: 0.75rem;">Open</button>
+                            </div>
+                        </li>
+                        <li class="list-group-item p-3 text-center text-muted fst-italic">
+                            Drag patients to calendar to schedule.
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Appointment Context Modal -->
+<div class="modal fade" id="appointmentModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header text-white" id="modalHeaderColor">
+                <h5 class="modal-title fw-bold" id="modalTitle">Appointment Detail</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4">
+                <div class="d-flex align-items-center mb-3">
+                    <i class="bi bi-person-circle fs-1 text-muted me-3"></i>
+                    <div>
+                        <h4 class="fw-bold mb-0" id="modalPatientName">John Smith</h4>
+                        <a href="/Patient/1" class="small text-decoration-none">View Full Chart <i class="bi bi-box-arrow-up-right"></i></a>
+                    </div>
+                </div>
+                
+                <table class="table table-sm table-borderless mb-4">
+                    <tbody>
+                        <tr><td class="text-muted" width="100">Time:</td><td class="fw-bold" id="modalTime">09:00 - 10:00</td></tr>
+                        <tr><td class="text-muted">Provider:</td><td class="fw-bold" id="modalProvider">Dr. Emily Chen</td></tr>
+                        <tr><td class="text-muted">Reason:</td><td class="fw-bold" id="modalReason">Root Canal</td></tr>
+                    </tbody>
+                </table>
+                
+                <h6 class="fw-bold border-bottom pb-2">Quick Actions (Status Change)</h6>
+                <div class="d-flex flex-wrap gap-2 mb-3">
+                    <button class="btn btn-sm btn-outline-success" onclick="changeStatus('Arrived')"><i class="bi bi-check-circle me-1"></i> Check-In</button>
+                    <button class="btn btn-sm btn-outline-warning text-dark" onclick="changeStatus('In-Chair')"><i class="bi bi-display me-1"></i> In-Chair</button>
+                    <button class="btn btn-sm btn-outline-info" onclick="changeStatus('Completed')"><i class="bi bi-flag me-1"></i> Completed</button>
+                </div>
+            </div>
+            <div class="modal-footer bg-light">
+                <a href="/Appointment/Edit/1" class="btn btn-primary"><i class="bi bi-pencil me-1"></i> Edit / Reschedule</a>
+                <button type="button" class="btn btn-danger" onclick="cancelAppointment()"><i class="bi bi-x-circle me-1"></i> Cancel Appt</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        var calendarEl = document.getElementById('calendar');
+        var calendar = new FullCalendar.Calendar(calendarEl, {
+            initialView: 'timeGridWeek',
+            headerToolbar: {
+                left: 'prev,next today',
+                center: 'title',
+                right: 'timeGridDay,timeGridWeek,dayGridMonth'
+            },
+            slotMinTime: '08:00:00',
+            slotMaxTime: '18:00:00',
+            allDaySlot: false,
+            editable: true,
+            droppable: true,
+            height: '100%',
+            events: [
+                {
+                    title: 'John Smith - Root Canal',
+                    start: '2026-07-31T09:00:00',
+                    end: '2026-07-31T10:00:00',
+                    backgroundColor: '#0d6efd', // Scheduled (Primary)
+                    borderColor: '#0d6efd',
+                    extendedProps: { patient: 'John Smith', provider: 'Dr. Emily Chen', reason: 'Root Canal', status: 'Scheduled' }
+                },
+                {
+                    title: 'Jane Doe - Checkup',
+                    start: '2026-07-31T10:30:00',
+                    end: '2026-07-31T11:00:00',
+                    backgroundColor: '#198754', // Arrived (Success)
+                    borderColor: '#198754',
+                    extendedProps: { patient: 'Jane Doe', provider: 'Dr. Alan', reason: 'Checkup', status: 'Arrived' }
+                }
+            ],
+            // Event Click (Context Menu / Detail Dialog)
+            eventClick: function(info) {
+                var props = info.event.extendedProps;
+                document.getElementById('modalPatientName').innerText = props.patient;
+                document.getElementById('modalReason').innerText = props.reason;
+                document.getElementById('modalProvider').innerText = props.provider;
+                
+                var startTime = info.event.start.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+                var endTime = info.event.end ? info.event.end.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : '';
+                document.getElementById('modalTime').innerText = startTime + (endTime ? ' - ' + endTime : '');
+                
+                // Color header based on status
+                var header = document.getElementById('modalHeaderColor');
+                header.className = 'modal-header text-white';
+                if(props.status === 'Scheduled') header.classList.add('bg-primary');
+                else if(props.status === 'Arrived') header.classList.add('bg-success');
+                else if(props.status === 'In-Chair') header.classList.add('bg-warning');
+                else if(props.status === 'Completed') header.classList.add('bg-info');
+                
+                var modal = new bootstrap.Modal(document.getElementById('appointmentModal'));
+                modal.show();
+            },
+            // Double Booking Prevention (Business Rule)
+            eventOverlap: function(stillEvent, movingEvent) {
+                alert("Business Rule Warning: Double booking is prevented for the same provider/chair slot.");
+                return false;
+            },
+            eventDrop: function(info) {
+                // Mimic reschedule confirmation
+                if(!confirm("Reschedule appointment to " + info.event.start.toLocaleString() + "?")) {
+                    info.revert();
+                }
+            }
+        });
+        calendar.render();
+        
+        // Initialize Draggables for Waiting List
+        new FullCalendar.Draggable(document.getElementById('waitingList'), {
+            itemSelector: '.draggable-item',
+            eventData: function(eventEl) {
+                return JSON.parse(eventEl.getAttribute('data-event'));
+            }
+        });
+    });
+
+    function checkInPatient(name) {
+        alert(name + " checked in successfully. Status updated to 'Arrived'.");
+    }
+
+    function changeStatus(newStatus) {
+        alert("Appointment status changed to: " + newStatus);
+        bootstrap.Modal.getInstance(document.getElementById('appointmentModal')).hide();
+    }
+
+    function cancelAppointment() {
+        if(confirm("Business Rule Warning: Are you sure you want to cancel this appointment? This requires a cancellation reason.")) {
+            alert("Appointment Cancelled.");
+            bootstrap.Modal.getInstance(document.getElementById('appointmentModal')).hide();
+        }
+    }
+</script>

@@ -1,0 +1,96 @@
+@using Clinic.Web.Services
+@using Clinic.Application.UI
+@inject IComponentRegistry ComponentRegistry
+@model UIMetadata
+
+@{
+    Layout = "_Layout";
+    ViewData["Title"] = Model.Title;
+}
+
+<div class="d-flex flex-column h-100 w-100" style="min-height: calc(100vh - var(--header-height));">
+    
+    @* North Region *@
+    @if (Model.Composition.North.Any())
+    {
+        <div class="region-north w-100 mb-3">
+            @foreach (var comp in Model.Composition.North)
+            {
+                @await ComponentRegistry.RenderComponentAsync(Component, comp, Model.Data)
+            }
+        </div>
+    }
+
+    <div class="d-flex flex-row flex-grow-1">
+        @* West Region *@
+        @if (Model.Composition.West.Any())
+        {
+            <div class="region-west me-3" style="min-width: 250px;">
+                @foreach (var comp in Model.Composition.West)
+                {
+                    @await ComponentRegistry.RenderComponentAsync(Component, comp, Model.Data)
+                }
+            </div>
+        }
+
+        @* Center Region *@
+        <div class="region-center flex-grow-1">
+            @{
+                bool hasAnyComponent = Model.Composition.North.Any() || 
+                                       Model.Composition.West.Any() || 
+                                       Model.Composition.Center.Any() || 
+                                       Model.Composition.East.Any() || 
+                                       Model.Composition.South.Any();
+            }
+
+            @if (hasAnyComponent)
+            {
+                if (Model.Composition.Center.Any())
+                {
+                    IgnoreBody();
+                    foreach (var comp in Model.Composition.Center)
+                    {
+                        @await ComponentRegistry.RenderComponentAsync(Component, comp, Model.Data)
+                    }
+                }
+                else
+                {
+                    @RenderBody()
+                }
+            }
+            else
+            {
+                IgnoreBody();
+                <div class="alert alert-warning m-4 shadow-sm">
+                    <h4 class="alert-heading"><i class="bi bi-shield-exclamation"></i> Runtime Guard: Empty Composition</h4>
+                    <p>The <strong>UIMetadata</strong> object did not provide any <code>UIComponent</code> for this screen. The Composition Engine prevented rendering a blank page.</p>
+                    <hr>
+                    <p class="mb-0 small"><strong>Diagnostic Info:</strong> Module: <code>@Model.ModuleName</code> | Path: <code>@Context.Request.Path</code></p>
+                </div>
+            }
+        </div>
+
+        @* East Region *@
+        @if (Model.Composition.East.Any())
+        {
+            <div class="region-east ms-3" style="min-width: 250px;">
+                @foreach (var comp in Model.Composition.East)
+                {
+                    @await ComponentRegistry.RenderComponentAsync(Component, comp, Model.Data)
+                }
+            </div>
+        }
+    </div>
+
+    @* South Region *@
+    @if (Model.Composition.South.Any())
+    {
+        <div class="region-south w-100 mt-3">
+            @foreach (var comp in Model.Composition.South)
+            {
+                @await ComponentRegistry.RenderComponentAsync(Component, comp, Model.Data)
+            }
+        </div>
+    }
+
+</div>

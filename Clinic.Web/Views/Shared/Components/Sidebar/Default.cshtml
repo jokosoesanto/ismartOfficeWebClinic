@@ -1,0 +1,44 @@
+@model List<Clinic.Application.Navigation.NavigationItem>
+@{
+    var currentPath = Context.Request.Path.Value;
+    if (string.IsNullOrEmpty(currentPath)) currentPath = "/";
+}
+<ul class="nav flex-column mt-3">
+    @foreach (var item in Model)
+    {
+        var hasChildren = item.Children != null && item.Children.Any();
+        var isActive = currentPath.StartsWith(item.Route, StringComparison.OrdinalIgnoreCase) && item.Route != "/" || currentPath == item.Route;
+        
+        <li class="nav-item">
+            @if (hasChildren)
+            {
+                <a class="nav-link text-main d-flex justify-content-between align-items-center @(isActive ? "fw-bold" : "")" 
+                   data-bs-toggle="collapse" href="#collapse-@item.Id" role="button" aria-expanded="@(isActive ? "true" : "false")">
+                    <span>
+                        <i class="bi @item.Icon me-2"></i> @item.Title
+                    </span>
+                    <i class="bi bi-chevron-down small"></i>
+                </a>
+                <div class="collapse @(isActive ? "show" : "")" id="collapse-@item.Id">
+                    <ul class="nav flex-column ms-3 mt-1">
+                        @foreach (var child in item.Children)
+                        {
+                            var isChildActive = currentPath == child.Route;
+                            <li class="nav-item mb-1">
+                                <a class="nav-link text-main small @(isChildActive ? "text-primary fw-bold" : "text-muted")" href="@child.Route">
+                                    <i class="bi @(string.IsNullOrEmpty(child.Icon) ? "bi-dash" : child.Icon) me-1"></i> @child.Title
+                                </a>
+                            </li>
+                        }
+                    </ul>
+                </div>
+            }
+            else
+            {
+                <a class="nav-link text-main @(isActive ? "fw-bold text-primary" : "")" href="@item.Route">
+                    <i class="bi @item.Icon me-2"></i> @item.Title
+                </a>
+            }
+        </li>
+    }
+</ul>

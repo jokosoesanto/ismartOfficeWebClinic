@@ -1,0 +1,157 @@
+@model Clinic.Application.UI.UIMetadata
+@{
+    
+}
+
+<!-- Admin Settings List Template -->
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="mb-0 fw-bold">@Model.Title</h2>
+        <div class="d-flex align-items-center gap-2">
+            <button class="btn btn-primary shadow-sm" onclick="openCrudModal('Add New Record')"><i class="bi bi-plus-lg me-1"></i> Add Record</button>
+            <a href="/Admin/CreateUser" class="btn btn-outline-secondary shadow-sm"><i class="bi bi-person-plus me-1"></i> User Form</a>
+        </div>
+    </div>
+
+    <div class="row g-4 h-100">
+        <!-- Settings Menu -->
+        <div class="col-md-3">
+            <div class="card shadow-sm border-0 h-100">
+                <div class="card-header bg-white border-bottom-0 pt-4 pb-0">
+                    <h6 class="fw-bold text-muted text-uppercase mb-0">System Setup</h6>
+                </div>
+                <div class="card-body">
+                    <div class="list-group list-group-flush border rounded mb-3">
+                        <h6 class="dropdown-header fw-bold bg-light border-bottom">Administration</h6>
+                        <a href="/Admin/Users" class="list-group-item list-group-item-action @(Model.Title == "Manage Users" ? "active fw-bold" : "")"><i class="bi bi-people me-2"></i>User Accounts</a>
+                        <a href="/Admin/Roles" class="list-group-item list-group-item-action @(Model.Title == "Manage Roles" ? "active fw-bold" : "")"><i class="bi bi-shield-lock me-2"></i>Roles & Permissions</a>
+                        <a href="/Admin/Configuration" class="list-group-item list-group-item-action @(Model.Title == "Configuration" ? "active fw-bold" : "")"><i class="bi bi-gear me-2"></i>Configuration</a>
+                    </div>
+                    <div class="list-group list-group-flush border rounded">
+                        <h6 class="dropdown-header fw-bold bg-light border-bottom">Master Data</h6>
+                        <a href="/Admin/Doctors" class="list-group-item list-group-item-action @(Model.Title == "Manage Doctors" ? "active fw-bold" : "")"><i class="bi bi-person-badge me-2"></i>Doctors / Providers</a>
+                        <a href="/Admin/Insurance" class="list-group-item list-group-item-action @(Model.Title == "Manage Insurance" ? "active fw-bold" : "")"><i class="bi bi-card-checklist me-2"></i>Insurance</a>
+                        <a href="/Admin/Procedures" class="list-group-item list-group-item-action @(Model.Title == "Manage Procedures" ? "active fw-bold" : "")"><i class="bi bi-list-check me-2"></i>Procedures</a>
+                        <a href="/Admin/Locations" class="list-group-item list-group-item-action @(Model.Title == "Manage Locations" ? "active fw-bold" : "")"><i class="bi bi-building me-2"></i>Locations</a>
+                        <a href="/Admin/Chairs" class="list-group-item list-group-item-action @(Model.Title == "Manage Chairs" ? "active fw-bold" : "")"><i class="bi bi-usb-drive me-2"></i>Chairs / Rooms</a>
+                        <a href="/Admin/Lookup" class="list-group-item list-group-item-action @(Model.Title == "Master Lookup" ? "active fw-bold" : "")"><i class="bi bi-tags me-2"></i>Master Lookup</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Data Grid -->
+        <div class="col-md-9">
+            <div class="card shadow-sm border-0 h-100">
+                <div class="card-header bg-white border-bottom-0 pt-4 pb-0 d-flex justify-content-between align-items-center">
+                    <h6 class="fw-bold text-muted text-uppercase mb-0">Registered @Model.Title</h6>
+                    <div class="input-group" style="width: 250px;">
+                        <input type="text" class="form-control form-control-sm" placeholder="Search...">
+                        <button class="btn btn-outline-secondary btn-sm" type="button"><i class="bi bi-search"></i></button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle">
+                            <thead class="table-light">
+                                <tr>
+                                    @if(Model.Title == "Manage Users" || Model.Title == "System Administration") {
+                                        <th>Username</th><th>Full Name</th><th>Role</th><th>Status</th>
+                                    } else if(Model.Title == "Manage Doctors") {
+                                        <th>Provider ID</th><th>Name</th><th>Specialty</th><th>Status</th>
+                                    } else if(Model.Title == "Manage Insurance") {
+                                        <th>Company</th><th>Plan Type</th><th>Phone</th><th>Status</th>
+                                    } else if(Model.Title == "Manage Procedures") {
+                                        <th>Code</th><th>Description</th><th>Fee</th><th>Category</th>
+                                    } else if(Model.Title == "Manage Locations") {
+                                        <th>Location Name</th><th>City</th><th>Phone</th><th>Status</th>
+                                    } else if(Model.Title == "Manage Chairs") {
+                                        <th>Chair ID</th><th>Location</th><th>Type</th><th>Status</th>
+                                    } else if(Model.Title == "Manage Roles") {
+                                        <th>Role Name</th><th>Users Count</th><th>Permissions</th><th>Status</th>
+                                    } else {
+                                        <th>Code</th><th>Name</th><th>Value</th><th>Status</th>
+                                    }
+                                    <th class="text-center">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @if(Model.Title == "Manage Users" || Model.Title == "System Administration") {
+                                    <tr>
+                                        <td class="fw-bold">admin</td><td>System Administrator</td><td><span class="badge bg-danger">Administrator</span></td><td><span class="badge bg-success">Active</span></td>
+                                        <td class="text-center"><button class="btn btn-sm btn-outline-primary" onclick="openCrudModal('Edit User')"><i class="bi bi-pencil"></i></button></td>
+                                    </tr>
+                                } else if(Model.Title == "Manage Doctors") {
+                                    <tr>
+                                        <td class="fw-bold">PRV-001</td><td>Dr. Emily Chen</td><td>Orthodontist</td><td><span class="badge bg-success">Active</span></td>
+                                        <td class="text-center"><button class="btn btn-sm btn-outline-primary" onclick="openCrudModal('Edit Provider')"><i class="bi bi-pencil"></i></button></td>
+                                    </tr>
+                                } else if(Model.Title == "Manage Insurance") {
+                                    <tr>
+                                        <td class="fw-bold">Delta Dental</td><td>PPO</td><td>555-0199</td><td><span class="badge bg-success">Active</span></td>
+                                        <td class="text-center"><button class="btn btn-sm btn-outline-primary" onclick="openCrudModal('Edit Insurance')"><i class="bi bi-pencil"></i></button></td>
+                                    </tr>
+                                } else {
+                                    <tr>
+                                        <td class="fw-bold">DEF-01</td><td>Default Record</td><td>Standard</td><td><span class="badge bg-success">Active</span></td>
+                                        <td class="text-center"><button class="btn btn-sm btn-outline-primary" onclick="openCrudModal('Edit Record')"><i class="bi bi-pencil"></i></button></td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Generic CRUD Modal -->
+<div class="modal fade" id="crudModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header bg-primary text-white border-bottom-0">
+                <h5 class="modal-title fw-bold" id="crudModalTitle">Add/Edit Record</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4">
+                <form id="crudForm">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Primary Identifier <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" required id="crudField1">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Description / Name <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" required id="crudField2">
+                    </div>
+                    <div class="mb-3 form-check form-switch">
+                        <input class="form-check-input" type="checkbox" id="crudStatus" checked>
+                        <label class="form-check-label" for="crudStatus">Active Status</label>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer bg-light">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="saveCrud()"><i class="bi bi-save me-1"></i> Save Changes</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function openCrudModal(title) {
+        document.getElementById('crudModalTitle').innerText = title;
+        var modal = new bootstrap.Modal(document.getElementById('crudModal'));
+        modal.show();
+    }
+
+    function saveCrud() {
+        const form = document.getElementById('crudForm');
+        if (!form.checkValidity()) {
+            form.reportValidity();
+            return;
+        }
+        alert("Record saved successfully! (Simulated)");
+        bootstrap.Modal.getInstance(document.getElementById('crudModal')).hide();
+    }
+</script>

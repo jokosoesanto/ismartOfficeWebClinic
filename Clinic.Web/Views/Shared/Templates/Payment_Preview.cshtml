@@ -1,0 +1,105 @@
+@model Clinic.Application.UI.UIMetadata
+@{
+    
+}
+
+<!-- Payment Preview / Receipt Template -->
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="mb-0 fw-bold">@Model.Title</h2>
+        <div>
+            <button class="btn btn-primary shadow-sm me-2"><i class="bi bi-printer me-1"></i> Print Receipt</button>
+            <a href="/Billing" class="btn btn-outline-secondary shadow-sm"><i class="bi bi-x-lg me-1"></i> Close</a>
+        </div>
+    </div>
+
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow-sm border-0">
+                <div class="card-body p-5">
+                    <div class="text-center mb-5">
+                        <i class="bi bi-check-circle-fill text-success" style="font-size: 4rem;"></i>
+                        <h3 class="fw-bold mt-3 text-success">Payment Successful</h3>
+                        <p class="text-muted">Transaction ID: TXN-260731-001</p>
+                    </div>
+
+                    <div class="border p-4 rounded bg-light mb-4">
+                        <div class="row">
+                            <div class="col-6">
+                                <h5 class="fw-bold text-muted mb-3 text-uppercase">Clinic Details</h5>
+                                <p class="mb-0 fw-bold">iSmart Office Dental Clinic</p>
+                                <p class="mb-0 text-muted">123 Health Ave, Suite 100</p>
+                                <p class="mb-0 text-muted">Springfield, IL 62701</p>
+                                <p class="mb-0 text-muted">Phone: (555) 123-4567</p>
+                            </div>
+                            <div class="col-6 text-end">
+                                <h5 class="fw-bold text-muted mb-3 text-uppercase">Receipt Info</h5>
+                                <p class="mb-0"><strong>Receipt No:</strong> RCP-2601001</p>
+                                <p class="mb-0"><strong>Date:</strong> 31 Jul 2026, 10:15 AM</p>
+                                <p class="mb-0"><strong>Cashier:</strong> AdminUser</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <h5 class="fw-bold text-muted mb-3 text-uppercase">Patient Details</h5>
+                        <div class="row">
+                            <div class="col-6">
+                                <p class="mb-0"><strong>Name:</strong> John Smith</p>
+                            </div>
+                            <div class="col-6">
+                                <p class="mb-0"><strong>Patient ID:</strong> PT-2601001</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <table class="table table-bordered mb-4">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Description</th>
+                                <th class="text-end">Amount</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Root Canal (D3330)</td>
+                                <td class="text-end">$450.00</td>
+                            </tr>
+                            <tr>
+                                <td>Panoramic X-Ray (D0330)</td>
+                                <td class="text-end">$150.00</td>
+                            </tr>
+                        </tbody>
+                        <tfoot class="fw-bold bg-light">
+                            <tr>
+                                <td class="text-end text-muted fw-normal">Subtotal:</td>
+                                <td class="text-end">$600.00</td>
+                            </tr>
+                            <tr>
+                                <td class="text-end text-muted fw-normal">Discount:</td>
+                                <td class="text-end text-success">-$0.00</td>
+                            </tr>
+                            <tr>
+                                <td class="text-end text-muted fw-normal">Insurance Coverage:</td>
+                                <td class="text-end text-success">-$0.00</td>
+                            </tr>
+                            <tr>
+                                <td class="text-end">Total Payment Received (Credit Card):</td>
+                                <td class="text-end text-success fs-5">$600.00</td>
+                            </tr>
+                            <tr>
+                                <td class="text-end text-muted fw-normal">Remaining Outstanding:</td>
+                                <td class="text-end text-danger">$0.00</td>
+                            </tr>
+                        </tfoot>
+                    </table>
+
+                    <div class="text-center text-muted small mt-5">
+                        <p class="mb-1">Thank you for trusting us with your dental health.</p>
+                        <p>Please retain this receipt for your records.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

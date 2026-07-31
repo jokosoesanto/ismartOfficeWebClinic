@@ -1,0 +1,75 @@
+<clinic-card title="Details" icon="bi-info-square">
+    <ul class="nav nav-tabs" id="patientTab" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="demographics-tab" data-bs-toggle="tab" data-bs-target="#demographics" type="button" role="tab" aria-controls="demographics" aria-selected="true">Demographics</button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="guardian-tab" data-bs-toggle="tab" data-bs-target="#guardian" type="button" role="tab" aria-controls="guardian" aria-selected="false">Guardian</button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="insurance-tab" data-bs-toggle="tab" data-bs-target="#insurance" type="button" role="tab" aria-controls="insurance" aria-selected="false">Insurance</button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="history-tab" data-bs-toggle="tab" data-bs-target="#history" type="button" role="tab" aria-controls="history" aria-selected="false">Tx History</button>
+        </li>
+    </ul>
+    <div class="tab-content p-3 border border-top-0 rounded-bottom" id="patientTabContent">
+        <div class="tab-pane fade show active" id="demographics" role="tabpanel" aria-labelledby="demographics-tab">
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">First Name</label>
+                    <input type="text" class="form-control" value="John" readonly>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Last Name</label>
+                    <input type="text" class="form-control" value="Doe" readonly>
+                </div>
+                <div class="col-md-12 mb-3">
+                    <label class="form-label">Address</label>
+                    <textarea class="form-control" rows="2" readonly>123 Main St, Springfield</textarea>
+                </div>
+            </div>
+        </div>
+        <div class="tab-pane fade" id="guardian" role="tabpanel" aria-labelledby="guardian-tab">
+            <div class="alert alert-info">Guardian information is required for minors.</div>
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Guardian Name</label>
+                    <input type="text" class="form-control" value="Mary Doe" readonly>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Relationship</label>
+                    <input type="text" class="form-control" value="Mother" readonly>
+                </div>
+            </div>
+        </div>
+        <div class="tab-pane fade" id="insurance" role="tabpanel" aria-labelledby="insurance-tab">
+            <table class="table table-bordered">
+                <thead class="table-light">
+                    <tr>
+                        <th>Provider</th>
+                        <th>Policy No</th>
+                        <th>Group No</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>BlueCross BlueShield</td>
+                        <td>POL-12345</td>
+                        <td>GRP-987</td>
+                        <td><span class="badge bg-success">Active</span></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="tab-pane fade" id="history" role="tabpanel" aria-labelledby="history-tab">
+            <div class="lazy-component-placeholder text-center p-4" data-lazy-url="/Patient/LazyHistory">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+                <p class="mt-2 text-muted">Loading treatment history...</p>
+            </div>
+        </div>
+    </div>
+</clinic-card>

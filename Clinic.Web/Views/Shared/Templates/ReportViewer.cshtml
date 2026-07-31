@@ -1,0 +1,216 @@
+@model Clinic.Application.UI.UIMetadata
+@{
+    
+}
+
+<!-- Report Viewer Template -->
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="mb-0 fw-bold">@Model.Title</h2>
+        <div>
+            <button class="btn btn-primary shadow-sm"><i class="bi bi-printer me-1"></i> Print</button>
+            <button class="btn btn-outline-success shadow-sm ms-2"><i class="bi bi-file-earmark-excel me-1"></i> Export Excel</button>
+            <button class="btn btn-outline-danger shadow-sm ms-2"><i class="bi bi-file-earmark-pdf me-1"></i> Export PDF</button>
+        </div>
+    </div>
+
+    <div class="row h-100 g-4">
+        <!-- Report Tree and Filters -->
+        <div class="col-md-3">
+            <div class="card shadow-sm border-0 mb-4">
+                <div class="card-header bg-white border-bottom-0 pt-4 pb-0">
+                    <h6 class="fw-bold text-muted text-uppercase mb-0">Report Library</h6>
+                </div>
+                <div class="card-body">
+                    <!-- Search Reports -->
+                    <div class="input-group input-group-sm mb-3">
+                        <span class="input-group-text bg-light"><i class="bi bi-search"></i></span>
+                        <input type="text" class="form-control" placeholder="Search reports...">
+                    </div>
+                    
+                    <div class="list-group list-group-flush border rounded" style="max-height: 400px; overflow-y: auto;">
+                        <a href="#" class="list-group-item list-group-item-action fw-bold"><i class="bi bi-star-fill text-warning me-2"></i>Favorites</a>
+                        <a href="#" class="list-group-item list-group-item-action ps-4" onclick="selectReport('Daily Revenue')"><i class="bi bi-file-bar-graph me-2"></i>Daily Revenue</a>
+                        
+                        <a href="#" class="list-group-item list-group-item-action fw-bold mt-2"><i class="bi bi-clock-history text-info me-2"></i>Recent Reports</a>
+                        <a href="#" class="list-group-item list-group-item-action ps-4" onclick="selectReport('Treatment Summary')"><i class="bi bi-file-medical me-2"></i>Treatment Summary</a>
+                        
+                        <a href="#" class="list-group-item list-group-item-action fw-bold mt-2"><i class="bi bi-folder-fill text-primary me-2"></i>Financial Reports</a>
+                        <a href="#" class="list-group-item list-group-item-action ps-4 active" onclick="selectReport('Daily Revenue')" id="reportLink-Daily Revenue"><i class="bi bi-file-bar-graph me-2"></i>Daily Revenue</a>
+                        <a href="#" class="list-group-item list-group-item-action ps-4" onclick="selectReport('Outstanding Balances')"><i class="bi bi-file-bar-graph me-2"></i>Outstanding Balances</a>
+                        <a href="#" class="list-group-item list-group-item-action ps-4" onclick="selectReport('Insurance Claims')"><i class="bi bi-file-earmark-medical me-2"></i>Insurance Claims</a>
+                        
+                        <a href="#" class="list-group-item list-group-item-action fw-bold mt-2"><i class="bi bi-folder-fill text-success me-2"></i>Clinical Reports</a>
+                        <a href="#" class="list-group-item list-group-item-action ps-4" onclick="selectReport('Patient Visits')"><i class="bi bi-people me-2"></i>Patient Visits</a>
+                        <a href="#" class="list-group-item list-group-item-action ps-4" onclick="selectReport('Treatment Summary')"><i class="bi bi-file-medical me-2"></i>Treatment Summary</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card shadow-sm border-0" id="parameterPanel">
+                <div class="card-header bg-light border-bottom-0 pt-3 pb-2">
+                    <h6 class="fw-bold text-primary text-uppercase mb-0"><i class="bi bi-sliders me-2"></i>Report Parameters</h6>
+                </div>
+                <div class="card-body bg-light">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold small">Date Range</label>
+                        <select class="form-select form-select-sm mb-2">
+                            <option>Today</option>
+                            <option>This Week</option>
+                            <option selected>This Month</option>
+                            <option>Custom Date...</option>
+                        </select>
+                        <div class="input-group input-group-sm mb-2">
+                            <span class="input-group-text">From</span>
+                            <input type="date" class="form-control" value="2026-07-01">
+                        </div>
+                        <div class="input-group input-group-sm">
+                            <span class="input-group-text">To</span>
+                            <input type="date" class="form-control" value="2026-07-31">
+                        </div>
+                    </div>
+                    
+                    <!-- Grouping / Sorting -->
+                    <div class="mb-3">
+                        <label class="form-label fw-bold small">Grouping By</label>
+                        <select class="form-select form-select-sm">
+                            <option>Provider</option>
+                            <option>Patient</option>
+                            <option>Date</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold small">Provider Filter</label>
+                        <select class="form-select form-select-sm">
+                            <option>All Providers</option>
+                            <option>Dr. Alan</option>
+                            <option>Dr. Emily Chen</option>
+                        </select>
+                    </div>
+                    <button class="btn btn-primary btn-sm w-100" onclick="generateReport()"><i class="bi bi-arrow-clockwise me-1"></i> Generate Preview</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Report Preview Panel -->
+        <div class="col-md-9">
+            <div class="card shadow-sm border-0 h-100 bg-secondary bg-opacity-10 position-relative">
+                
+                <!-- Toolbar overlay for export -->
+                <div class="position-absolute top-0 end-0 p-3" style="z-index: 10;">
+                    <div class="btn-group shadow-sm">
+                        <button class="btn btn-light btn-sm" title="Zoom In"><i class="bi bi-zoom-in"></i></button>
+                        <button class="btn btn-light btn-sm" title="Zoom Out"><i class="bi bi-zoom-out"></i></button>
+                        <button class="btn btn-light btn-sm border-start" title="Fit to Width"><i class="bi bi-arrows-fullscreen"></i></button>
+                    </div>
+                </div>
+
+                <div class="card-body p-4 d-flex justify-content-center align-items-start overflow-auto" id="reportPreviewContainer">
+                    
+                    <!-- Empty State -->
+                    <div id="emptyState" class="text-center p-5 text-muted align-self-center">
+                        <i class="bi bi-file-earmark-bar-graph display-1 mb-3 d-block text-secondary"></i>
+                        <h4 class="fw-bold">No Report Selected</h4>
+                        <p>Select a report from the library and configure parameters to generate a preview.</p>
+                    </div>
+
+                    <!-- The actual A4 size report page (Hidden initially) -->
+                    <div id="reportPage" class="bg-white p-5 shadow d-none" style="width: 21cm; min-height: 29.7cm;">
+                        <div class="text-center mb-4 border-bottom pb-4">
+                            <h3 class="fw-bold text-uppercase" id="reportTitleHeader">Daily Revenue Report</h3>
+                            <h5 class="text-muted">iSmart Office Dental Clinic</h5>
+                            <p class="mb-0 text-muted">Period: 01 Jul 2026 - 31 Jul 2026</p>
+                        </div>
+                        
+                        <div class="table-responsive">
+                            <table class="table table-bordered table-sm">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>Patient</th>
+                                        <th>Provider</th>
+                                        <th class="text-end">Amount Paid</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>31/07/2026</td>
+                                        <td>John Smith</td>
+                                        <td>Dr. Emily Chen</td>
+                                        <td class="text-end">$450.00</td>
+                                    </tr>
+                                    <tr>
+                                        <td>25/07/2026</td>
+                                        <td>Jane Smith</td>
+                                        <td>Dr. Alan</td>
+                                        <td class="text-end">$120.00</td>
+                                    </tr>
+                                </tbody>
+                                <tfoot>
+                                    <tr class="fw-bold table-active">
+                                        <td colspan="3" class="text-end">Total Revenue:</td>
+                                        <td class="text-end">$570.00</td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                        
+                        <div class="mt-5 text-end text-muted small">
+                            <p>Generated on: 31 Jul 2026 10:20 AM</p>
+                            <p>Page 1 of 1</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    let currentReport = null;
+
+    // Wait for DOM
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initialize Empty State
+        document.getElementById('reportPage').classList.add('d-none');
+        document.getElementById('emptyState').classList.remove('d-none');
+        document.getElementById('parameterPanel').style.opacity = '0.5';
+        document.getElementById('parameterPanel').style.pointerEvents = 'none';
+        
+        // Unset active class from all links
+        document.querySelectorAll('.list-group-item').forEach(el => el.classList.remove('active'));
+    });
+
+    function selectReport(reportName) {
+        currentReport = reportName;
+        
+        // Manage UI State
+        document.querySelectorAll('.list-group-item').forEach(el => el.classList.remove('active'));
+        // Find the link by text content
+        Array.from(document.querySelectorAll('.list-group-item')).forEach(el => {
+            if(el.textContent.includes(reportName) && !el.classList.contains('fw-bold')) {
+                el.classList.add('active');
+            }
+        });
+
+        // Enable Parameters
+        document.getElementById('parameterPanel').style.opacity = '1';
+        document.getElementById('parameterPanel').style.pointerEvents = 'auto';
+        
+        // Show empty state, wait for generation
+        document.getElementById('reportPage').classList.add('d-none');
+        document.getElementById('emptyState').classList.remove('d-none');
+        document.querySelector('#emptyState h4').innerText = "Report Configured";
+        document.querySelector('#emptyState p').innerText = "Click 'Generate Preview' to view the report.";
+    }
+
+    function generateReport() {
+        if(!currentReport) return;
+        
+        // Show loading state simulation
+        document.getElementById('emptyState').classList.add('d-none');
+        document.getElementById('reportPage').classList.remove('d-none');
+        document.getElementById('reportTitleHeader').innerText = currentReport + " Report";
+    }
+</script>

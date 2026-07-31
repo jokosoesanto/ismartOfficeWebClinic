@@ -1,0 +1,191 @@
+@model Clinic.Application.UI.UIMetadata
+@{
+    
+}
+
+<!-- Patient Form Template -->
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="mb-0 fw-bold">@Model.Title</h2>
+        <a href="/Patient" class="btn btn-outline-secondary shadow-sm"><i class="bi bi-arrow-left me-2"></i>Back to Patient List</a>
+    </div>
+
+    <div class="card shadow-sm border-0">
+        <div class="card-header bg-white border-bottom-0 pt-4 pb-0">
+            <ul class="nav nav-tabs card-header-tabs" id="patientTabs" role="tablist">
+                <li class="nav-item">
+                    <button class="nav-link active fw-bold" id="general-tab" data-bs-toggle="tab" data-bs-target="#general" type="button" role="tab"><i class="bi bi-person me-2"></i>General Info</button>
+                </li>
+                <li class="nav-item">
+                    <button class="nav-link fw-bold" id="insurance-tab" data-bs-toggle="tab" data-bs-target="#insurance" type="button" role="tab"><i class="bi bi-shield-check me-2"></i>Insurance</button>
+                </li>
+                <li class="nav-item">
+                    <button class="nav-link fw-bold text-danger" id="medical-tab" data-bs-toggle="tab" data-bs-target="#medical" type="button" role="tab"><i class="bi bi-exclamation-triangle me-2"></i>Medical Alert</button>
+                </li>
+            </ul>
+        </div>
+        <div class="card-body p-4">
+            <form>
+                <div class="tab-content" id="patientTabsContent">
+                    <!-- General Info Tab -->
+                    <div class="tab-pane fade show active" id="general" role="tabpanel">
+                        <div class="row g-4">
+                            <div class="col-md-3 text-center">
+                                <div class="bg-light rounded d-flex align-items-center justify-content-center mb-3 border position-relative overflow-hidden" style="height: 200px;">
+                                    <i class="bi bi-person text-secondary" style="font-size: 5rem;"></i>
+                                    <img id="patientPhotoPreview" src="" class="position-absolute top-0 start-0 w-100 h-100 object-fit-cover d-none" alt="Patient Photo">
+                                </div>
+                                <div class="d-grid gap-2">
+                                    <label for="patientPhotoInput" class="btn btn-sm btn-outline-primary m-0"><i class="bi bi-camera me-1"></i> Upload Photo</label>
+                                    <input type="file" id="patientPhotoInput" class="d-none" accept="image/*" onchange="previewPhoto(event)">
+                                </div>
+                                <div class="mt-3 text-start">
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" role="switch" id="chkIsActive" checked>
+                                        <label class="form-check-label fw-bold text-success" for="chkIsActive">Active Patient</label>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-9">
+                                <div class="row g-3">
+                                    <div class="col-md-4">
+                                        <label class="form-label fw-bold">Title</label>
+                                        <select class="form-select">
+                                            <option>Mr.</option>
+                                            <option>Mrs.</option>
+                                            <option>Ms.</option>
+                                            <option>Dr.</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label fw-bold">First Name <span class="text-danger">*</span></label>
+                                        <input type="text" class="form-control" placeholder="First Name">
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label fw-bold">Last Name</label>
+                                        <input type="text" class="form-control" placeholder="Last Name">
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label fw-bold">Date of Birth</label>
+                                        <input type="date" class="form-control">
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label fw-bold">Gender</label>
+                                        <select class="form-select">
+                                            <option>Male</option>
+                                            <option>Female</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label fw-bold">Marital Status</label>
+                                        <select class="form-select">
+                                            <option>Single</option>
+                                            <option>Married</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label fw-bold">Blood Type</label>
+                                        <select class="form-select">
+                                            <option value="">Unknown</option>
+                                            <option>A+</option>
+                                            <option>A-</option>
+                                            <option>B+</option>
+                                            <option>B-</option>
+                                            <option>AB+</option>
+                                            <option>AB-</option>
+                                            <option>O+</option>
+                                            <option>O-</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label fw-bold">SSN / KTP <span class="text-danger">*</span></label>
+                                        <input type="text" class="form-control" placeholder="ID Number" required>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label fw-bold">Email</label>
+                                        <input type="email" class="form-control" placeholder="Email Address">
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label fw-bold">Phone (Mobile) <span class="text-danger">*</span></label>
+                                        <input type="tel" class="form-control" placeholder="Mobile Number" required>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label fw-bold">Occupation</label>
+                                        <input type="text" class="form-control" placeholder="Occupation">
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label fw-bold">Employer</label>
+                                        <input type="text" class="form-control" placeholder="Employer Company">
+                                    </div>
+                                    <div class="col-12">
+                                        <label class="form-label fw-bold">Address</label>
+                                        <textarea class="form-control" rows="2" placeholder="Full Address"></textarea>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Insurance Tab Placeholder -->
+                    <div class="tab-pane fade" id="insurance" role="tabpanel">
+                        <div class="alert alert-info border-0"><i class="bi bi-info-circle me-2"></i> Add insurance coverage information here.</div>
+                        <button class="btn btn-outline-primary mb-3"><i class="bi bi-plus"></i> Add Insurance</button>
+                        <div class="table-responsive">
+                            <table class="table table-bordered">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Provider</th>
+                                        <th>Policy Number</th>
+                                        <th>Group</th>
+                                        <th>Coverage %</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr><td colspan="4" class="text-center text-muted">No insurance records found.</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    
+                    <!-- Medical Alert Tab -->
+                    <div class="tab-pane fade" id="medical" role="tabpanel">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold text-danger">Allergies</label>
+                                <textarea class="form-control" rows="3" placeholder="List any allergies (e.g. Penicillin, Latex)"></textarea>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold text-danger">Medical Conditions</label>
+                                <textarea class="form-control" rows="3" placeholder="List existing medical conditions (e.g. Diabetes, Hypertension)"></textarea>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <hr class="my-4">
+                <div class="d-flex justify-content-end gap-2">
+                    <a href="/Patient" class="btn btn-secondary shadow-sm">Cancel</a>
+                    <a href="/Patient" class="btn btn-primary shadow-sm"><i class="bi bi-save me-2"></i>Save Patient</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    function previewPhoto(event) {
+        const input = event.target;
+        const preview = document.getElementById('patientPhotoPreview');
+        const icon = preview.previousElementSibling;
+        
+        if (input.files && input.files[0]) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                preview.src = e.target.result;
+                preview.classList.remove('d-none');
+                icon.classList.add('d-none');
+            }
+            reader.readAsDataURL(input.files[0]);
+        }
+    }
+</script>

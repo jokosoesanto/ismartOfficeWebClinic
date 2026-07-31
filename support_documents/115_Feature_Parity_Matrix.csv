@@ -1,0 +1,11 @@
+Desktop Feature,Prototype Feature,Parity,Status,Priority,Recommendation,Risk,Owner,Sprint
+"Global Toolbar Actions (Add)","Missing","None","MISSING","High","Implement Global '+' button in Header for quick actions","UX Risk","Frontend Team","Sprint 2"
+"Keyboard Shortcuts (F2, F3)","Missing","None","MISSING","Medium","Implement Javascript Keyboard Listener for power users","User Adoption Risk","Frontend Team","Sprint 3"
+"MDI Multi-Window Support","Browser Tabs","Different","DIFFERENT","Low","Train users to use standard browser tabs instead of MDI","Migration Risk","Product Team","N/A"
+"Patient Demographics Form","Patient Profile Region","Partial","PARTIAL","Critical","Map all missing fields (e.g., SSN, secondary insurance)","Missing Business Risk","Fullstack Team","Sprint 2"
+"Patient Odontogram/Chart","Medical Record Tab","None","MISSING","Critical","Evaluate Canvas or SVG-based charting library","Missing Business Risk","Fullstack Team","Sprint 3"
+"Dynamic Reporting (frmCustomReport)","Report Module Scaffold","None","MISSING","High","Implement dynamic column and filter builder in Web","Technical Risk","Backend Team","Sprint 5"
+"Data Grid Sorting/Filtering","Table-Responsive (No Logic)","None","MISSING","High","Integrate Datatables.net or specialized Grid component","UX Risk","Frontend Team","Sprint 2"
+"Insurance Verification (frmInsurance)","None","None","MISSING","Critical","Add Insurance Sub-module to Admin and Patient","Missing Business Risk","Fullstack Team","Sprint 4"
+"Local DB Config (frmDatabaseSetup)","appsettings.json","Different","NOT APPLICABLE","Low","Web uses centralized DB config, remove from UI","Technical Risk","Architecture","N/A"
+"User Roles & Permissions","Admin -> Roles (Mocked)","Partial","PARTIAL","High","Implement Identity/RBAC dynamic rendering","Technical Risk","Backend Team","Sprint 2"
