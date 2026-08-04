@@ -31,6 +31,6 @@ namespace Clinic.Application.UI
         public UIComposition Composition { get; set; } = new();
         
         // Context specific data injected into components
-        public object Data { get; set; } 
+        public object? Data { get; set; } 
     }
 }

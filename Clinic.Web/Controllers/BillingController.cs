@@ -1,9 +1,11 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 using Clinic.Application.UI;
 using System.Collections.Generic;
 
 namespace Clinic.Web.Controllers
 {
+    [Authorize]
     [Route("[controller]")]
     public class BillingController : Controller
     {

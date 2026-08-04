@@ -1,9 +1,11 @@
 using System.Linq;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 using Clinic.Web.Services.Diagnostics;
 
 namespace Clinic.Web.Controllers
 {
+    [Authorize]
     [Route("diagnostics/[controller]")]
     public class DiagnosticsController : Controller
     {

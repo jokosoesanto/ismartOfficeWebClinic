@@ -58,7 +58,7 @@ namespace Clinic.Web.Services
             }
         }
 
-        private IHtmlContent RenderDiagnosticFallback(Diagnostics.ComponentManifest manifest, string additionalError = null)
+        private IHtmlContent RenderDiagnosticFallback(Diagnostics.ComponentManifest manifest, string? additionalError = null)
         {
             var div = new TagBuilder("div");
             div.AddCssClass("alert alert-danger m-2 shadow-sm border-danger border-2");

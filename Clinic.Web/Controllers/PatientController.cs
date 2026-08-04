@@ -1,9 +1,11 @@
 using Microsoft.AspNetCore.Mvc;
 using Clinic.Application.UI;
 using System.Dynamic;
+using Microsoft.AspNetCore.Authorization;
 
 namespace Clinic.Web.Controllers
 {
+    [Authorize]
     [Route("[controller]")]
     public class PatientController : Controller
     {

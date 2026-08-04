@@ -21,7 +21,7 @@
                 </a>
                 <div class="collapse @(isActive ? "show" : "")" id="collapse-@item.Id">
                     <ul class="nav flex-column ms-3 mt-1">
-                        @foreach (var child in item.Children)
+                        @foreach (var child in item.Children ?? Enumerable.Empty<Clinic.Application.Navigation.NavigationItem>())
                         {
                             var isChildActive = currentPath == child.Route;
                             <li class="nav-item mb-1">

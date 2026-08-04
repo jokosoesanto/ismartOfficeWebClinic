@@ -1,0 +1,72 @@
+@model Clinic.Application.UI.UIMetadata
+@{
+}
+
+<!-- Admin Permission Form Template -->
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="mb-0 fw-bold">@Model.Title</h2>
+        <a href="/Admin/Permissions" class="btn btn-outline-secondary shadow-sm"><i class="bi bi-arrow-left me-2"></i>Back to Permissions</a>
+    </div>
+
+    <div class="card shadow-sm border-0" style="max-width: 700px; margin: 0 auto;">
+        <div class="card-header bg-white border-bottom-0 pt-4 pb-0">
+            <h5 class="fw-bold text-primary mb-0"><i class="bi bi-ui-checks me-2"></i>Permission Details</h5>
+        </div>
+        <div class="card-body p-4">
+            <form method="post" action="/Admin/SavePermission">
+                @{
+                    var permission = Model.Data as Clinic.Application.DTOs.Auth.PermissionDto;
+                    var isSystem = permission?.Type == Clinic.Domain.Entities.Auth.PermissionType.System;
+                    var permId = permission?.Id ?? Guid.Empty;
+                }
+                <input type="hidden" name="Id" value="@permId" />
+
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold">Permission Code <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" name="Code" value="@permission?.Code" required @(isSystem ? "readonly" : "")>
+                        <div class="form-text text-muted small">Use Module.Action convention.</div>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold">Permission Name <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" name="DisplayName" value="@permission?.DisplayName" required @(isSystem ? "readonly" : "")>
+                    </div>
+                </div>
+                
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold">Module</label>
+                        <input type="text" class="form-control" name="Module" value="@permission?.Module" @(isSystem ? "readonly" : "")>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold">Category</label>
+                        <input type="text" class="form-control" name="Category" value="@permission?.Category" @(isSystem ? "readonly" : "")>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Description</label>
+                    <textarea class="form-control" name="Description" rows="3">@permission?.Description</textarea>
+                </div>
+                
+                <div class="mb-3 mt-4">
+                    <div class="form-check form-switch mb-2">
+                        <input class="form-check-input" type="checkbox" name="IsActive" value="true" id="isActive" @(permission?.IsActive != false ? "checked" : "")>
+                        <label class="form-check-label fw-bold" for="isActive">Active Status</label>
+                    </div>
+                    @if (isSystem)
+                    {
+                        <div class="form-text text-muted small mt-1">System metadata fields (Code, Name, Module, Category) are readonly. Only Description and Active Status can be changed.</div>
+                    }
+                </div>
+
+                <hr class="my-4">
+                <div class="d-flex justify-content-end gap-2">
+                    <a href="/Admin/Permissions" class="btn btn-secondary shadow-sm">Cancel</a>
+                    <button type="submit" class="btn btn-primary shadow-sm"><i class="bi bi-save me-2"></i>Save Permission</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

@@ -1,4 +1,4 @@
-﻿@model Clinic.Application.UI.UIMetadata
+@model Clinic.Application.UI.UIMetadata
 @{
     
 }
@@ -31,9 +31,13 @@
                 <div class="mb-3">
                     <label class="form-label fw-bold">Role</label>
                     <select class="form-select">
-                        <option>Administrator</option>
-                        <option>Front Desk</option>
-                        <option>Nurse</option>
+                        @if (Model.Data is System.Collections.Generic.IEnumerable<Clinic.Application.DTOs.Auth.RoleDto> roles)
+                        {
+                            foreach (var r in roles)
+                            {
+                                <option value="@r.Id">@r.Name @(r.IsSystem ? "[SYSTEM]" : "")</option>
+                            }
+                        }
                     </select>
                 </div>
                 <div class="mb-3 form-check form-switch">

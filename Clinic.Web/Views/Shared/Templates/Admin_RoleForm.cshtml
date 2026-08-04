@@ -1,0 +1,70 @@
+@model Clinic.Application.UI.UIMetadata
+@{
+}
+
+<!-- Admin Role Form Template -->
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="mb-0 fw-bold">@Model.Title</h2>
+        <a href="/Admin/Roles" class="btn btn-outline-secondary shadow-sm"><i class="bi bi-arrow-left me-2"></i>Back to Roles</a>
+    </div>
+
+    <div class="card shadow-sm border-0" style="max-width: 700px; margin: 0 auto;">
+        <div class="card-header bg-white border-bottom-0 pt-4 pb-0">
+            <h5 class="fw-bold text-primary mb-0"><i class="bi bi-shield-lock me-2"></i>Role Details</h5>
+        </div>
+        <div class="card-body p-4">
+            <form method="post" action="/Admin/SaveRole">
+                @{
+                    var role = Model.Data as Clinic.Application.DTOs.Auth.RoleDto;
+                    var roleId = role?.Id ?? Guid.Empty;
+                    var name = role?.Name ?? "";
+                    var description = role?.Description ?? "";
+                    var isActive = role == null || role.IsActive; // Default true for new
+                    var isSystem = role?.IsSystem ?? false;
+                    var isAdministrator = string.Equals(name, "Administrator", StringComparison.OrdinalIgnoreCase);
+                }
+                <input type="hidden" name="Id" value="@roleId" />
+                
+                <div class="row mb-3">
+                    <div class="col-md-12">
+                        <label class="form-label fw-bold">Role Name <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" name="Name" value="@name" placeholder="e.g. Administrator" required @(isSystem ? "readonly" : "")>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Description</label>
+                    <textarea class="form-control" name="Description" rows="3" placeholder="Describe the purpose of this role">@description</textarea>
+                </div>
+                
+                <div class="row mb-3 mt-4">
+                    <div class="col-md-6">
+                        <div class="form-check form-switch mb-2">
+                            @if(isAdministrator) { <input type="hidden" name="IsActive" value="true" /> }
+                            <input class="form-check-input" type="checkbox" name="IsActive" value="true" id="isActive" @(isActive ? "checked" : "") @(isAdministrator ? "disabled" : "")>
+                            <label class="form-check-label fw-bold" for="isActive">Active Status</label>
+                        </div>
+                        <div class="form-text text-muted small">Inactive roles cannot be assigned to users.</div>
+                    </div>
+                    <div class="col-md-6">
+                        @if (isAdministrator)
+                        {
+                            <span class="badge bg-dark mb-2"><i class="bi bi-star-fill me-1"></i> ROOT ROLE</span>
+                        }
+                        @if (isSystem)
+                        {
+                            <span class="badge bg-danger"><i class="bi bi-shield-lock me-1"></i> System Role</span>
+                            <div class="form-text text-muted small mt-1">System roles cannot be deleted.</div>
+                        }
+                    </div>
+                </div>
+
+                <hr class="my-4">
+                <div class="d-flex justify-content-end gap-2">
+                    <a href="/Admin/Roles" class="btn btn-secondary shadow-sm">Cancel</a>
+                    <button type="submit" class="btn btn-primary shadow-sm"><i class="bi bi-save me-2"></i>Save Role</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

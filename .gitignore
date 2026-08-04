@@ -4,3 +4,8 @@ obj/
 *.suo
 .vs/
 support_documents/
+*.sqlite3-wal
+*.sqlite3-shm
+logs/
+publish/
+cache/

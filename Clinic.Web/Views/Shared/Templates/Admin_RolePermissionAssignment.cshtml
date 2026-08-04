@@ -1,0 +1,273 @@
+@model Clinic.Application.UI.UIMetadata
+@{
+    var rpData = Model.Data as Clinic.Application.DTOs.Auth.RolePermissionsDto;
+    var selectedRoleId = ViewBag.SelectedRoleId as string;
+    var role = rpData?.Roles.FirstOrDefault(r => r.Id.ToString() == selectedRoleId);
+    var permissions = (rpData?.Permissions ?? new List<Clinic.Application.DTOs.Auth.PermissionDto>())
+                      .Where(p => !string.IsNullOrWhiteSpace(p.Category) && !string.IsNullOrWhiteSpace(p.Module))
+                      .ToList();
+}
+
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="mb-0 fw-bold">@Model.Title</h2>
+        <a href="/Admin/Roles" class="btn btn-outline-secondary shadow-sm"><i class="bi bi-arrow-left me-2"></i>Back to Roles</a>
+    </div>
+
+    @if (role == null)
+    {
+        <div class="alert alert-danger">Role not found.</div>
+    }
+    else
+    {
+        <div class="card shadow-sm border-0 mb-4">
+            <div class="card-body bg-light rounded d-flex align-items-center">
+                <div class="me-4">
+                    <h1 class="display-4 text-primary mb-0"><i class="bi bi-shield-lock"></i></h1>
+                </div>
+                <div>
+                    <h4 class="fw-bold mb-1">@role.Name</h4>
+                    <p class="text-muted mb-0">@role.Description</p>
+                    <div class="mt-2">
+                        <span class="badge @(role.IsSystem ? "bg-primary" : "bg-success")">@(role.IsSystem ? "System Role" : "Custom Role")</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <form method="post" action="/Admin/SaveRolePermissions">
+            <input type="hidden" name="roleId" value="@role.Id" />
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-white pt-4 pb-3">
+                    <h5 class="fw-bold mb-0">Permission Assignment</h5>
+                    <p class="text-muted small mb-0">Select the permissions you want to grant to this role.</p>
+                </div>
+                <div class="card-body p-4 bg-light">
+                    <!-- Filters -->
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            <input type="text" id="permSearch" class="form-control" placeholder="Search permissions..." oninput="filterPermissions()">
+                        </div>
+                        <div class="col-md-4">
+                            <select id="permCategory" class="form-select" onchange="filterPermissions()">
+                                <option value="">All Categories</option>
+                                @foreach (var cat in permissions.Select(p => p.Category).Distinct().OrderBy(c => c))
+                                {
+                                    <option value="@cat">@cat</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <select id="permModule" class="form-select" onchange="filterPermissions()">
+                                <option value="">All Modules</option>
+                                @foreach (var mod in permissions.Select(p => p.Module).Distinct().OrderBy(m => m))
+                                {
+                                    <option value="@mod">@mod</option>
+                                }
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="d-flex justify-content-end mb-2 gap-2">
+                        <button type="button" class="btn btn-sm btn-outline-secondary" onclick="expandAll()">Expand All</button>
+                        <button type="button" class="btn btn-sm btn-outline-secondary" onclick="collapseAll()">Collapse All</button>
+                    </div>
+
+                    <!-- Tree Accordion -->
+                    <div class="accordion" id="permissionAccordion">
+                        @{
+                            var groupedByCategory = permissions.GroupBy(p => p.Category).OrderBy(g => g.Key);
+                            int catIndex = 0;
+                            foreach (var catGroup in groupedByCategory)
+                            {
+                                var categoryName = catGroup.Key;
+                                var catId = "cat_" + catIndex;
+                                <div class="accordion-item permission-category border-0 bg-transparent" data-category="@categoryName">
+                                    <h2 class="accordion-header" id="heading_@catId">
+                                        <button class="accordion-button collapsed fw-bold bg-transparent shadow-none px-0 py-2 border-bottom" type="button" data-bs-toggle="collapse" data-bs-target="#collapse_@catId" aria-expanded="false" aria-controls="collapse_@catId">
+                                            <i class="bi bi-folder2-open me-2 text-primary"></i> @categoryName
+                                        </button>
+                                    </h2>
+                                    <div id="collapse_@catId" class="accordion-collapse collapse ms-4 border-start border-2 ps-3 mt-2" aria-labelledby="heading_@catId">
+                                        <div class="mb-3">
+                                            <div class="form-check">
+                                                <input class="form-check-input cat-select-all" type="checkbox" id="checkAll_@catId" onchange="toggleCategory('@catId', this.checked)">
+                                                <label class="form-check-label fw-bold small text-muted" for="checkAll_@catId">Select All @categoryName</label>
+                                            </div>
+                                        </div>
+
+                                        @{
+                                            var groupedByModule = catGroup.GroupBy(p => p.Module).OrderBy(g => g.Key);
+                                            int modIndex = 0;
+                                            foreach (var modGroup in groupedByModule)
+                                            {
+                                                var moduleName = modGroup.Key;
+                                                var modId = catId + "_mod_" + modIndex;
+                                                <div class="mb-3 permission-module" data-module="@moduleName">
+                                                    <div class="d-flex align-items-center mb-2">
+                                                        <a class="text-decoration-none text-dark fw-bold" data-bs-toggle="collapse" href="#collapse_mod_@modId" role="button" aria-expanded="false" aria-controls="collapse_mod_@modId">
+                                                            <i class="bi bi-box-seam me-2 text-secondary"></i> @moduleName
+                                                        </a>
+                                                        <div class="form-check ms-3 mb-0">
+                                                            <input class="form-check-input mod-select-all" type="checkbox" id="checkAll_@modId" onchange="toggleModule('@modId', this.checked)">
+                                                            <label class="form-check-label small text-muted" for="checkAll_@modId">Select All</label>
+                                                        </div>
+                                                    </div>
+                                                    
+                                                    <div class="collapse show ms-4 border-start border-1 ps-3 perm-list" id="collapse_mod_@modId">
+                                                        @foreach (var perm in modGroup)
+                                                        {
+                                                            bool isChecked = role.PermissionIds != null && role.PermissionIds.Contains(perm.Id);
+                                                            <div class="permission-item py-1" data-name="@perm.DisplayName.ToLower()" data-desc="@perm.Description.ToLower()">
+                                                                <div class="form-check">
+                                                                    <input class="form-check-input perm-checkbox" type="checkbox" name="permissionIds" value="@perm.Id" id="perm_@perm.Id" @(isChecked ? "checked" : "") onchange="updateCheckAllState()">
+                                                                    <label class="form-check-label" for="perm_@perm.Id" title="@perm.Description">
+                                                                        @perm.DisplayName
+                                                                    </label>
+                                                                </div>
+                                                            </div>
+                                                        }
+                                                    </div>
+                                                </div>
+                                                modIndex++;
+                                            }
+                                        }
+                                    </div>
+                                </div>
+                                catIndex++;
+                            }
+                        }
+                    </div>
+                </div>
+                <div class="card-footer bg-light p-3 d-flex justify-content-end gap-2">
+                    <a href="/Admin/Roles" class="btn btn-secondary shadow-sm">Cancel</a>
+                    <button type="submit" class="btn btn-success shadow-sm"><i class="bi bi-shield-check me-2"></i>Save Assignments</button>
+                </div>
+            </div>
+        </form>
+    }
+</div>
+
+<script>
+    function filterPermissions() {
+        var search = document.getElementById('permSearch').value.toLowerCase();
+        var catFilter = document.getElementById('permCategory').value;
+        var modFilter = document.getElementById('permModule').value;
+
+        var categories = document.querySelectorAll('.permission-category');
+        categories.forEach(cat => {
+            var catName = cat.getAttribute('data-category');
+            var showCat = catFilter === "" || catName === catFilter;
+            var hasVisibleModules = false;
+
+            var modules = cat.querySelectorAll('.permission-module');
+            modules.forEach(mod => {
+                var modName = mod.getAttribute('data-module');
+                var showMod = modFilter === "" || modName === modFilter;
+                var hasVisiblePerms = false;
+
+                var perms = mod.querySelectorAll('.permission-item');
+                perms.forEach(perm => {
+                    var permName = perm.getAttribute('data-name');
+                    var permDesc = perm.getAttribute('data-desc');
+                    var showPerm = search === "" || permName.includes(search) || permDesc.includes(search);
+
+                    if (showPerm) {
+                        perm.style.display = '';
+                        hasVisiblePerms = true;
+                    } else {
+                        perm.style.display = 'none';
+                    }
+                });
+
+                if (showMod && hasVisiblePerms) {
+                    mod.style.display = '';
+                    hasVisibleModules = true;
+                } else {
+                    mod.style.display = 'none';
+                }
+            });
+
+            if (showCat && hasVisibleModules) {
+                cat.style.display = '';
+            } else {
+                cat.style.display = 'none';
+            }
+        });
+    }
+
+    function toggleCategory(catId, checked) {
+        var container = document.getElementById('collapse_' + catId);
+        var checkboxes = container.querySelectorAll('.perm-checkbox');
+        checkboxes.forEach(cb => {
+            if (cb.closest('.permission-item').style.display !== 'none') {
+                cb.checked = checked;
+            }
+        });
+        var modCheckboxes = container.querySelectorAll('.mod-select-all');
+        modCheckboxes.forEach(cb => cb.checked = checked);
+    }
+
+    function toggleModule(modId, checked) {
+        var container = document.getElementById('collapse_mod_' + modId);
+        var checkboxes = container.querySelectorAll('.perm-checkbox');
+        checkboxes.forEach(cb => {
+            if (cb.closest('.permission-item').style.display !== 'none') {
+                cb.checked = checked;
+            }
+        });
+        updateCheckAllState();
+    }
+
+    function updateCheckAllState() {
+        // Evaluate check all states based on visible children
+        var modules = document.querySelectorAll('.permission-module');
+        modules.forEach(mod => {
+            var modCheck = mod.querySelector('.mod-select-all');
+            var perms = mod.querySelectorAll('.perm-checkbox');
+            var allChecked = true;
+            perms.forEach(p => {
+                if (p.closest('.permission-item').style.display !== 'none' && !p.checked) {
+                    allChecked = false;
+                }
+            });
+            if (modCheck) modCheck.checked = allChecked;
+        });
+
+        var categories = document.querySelectorAll('.permission-category');
+        categories.forEach(cat => {
+            var catCheck = cat.querySelector('.cat-select-all');
+            var perms = cat.querySelectorAll('.perm-checkbox');
+            var allChecked = true;
+            perms.forEach(p => {
+                if (p.closest('.permission-item').style.display !== 'none' && !p.checked) {
+                    allChecked = false;
+                }
+            });
+            if (catCheck) catCheck.checked = allChecked;
+        });
+    }
+
+    function expandAll() {
+        var buttons = document.querySelectorAll('.accordion-button.collapsed');
+        buttons.forEach(btn => btn.click());
+        var modCollapses = document.querySelectorAll('.perm-list.collapse:not(.show)');
+        if(typeof bootstrap !== 'undefined' && bootstrap.Collapse) {
+            modCollapses.forEach(el => new bootstrap.Collapse(el, {toggle: false}).show());
+        }
+    }
+
+    function collapseAll() {
+        var buttons = document.querySelectorAll('.accordion-button:not(.collapsed)');
+        buttons.forEach(btn => btn.click());
+        var modCollapses = document.querySelectorAll('.perm-list.collapse.show');
+        if(typeof bootstrap !== 'undefined' && bootstrap.Collapse) {
+            modCollapses.forEach(el => new bootstrap.Collapse(el, {toggle: false}).hide());
+        }
+    }
+
+    // Initial state check
+    document.addEventListener("DOMContentLoaded", function() {
+        updateCheckAllState();
+    });
+</script>

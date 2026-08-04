@@ -1,9 +1,11 @@
 using Microsoft.AspNetCore.Mvc;
 using Clinic.Application.UI;
 using System.Collections.Generic;
+using Microsoft.AspNetCore.Authorization;
 
 namespace Clinic.Web.Controllers
 {
+    [Authorize]
     [Route("[controller]")]
     public class AppointmentController : Controller
     {
