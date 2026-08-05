@@ -20,6 +20,8 @@ namespace Clinic.Infrastructure.Repositories.Auth
         {
             return await _context.Users
                 .Include(u => u.UserRoles).ThenInclude(ur => ur.Role).ThenInclude(r => r.RolePermissions).ThenInclude(rp => rp.Permission)
+                .Include(u => u.PrimaryLocation)
+                .Include(u => u.UserAccessibleLocations)
                 .FirstOrDefaultAsync(u => u.Id == id);
         }
 
@@ -28,7 +30,38 @@ namespace Clinic.Infrastructure.Repositories.Auth
             var normalized = username.ToUpperInvariant();
             return await _context.Users
                 .Include(u => u.UserRoles).ThenInclude(ur => ur.Role).ThenInclude(r => r.RolePermissions).ThenInclude(rp => rp.Permission)
+                .Include(u => u.PrimaryLocation)
+                .Include(u => u.UserAccessibleLocations)
                 .FirstOrDefaultAsync(u => u.NormalizedUsername == normalized);
+        }
+
+        public async Task<System.Collections.Generic.IEnumerable<User>> GetAllAsync()
+        {
+            return await _context.Users
+                .Include(u => u.PrimaryLocation)
+                .Include(u => u.UserAccessibleLocations)
+                .Include(u => u.UserRoles).ThenInclude(ur => ur.Role)
+                .ToListAsync();
+        }
+
+        public async Task<System.Collections.Generic.IEnumerable<User>> GetUsersByRoleIdAsync(Guid roleId)
+        {
+            return await _context.Users
+                .Where(u => u.UserRoles.Any(ur => ur.RoleId == roleId))
+                .ToListAsync();
+        }
+
+        public async Task<string?> GetPermissionVersionAsync(Guid userId)
+        {
+            return await _context.Users
+                .Where(u => u.Id == userId)
+                .Select(u => u.PermissionVersion)
+                .FirstOrDefaultAsync();
+        }
+
+        public async Task UpdateAllPermissionVersionsAsync(string newVersion)
+        {
+            await _context.Users.ExecuteUpdateAsync(s => s.SetProperty(u => u.PermissionVersion, newVersion));
         }
 
         public Task UpdateAsync(User user)

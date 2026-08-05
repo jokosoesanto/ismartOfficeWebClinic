@@ -1,4 +1,6 @@
 @model Clinic.Application.UI.UIMetadata
+@using Microsoft.AspNetCore.Authorization
+@inject IAuthorizationService AuthorizationService
 @{
     
 }
@@ -6,23 +8,25 @@
 @{
     var addCaption = "Record";
     var formCaption = "User Form";
-    var formUrl = "/Admin/CreateUser";
+    var formUrl = "/Admin/UserForm";
     var showFormButton = true;
 
-    if (Model.Title == "Manage Users") { addCaption = "User"; formCaption = "User Form"; formUrl = "/Admin/CreateUser"; }
+    if (Model.Title == "Manage Users") { addCaption = "User"; formCaption = "User Form"; formUrl = "/Admin/UserForm"; }
     else if (Model.Title == "Manage Roles") { addCaption = "Role"; showFormButton = false; formUrl = "/Admin/RoleForm"; }
     else if (Model.Title == "Manage Permissions") { addCaption = "Permission"; showFormButton = false; formUrl = "/Admin/PermissionForm"; }
-    else if (Model.Title == "Manage Locations") { addCaption = "Location"; formCaption = "Location Form"; formUrl = "#"; }
-    else if (Model.Title == "Manage Chairs") { addCaption = "Chair"; formCaption = "Chair Form"; formUrl = "#"; }
+    else if (Model.Title == "Manage Locations") { addCaption = "Location"; showFormButton = false; formUrl = "/Admin/LocationForm"; }
+    else if (Model.Title == "Manage Chairs") { addCaption = "Chair"; showFormButton = false; formUrl = "/Admin/ChairForm"; }
 }
 <!-- Admin Settings List Template -->
 <div class="container-fluid py-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h2 class="mb-0 fw-bold">@Model.Title</h2>
         <div class="d-flex align-items-center gap-2">
-            @if (Model.Title == "Manage Roles" || Model.Title == "Manage Permissions")
+            @if (Model.Title == "Manage Users" || Model.Title == "Manage Roles" || Model.Title == "Manage Permissions" || Model.Title == "Manage Locations" || Model.Title == "Manage Chairs")
             {
-                <a href="@formUrl" class="btn btn-primary shadow-sm"><i class="bi bi-plus-lg me-1"></i> Add @addCaption</a>
+                var addPolicy = Model.Title == "Manage Users" ? "Admin.UserForm" : Model.Title == "Manage Locations" ? "Admin.LocationForm" : Model.Title == "Manage Chairs" ? "Admin.ChairForm" : "Admin.PermissionForm";
+                if (Model.Title == "Manage Roles") addPolicy = "Admin.RoleForm";
+                <a asp-permission="@addPolicy" href="@formUrl" class="btn btn-primary shadow-sm"><i class="bi bi-plus-lg me-1"></i> Add @addCaption</a>
                 <a href="?" class="btn btn-outline-secondary shadow-sm"><i class="bi bi-arrow-clockwise me-1"></i> Refresh</a>
                 <button class="btn btn-outline-secondary shadow-sm" disabled><i class="bi bi-download me-1"></i> Export</button>
             }
@@ -56,7 +60,10 @@
                         <a href="/Admin/Insurance" class="list-group-item list-group-item-action @(Model.Title == "Manage Insurance" ? "active fw-bold" : "")"><i class="bi bi-card-checklist me-2"></i>Insurance</a>
                         <a href="/Admin/Procedures" class="list-group-item list-group-item-action @(Model.Title == "Manage Procedures" ? "active fw-bold" : "")"><i class="bi bi-list-check me-2"></i>Procedures</a>
                         <a href="/Admin/Lookup" class="list-group-item list-group-item-action @(Model.Title == "Master Lookup" ? "active fw-bold" : "")"><i class="bi bi-tags me-2"></i>Master Lookup</a>
-                        <a href="/Admin/Configuration" class="list-group-item list-group-item-action @(Model.Title == "Configuration" ? "active fw-bold" : "")"><i class="bi bi-gear me-2"></i>Configuration</a>
+                    @if (User.HasClaim("Permission", "Configuration.Security"))
+                    {
+                        <a href="/Configuration/Security" class="list-group-item list-group-item-action @(Model.Title == "Configuration" || Model.Title == "Security Configuration" ? "active fw-bold" : "")"><i class="bi bi-gear me-2"></i>Configuration</a>
+                    }
                     </div>
                 </div>
             </div>
@@ -69,8 +76,47 @@
                     <h6 class="fw-bold text-muted text-uppercase mb-0">Registered @Model.Title</h6>
                 </div>
                 <div class="card-body">
-                    <div class="table-responsive">
-                        <table class="table table-hover align-middle enterprise-grid" style="width:100%">
+                    @if (Model.Title == "Security Configuration")
+                    {
+                        @if (TempData["SuccessMessage"] != null)
+                        {
+                            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                                <i class="bi bi-check-circle me-2"></i>@TempData["SuccessMessage"]
+                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                            </div>
+                        }
+
+                        @if (TempData["ErrorMessage"] != null)
+                        {
+                            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                                <i class="bi bi-exclamation-circle me-2"></i>@TempData["ErrorMessage"]
+                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                            </div>
+                        }
+
+                        <form asp-controller="Configuration" asp-action="UpdateSecurity" method="post">
+                            <div class="row mb-4">
+                                <div class="col-md-6">
+                                    <label for="sessionTimeoutMinutes" class="form-label fw-semibold">Session Timeout (Minutes)</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-light"><i class="bi bi-clock-history"></i></span>
+                                        <input type="number" class="form-control" id="sessionTimeoutMinutes" name="sessionTimeoutMinutes" value="@Model.Data" min="5" max="480" required>
+                                    </div>
+                                    <div class="form-text">Minimum 5 minutes, Maximum 480 minutes (8 hours).</div>
+                                </div>
+                            </div>
+
+                            <div class="d-flex justify-content-end">
+                                <button type="submit" class="btn btn-primary px-4">
+                                    <i class="bi bi-save me-2"></i>Save Configuration
+                                </button>
+                            </div>
+                        </form>
+                    }
+                    else
+                    {
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle enterprise-grid" style="width:100%">
                             <thead class="table-light">
                                 <tr>
                                     @if(Model.Title == "Manage Users" || Model.Title == "System Administration") {
@@ -82,7 +128,7 @@
                                     } else if(Model.Title == "Manage Procedures") {
                                         <th>Code</th><th>Description</th><th>Fee</th><th>Category</th>
                                     } else if(Model.Title == "Manage Locations") {
-                                        <th>Location Name</th><th>City</th><th>Phone</th><th>Status</th>
+                                        <th>Clinic Code</th><th>Clinic Name</th><th>City</th><th>Phone</th><th>Opening Hours</th><th>Chairs (Tot/Avail)</th><th>Status</th>
                                     } else if(Model.Title == "Manage Chairs") {
                                         <th>Chair ID</th><th>Location</th><th>Type</th><th>Status</th>
                                     } else if(Model.Title == "Manage Roles") {
@@ -97,10 +143,74 @@
                             </thead>
                             <tbody>
                                 @if(Model.Title == "Manage Users" || Model.Title == "System Administration") {
-                                    <tr>
-                                        <td class="fw-bold">admin</td><td>System Administrator</td><td><span class="badge bg-danger">Administrator</span></td><td><span class="badge bg-success">Active</span></td>
-                                        <td class="text-center"><button class="btn btn-sm btn-outline-primary" onclick="openCrudModal('Edit User')"><i class="bi bi-pencil"></i></button></td>
-                                    </tr>
+                                    if (Model.Data is IEnumerable<Clinic.Application.DTOs.Auth.UserDto> users)
+                                    {
+                                        foreach (var user in users)
+                                        {
+                                            <tr>
+                                                <td class="fw-bold">@user.Username</td>
+                                                <td>@user.FullName</td>
+                                                <td>
+                                                    @foreach(var role in user.Roles)
+                                                    {
+                                                        <span class="badge @(role == "Administrator" ? "bg-danger" : "bg-primary") me-1">@role</span>
+                                                    }
+                                                </td>
+                                                <td><span class="badge @(user.IsActive ? "bg-success" : "bg-danger")">@(user.IsActive ? "Active" : "Inactive")</span></td>
+                                                <td class="text-center">
+                                                    <a href="/Admin/UserDetails/@user.Id" class="btn btn-sm btn-outline-info" title="View Details" data-bs-toggle="tooltip"><i class="bi bi-info-circle"></i></a>
+                                                    <a asp-permission="Admin.UserForm" href="/Admin/UserForm/@user.Id" class="btn btn-sm btn-outline-primary ms-1" title="Edit User" data-bs-toggle="tooltip"><i class="bi bi-pencil"></i></a>
+                                                    @if (user.Email != "admin@admin.com")
+                                                    {
+                                                        <form asp-permission="Admin.DeleteUser" method="post" action="/Admin/DeleteUser/@user.Id" style="display:inline;" onsubmit="return confirm('Are you sure you want to deactivate this user?');">
+                                                            <button type="submit" class="btn btn-sm btn-outline-danger ms-1" title="Delete User" data-bs-toggle="tooltip"><i class="bi bi-trash"></i></button>
+                                                        </form>
+                                                    }
+                                                </td>
+                                            </tr>
+                                        }
+                                    }
+                                } else if(Model.Title == "Manage Locations") {
+                                    if (Model.Data is IEnumerable<Clinic.Application.DTOs.MasterData.LocationDto> locations)
+                                    {
+                                        foreach (var location in locations)
+                                        {
+                                            <tr>
+                                                <td class="fw-bold">@location.ClinicCode</td>
+                                                <td>@location.ClinicName @(location.IsHeadquarters ? Html.Raw("<i class='bi bi-star-fill text-warning' title='Headquarters'></i>") : "")</td>
+                                                <td>@location.City</td>
+                                                <td>@location.Phone</td>
+                                                <td>@(location.OpeningTime)-@(location.ClosingTime)</td>
+                                                <td>@location.TotalChair / @location.AvailableChair</td>
+                                                <td><span class="badge @(location.IsActive ? "bg-success" : "bg-danger")">@(location.IsActive ? "Active" : "Inactive")</span></td>
+                                                <td class="text-center">
+                                                    <a asp-permission="Admin.LocationForm" href="/Admin/LocationForm/@location.Id" class="btn btn-sm btn-outline-primary" title="Edit Location" data-bs-toggle="tooltip"><i class="bi bi-pencil"></i></a>
+                                                    <form asp-permission="Admin.DeleteLocation" method="post" action="/Admin/DeleteLocation/@location.Id" style="display:inline;" onsubmit="return confirm('Are you sure you want to delete this location?');">
+                                                        <button type="submit" class="btn btn-sm btn-outline-danger ms-1" title="Delete Location" data-bs-toggle="tooltip"><i class="bi bi-trash"></i></button>
+                                                    </form>
+                                                </td>
+                                            </tr>
+                                        }
+                                    }
+                                } else if(Model.Title == "Manage Chairs") {
+                                    if (Model.Data is IEnumerable<Clinic.Application.DTOs.MasterData.ChairDto> chairs)
+                                    {
+                                        foreach (var chair in chairs)
+                                        {
+                                            <tr>
+                                                <td class="fw-bold">@chair.Code</td>
+                                                <td>@chair.LocationName</td>
+                                                <td>@chair.Name</td>
+                                                <td><span class="badge @(chair.IsActive ? "bg-success" : "bg-danger")">@(chair.IsActive ? "Active" : "Inactive")</span></td>
+                                                <td class="text-center">
+                                                    <a asp-permission="Admin.ChairForm" href="/Admin/ChairForm/@chair.Id" class="btn btn-sm btn-outline-primary" title="Edit Chair" data-bs-toggle="tooltip"><i class="bi bi-pencil"></i></a>
+                                                    <form asp-permission="Admin.DeleteChair" method="post" action="/Admin/DeleteChair/@chair.Id" style="display:inline;" onsubmit="return confirm('Are you sure you want to delete this chair?');">
+                                                        <button type="submit" class="btn btn-sm btn-outline-danger ms-1" title="Delete Chair" data-bs-toggle="tooltip"><i class="bi bi-trash"></i></button>
+                                                    </form>
+                                                </td>
+                                            </tr>
+                                        }
+                                    }
                                 } else if(Model.Title == "Manage Doctors") {
                                     <tr>
                                         <td class="fw-bold">PRV-001</td><td>Dr. Emily Chen</td><td>Orthodontist</td><td><span class="badge bg-success">Active</span></td>
@@ -129,11 +239,11 @@
                                                 <td><span class="badge bg-secondary">@role.PermissionsCount Permissions</span></td>
                                                 <td><span class="badge @(role.IsSystem ? "bg-primary" : "bg-success")">@(role.IsSystem ? "System" : "Custom")</span></td>
                                                 <td class="text-center">
-                                                    <a href="/Admin/RoleForm/@role.Id" class="btn btn-sm btn-outline-primary" title="Edit Role" data-bs-toggle="tooltip"><i class="bi bi-pencil"></i></a>
-                                                    <a href="/Admin/AssignPermissions/@role.Id" class="btn btn-sm btn-outline-success ms-1" title="Assign Permissions" data-bs-toggle="tooltip"><i class="bi bi-shield-check"></i> Assign</a>
-                                                    @if (!role.IsSystem)
+                                                    <a asp-permission="Admin.RoleForm" href="/Admin/RoleForm/@role.Id" class="btn btn-sm btn-outline-primary" title="Edit Role" data-bs-toggle="tooltip"><i class="bi bi-pencil"></i></a>
+                                                    <a asp-permission="Admin.AssignPermissions" href="/Admin/AssignPermissions/@role.Id" class="btn btn-sm btn-outline-success ms-1" title="Assign Permissions" data-bs-toggle="tooltip"><i class="bi bi-shield-check"></i> Assign</a>
+                                                    @if (role.Name != "Administrator" && role.Name != "Receptionist" && role.Name != "Doctor")
                                                     {
-                                                        <form method="post" action="/Admin/DeleteRole/@role.Id" style="display:inline;" onsubmit="return confirm('Are you sure you want to delete this role?');">
+                                                        <form asp-permission="Admin.DeleteRole" method="post" action="/Admin/DeleteRole/@role.Id" style="display:inline;" onsubmit="return confirm('Are you sure you want to delete this role?');">
                                                             <button type="submit" class="btn btn-sm btn-outline-danger ms-1" title="Delete Role" data-bs-toggle="tooltip"><i class="bi bi-trash"></i></button>
                                                         </form>
                                                     }
@@ -168,6 +278,7 @@
                             </tbody>
                         </table>
                     </div>
+                    }
                 </div>
             </div>
         </div>

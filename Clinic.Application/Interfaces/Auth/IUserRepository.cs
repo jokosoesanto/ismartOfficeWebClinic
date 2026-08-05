@@ -10,5 +10,9 @@ namespace Clinic.Application.Interfaces.Auth
         Task<User?> GetByUsernameAsync(string username);
         Task UpdateAsync(User user);
         Task AddAsync(User user);
+        Task<System.Collections.Generic.IEnumerable<User>> GetAllAsync();
+        Task<System.Collections.Generic.IEnumerable<User>> GetUsersByRoleIdAsync(Guid roleId);
+        Task<string?> GetPermissionVersionAsync(Guid userId);
+        Task UpdateAllPermissionVersionsAsync(string newVersion);
     }
 }

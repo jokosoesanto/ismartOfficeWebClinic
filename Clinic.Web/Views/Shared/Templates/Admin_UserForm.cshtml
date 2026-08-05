@@ -1,6 +1,9 @@
 @model Clinic.Application.UI.UIMetadata
 @{
-    
+    var userDto = Model.Data?.GetType().GetProperty("User")?.GetValue(Model.Data) as Clinic.Application.DTOs.Auth.UserDto;
+    var isNew = userDto == null || userDto.Id == Guid.Empty;
+    var roles = Model.Data?.GetType().GetProperty("Roles")?.GetValue(Model.Data) as IEnumerable<Clinic.Application.DTOs.Auth.RoleDto>;
+    var locations = Model.Data?.GetType().GetProperty("Locations")?.GetValue(Model.Data) as IEnumerable<Clinic.Application.DTOs.MasterData.LocationDto>;
 }
 
 <!-- Admin User Form Template -->
@@ -15,40 +18,132 @@
             <h5 class="fw-bold text-primary mb-0"><i class="bi bi-person-badge me-2"></i>User Details</h5>
         </div>
         <div class="card-body p-4">
-            <form>
+            @if (!ViewData.ModelState.IsValid)
+            {
+                <div class="alert alert-danger shadow-sm">
+                    <h6 class="alert-heading fw-bold"><i class="bi bi-exclamation-triangle me-2"></i> Please fix the following errors:</h6>
+                    <hr>
+                    <div asp-validation-summary="All" class="mb-0"></div>
+                </div>
+            }
+            <form method="post" action="/Admin/SaveUser">
+                @if (!isNew)
+                {
+                    <input type="hidden" name="Id" value="@userDto?.Id" />
+                }
+                
                 <div class="mb-3">
                     <label class="form-label fw-bold">Username <span class="text-danger">*</span></label>
-                    <input type="text" class="form-control" placeholder="Login ID">
+                    <input type="text" class="form-control" name="Username" required value="@userDto?.Username" @(!isNew ? "readonly" : "")>
                 </div>
                 <div class="mb-3">
                     <label class="form-label fw-bold">Full Name <span class="text-danger">*</span></label>
-                    <input type="text" class="form-control" placeholder="Display Name">
+                    <input type="text" class="form-control" name="FullName" required value="@userDto?.FullName">
                 </div>
                 <div class="mb-3">
-                    <label class="form-label fw-bold">Password</label>
-                    <input type="password" class="form-control" placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢">
+                    <label class="form-label fw-bold">Display Name</label>
+                    <input type="text" class="form-control" name="DisplayName" value="@userDto?.DisplayName">
                 </div>
                 <div class="mb-3">
-                    <label class="form-label fw-bold">Role</label>
-                    <select class="form-select">
-                        @if (Model.Data is System.Collections.Generic.IEnumerable<Clinic.Application.DTOs.Auth.RoleDto> roles)
+                    <label class="form-label fw-bold">Email <span class="text-danger">*</span></label>
+                    <input type="email" class="form-control" name="Email" required value="@userDto?.Email">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Phone Number</label>
+                    <input type="text" class="form-control" name="PhoneNumber" value="@userDto?.PhoneNumber">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-bold" for="newPassword">Password @(isNew ? Html.Raw("<span class=\"text-danger\">*</span>") : "")</label>
+                    <div class="input-group">
+                        <input type="password" class="form-control" id="newPassword" name="newPassword" placeholder="••••••••" @(isNew ? "required" : "")>
+                        <button class="btn btn-outline-secondary password-toggle" type="button" data-target="newPassword" tabindex="-1">
+                            <i class="fa-solid fa-eye"></i>
+                        </button>
+                    </div>
+                    @if(!isNew) { <div class="form-text mt-1">Leave blank to keep existing password.</div> }
+                </div>
+                <div class="mb-3 form-check form-switch">
+                    <input class="form-check-input" type="checkbox" id="mustChangePassword" name="MustChangePassword" value="true" @(userDto?.MustChangePassword == true ? "checked" : "")>
+                    <label class="form-check-label fw-bold" for="mustChangePassword">Force Password Change on Next Login</label>
+                </div>
+                
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Role <span class="text-danger">*</span></label>
+                    <select class="form-select" name="RoleIds" required>
+                        <option value="">-- Select Role --</option>
+                        @if (roles != null)
                         {
                             foreach (var r in roles)
                             {
-                                <option value="@r.Id">@r.Name @(r.IsSystem ? "[SYSTEM]" : "")</option>
+                                if (userDto?.RoleIds?.Contains(r.Id) == true)
+                                {
+                                    <option value="@r.Id" selected>@r.Name @(r.IsSystem ? "[SYSTEM]" : "")</option>
+                                }
+                                else
+                                {
+                                    <option value="@r.Id">@r.Name @(r.IsSystem ? "[SYSTEM]" : "")</option>
+                                }
                             }
                         }
                     </select>
                 </div>
+
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Primary Location <span class="text-danger">*</span></label>
+                    <select class="form-select" name="PrimaryLocationId" required>
+                        <option value="">-- Select Primary Location --</option>
+                        @if (locations != null)
+                        {
+                            foreach (var l in locations)
+                            {
+                                if (userDto?.PrimaryLocationId == l.Id)
+                                {
+                                    <option value="@l.Id" selected>@l.ClinicName</option>
+                                }
+                                else
+                                {
+                                    <option value="@l.Id">@l.ClinicName</option>
+                                }
+                            }
+                        }
+                    </select>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Accessible Locations</label>
+                    <select class="form-select" name="AccessibleLocationIds" multiple style="height: 120px;">
+                        @if (locations != null)
+                        {
+                            foreach (var l in locations)
+                            {
+                                if (userDto?.AccessibleLocationIds?.Contains(l.Id) == true)
+                                {
+                                    <option value="@l.Id" selected>@l.ClinicName</option>
+                                }
+                                else
+                                {
+                                    <option value="@l.Id">@l.ClinicName</option>
+                                }
+                            }
+                        }
+                    </select>
+                    <small class="text-muted">Hold Ctrl/Cmd to select multiple locations.</small>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Notes</label>
+                    <textarea class="form-control" name="Notes" rows="3">@userDto?.Notes</textarea>
+                </div>
+
                 <div class="mb-3 form-check form-switch">
-                    <input class="form-check-input" type="checkbox" id="isActive" checked>
+                    <input class="form-check-input" type="checkbox" id="isActive" name="IsActive" value="true" @(isNew || userDto!.IsActive ? "checked" : "")>
                     <label class="form-check-label fw-bold" for="isActive">Account is Active</label>
                 </div>
                 
                 <hr class="my-4">
                 <div class="d-flex justify-content-end gap-2">
                     <a href="/Admin/Users" class="btn btn-secondary shadow-sm">Cancel</a>
-                    <a href="/Admin/Users" class="btn btn-primary shadow-sm"><i class="bi bi-save me-2"></i>Save User</a>
+                    <button type="submit" class="btn btn-primary shadow-sm"><i class="bi bi-save me-2"></i>Save User</button>
                 </div>
             </form>
         </div>

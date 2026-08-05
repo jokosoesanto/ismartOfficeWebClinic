@@ -110,7 +110,7 @@ namespace Clinic.Application.UseCases.Auth
                 Email = user.Email,
                 MustChangePassword = user.MustChangePassword,
                 Roles = user.UserRoles.Select(ur => ur.Role.Name).ToList(),
-                Permissions = user.UserRoles.SelectMany(ur => ur.Role.RolePermissions).Select(rp => rp.Permission.Name).Distinct().ToList()
+                Permissions = user.UserRoles.SelectMany(ur => ur.Role.RolePermissions).Select(rp => rp.Permission.Code).Where(c => !string.IsNullOrEmpty(c)).Distinct().ToList()
             };
 
             return new AuthResponseDto
@@ -154,6 +154,7 @@ namespace Clinic.Application.UseCases.Auth
             user.PasswordHash = _passwordHasher.HashPassword(user, request.NewPassword);
             user.LastPasswordChangedAt = DateTime.UtcNow;
             user.MustChangePassword = false;
+            user.PermissionVersion = Guid.NewGuid().ToString("N");
             user.UpdatedAt = DateTime.UtcNow;
 
             await _userRepository.UpdateAsync(user);
@@ -185,11 +186,45 @@ namespace Clinic.Application.UseCases.Auth
                 Id = user.Id,
                 Username = user.Username,
                 FullName = user.FullName,
+                DisplayName = user.DisplayName,
                 Email = user.Email,
+                PhoneNumber = user.PhoneNumber,
                 MustChangePassword = user.MustChangePassword,
                 Roles = user.UserRoles.Select(ur => ur.Role.Name).ToList(),
                 Permissions = user.UserRoles.SelectMany(ur => ur.Role.RolePermissions).Select(rp => rp.Permission.Name).Distinct().ToList()
             };
+        }
+
+        public async Task UpdateProfileAsync(Guid userId, UpdateProfileDto dto)
+        {
+            var user = await _userRepository.GetByIdAsync(userId);
+            if (user == null) throw new Exception("User not found.");
+
+            string beforeValue = System.Text.Json.JsonSerializer.Serialize(new { user.FullName, user.DisplayName, user.Email, user.PhoneNumber });
+
+            user.FullName = dto.FullName;
+            user.DisplayName = dto.DisplayName;
+            user.Email = dto.Email;
+            user.NormalizedEmail = dto.Email.ToUpperInvariant();
+            user.PhoneNumber = dto.PhoneNumber;
+            user.UpdatedAt = DateTime.UtcNow;
+
+            await _userRepository.UpdateAsync(user);
+
+            await _auditRepository.AddAsync(new AuditLog
+            {
+                UserId = userId,
+                Action = "UpdateProfile",
+                Module = "Authentication",
+                EntityName = "User",
+                EntityId = userId.ToString(),
+                OldValue = beforeValue,
+                NewValue = System.Text.Json.JsonSerializer.Serialize(new { user.FullName, user.DisplayName, user.Email, user.PhoneNumber }),
+                IPAddress = _currentUserService.IPAddress,
+                UserAgent = _currentUserService.UserAgent
+            });
+
+            await _unitOfWork.SaveChangesAsync();
         }
 
         public async Task<System.Collections.Generic.IEnumerable<RoleDto>> GetRolesAsync()
@@ -247,6 +282,13 @@ namespace Clinic.Application.UseCases.Auth
                 }
             }
             await _roleRepository.UpdateAsync(role);
+
+            var affectedUsers = await _userRepository.GetUsersByRoleIdAsync(roleId);
+            foreach (var u in affectedUsers)
+            {
+                u.PermissionVersion = Guid.NewGuid().ToString("N");
+                await _userRepository.UpdateAsync(u);
+            }
 
             await _auditRepository.AddAsync(new AuditLog
             {
@@ -337,6 +379,12 @@ namespace Clinic.Application.UseCases.Auth
             else
             {
                 await _roleRepository.UpdateAsync(role);
+                var affectedUsers = await _userRepository.GetUsersByRoleIdAsync(role.Id);
+                foreach (var u in affectedUsers)
+                {
+                    u.PermissionVersion = Guid.NewGuid().ToString("N");
+                    await _userRepository.UpdateAsync(u);
+                }
             }
 
             string afterValue = System.Text.Json.JsonSerializer.Serialize(new { role.Name, role.Description, role.IsActive });
@@ -366,6 +414,10 @@ namespace Clinic.Application.UseCases.Auth
             perm.UpdatedAt = DateTime.UtcNow;
 
             await _permissionRepository.UpdateAsync(perm);
+            
+            // Because a permission's status changed, it might affect any role/user holding it.
+            // Simplest safe approach: invalidate everyone's permission version.
+            await _userRepository.UpdateAllPermissionVersionsAsync(Guid.NewGuid().ToString("N"));
 
             await _auditRepository.AddAsync(new AuditLog
             {
@@ -403,6 +455,163 @@ namespace Clinic.Application.UseCases.Auth
                 EntityId = role.Id.ToString(),
                 OldValue = beforeValue,
                 NewValue = System.Text.Json.JsonSerializer.Serialize(new { role.Name, role.IsDeleted })
+            });
+            await _unitOfWork.SaveChangesAsync();
+        }
+
+        public async Task<System.Collections.Generic.IEnumerable<UserDto>> GetAllUsersAsync()
+        {
+            var users = await _userRepository.GetAllAsync();
+            return users.Select(u => new UserDto
+            {
+                Id = u.Id,
+                Username = u.Username,
+                FullName = u.FullName,
+                DisplayName = u.DisplayName,
+                Email = u.Email,
+                PhoneNumber = u.PhoneNumber,
+                Notes = u.Notes,
+                MustChangePassword = u.MustChangePassword,
+                IsActive = u.IsActive,
+                PrimaryLocationId = u.PrimaryLocationId,
+                PrimaryLocationName = u.PrimaryLocation?.ClinicName ?? string.Empty,
+                Roles = u.UserRoles.Select(ur => ur.Role.Name).ToList(),
+                RoleIds = u.UserRoles.Select(ur => ur.RoleId).ToList(),
+                AccessibleLocationIds = u.UserAccessibleLocations.Select(ul => ul.LocationId).ToList()
+            });
+        }
+
+        public async Task<UserDto?> GetUserByIdAsync(Guid id)
+        {
+            var u = await _userRepository.GetByIdAsync(id);
+            if (u == null) return null;
+
+            return new UserDto
+            {
+                Id = u.Id,
+                Username = u.Username,
+                FullName = u.FullName,
+                DisplayName = u.DisplayName,
+                Email = u.Email,
+                PhoneNumber = u.PhoneNumber,
+                Notes = u.Notes,
+                MustChangePassword = u.MustChangePassword,
+                IsActive = u.IsActive,
+                PrimaryLocationId = u.PrimaryLocationId,
+                PrimaryLocationName = u.PrimaryLocation?.ClinicName ?? string.Empty,
+                Roles = u.UserRoles.Select(ur => ur.Role.Name).ToList(),
+                RoleIds = u.UserRoles.Select(ur => ur.RoleId).ToList(),
+                AccessibleLocationIds = u.UserAccessibleLocations.Select(ul => ul.LocationId).ToList()
+            };
+        }
+
+        public async Task SaveUserAsync(UserDto dto, string? newPassword, Guid? currentUserId)
+        {
+            User? user;
+            bool isNew = false;
+            string beforeValue = "null";
+
+            if (dto.Id == Guid.Empty)
+            {
+                var existing = await _userRepository.GetByUsernameAsync(dto.Username);
+                if (existing != null) throw new InvalidOperationException("Username must be unique.");
+
+                user = new User();
+                user.CreatedAt = DateTime.UtcNow;
+                isNew = true;
+            }
+            else
+            {
+                user = await _userRepository.GetByIdAsync(dto.Id);
+                if (user == null) throw new Exception("User not found");
+
+                if (!string.Equals(user.Username, dto.Username, StringComparison.OrdinalIgnoreCase))
+                {
+                    var existing = await _userRepository.GetByUsernameAsync(dto.Username);
+                    if (existing != null) throw new InvalidOperationException("Username must be unique.");
+                }
+
+                beforeValue = System.Text.Json.JsonSerializer.Serialize(new { user.Username, user.FullName, user.Email, user.IsActive, user.PrimaryLocationId });
+                user.UpdatedAt = DateTime.UtcNow;
+            }
+
+            user.Username = dto.Username;
+            user.NormalizedUsername = dto.Username.ToUpperInvariant();
+            user.FullName = dto.FullName;
+            user.DisplayName = dto.DisplayName;
+            user.Email = dto.Email;
+            user.NormalizedEmail = dto.Email.ToUpperInvariant();
+            user.PhoneNumber = dto.PhoneNumber;
+            user.Notes = dto.Notes;
+            user.IsActive = dto.IsActive;
+            user.MustChangePassword = dto.MustChangePassword;
+            user.PrimaryLocationId = dto.PrimaryLocationId;
+            user.PermissionVersion = Guid.NewGuid().ToString("N");
+            
+            if (isNew)
+            {
+                if (string.IsNullOrWhiteSpace(newPassword)) throw new InvalidOperationException("Password is required for new users.");
+                user.PasswordHash = _passwordHasher.HashPassword(user, newPassword);
+            }
+            else if (!string.IsNullOrWhiteSpace(newPassword))
+            {
+                user.PasswordHash = _passwordHasher.HashPassword(user, newPassword);
+            }
+
+            user.UserRoles.Clear();
+            foreach (var roleId in dto.RoleIds)
+            {
+                user.UserRoles.Add(new UserRole { RoleId = roleId });
+            }
+
+            user.UserAccessibleLocations.Clear();
+            foreach (var locId in dto.AccessibleLocationIds)
+            {
+                user.UserAccessibleLocations.Add(new UserLocation { LocationId = locId });
+            }
+
+            if (isNew) await _userRepository.AddAsync(user);
+            else await _userRepository.UpdateAsync(user);
+
+            await _auditRepository.AddAsync(new AuditLog
+            {
+                UserId = currentUserId,
+                Action = isNew ? "CreateUser" : "UpdateUser",
+                Module = "Administration",
+                EntityName = "User",
+                EntityId = user.Id.ToString(),
+                OldValue = beforeValue,
+                NewValue = System.Text.Json.JsonSerializer.Serialize(new { user.Username, user.FullName, user.Email, user.IsActive, user.PrimaryLocationId })
+            });
+            await _unitOfWork.SaveChangesAsync();
+        }
+
+        public async Task DeleteUserAsync(Guid id, Guid? currentUserId)
+        {
+            var user = await _userRepository.GetByIdAsync(id);
+            if (user == null) return;
+            
+            if (user.UserRoles.Any(ur => string.Equals(ur.Role.Name, "Administrator", StringComparison.OrdinalIgnoreCase)))
+            {
+                throw new InvalidOperationException("Administrator user cannot be deleted.");
+            }
+
+            string beforeValue = System.Text.Json.JsonSerializer.Serialize(new { user.Username, user.IsActive, user.IsDeleted });
+            user.IsActive = false; // Soft delete / Deactivate
+            user.IsDeleted = true;
+            user.DeletedAt = DateTime.UtcNow;
+            user.DeletedBy = currentUserId;
+            
+            await _userRepository.UpdateAsync(user);
+            await _auditRepository.AddAsync(new AuditLog
+            {
+                UserId = currentUserId,
+                Action = "DeleteUser",
+                Module = "Administration",
+                EntityName = "User",
+                EntityId = user.Id.ToString(),
+                OldValue = beforeValue,
+                NewValue = System.Text.Json.JsonSerializer.Serialize(new { user.Username, user.IsActive })
             });
             await _unitOfWork.SaveChangesAsync();
         }

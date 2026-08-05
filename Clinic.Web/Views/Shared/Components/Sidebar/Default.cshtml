@@ -13,10 +13,12 @@
             @if (hasChildren)
             {
                 <a class="nav-link text-main d-flex justify-content-between align-items-center @(isActive ? "fw-bold" : "")" 
-                   data-bs-toggle="collapse" href="#collapse-@item.Id" role="button" aria-expanded="@(isActive ? "true" : "false")">
-                    <span>
-                        <i class="bi @item.Icon me-2"></i> @item.Title
-                    </span>
+                   data-bs-toggle="collapse" href="#collapse-@item.Id" role="button" aria-expanded="@(isActive ? "true" : "false")"
+                   data-sidebar-tooltip="tooltip" data-bs-placement="right" title="@item.Title">
+                    <div class="d-flex align-items-center">
+                        <i class="bi @item.Icon me-2"></i>
+                        <span class="sidebar-text">@item.Title</span>
+                    </div>
                     <i class="bi bi-chevron-down small"></i>
                 </a>
                 <div class="collapse @(isActive ? "show" : "")" id="collapse-@item.Id">
@@ -25,8 +27,10 @@
                         {
                             var isChildActive = currentPath == child.Route;
                             <li class="nav-item mb-1">
-                                <a class="nav-link text-main small @(isChildActive ? "text-primary fw-bold" : "text-muted")" href="@child.Route">
-                                    <i class="bi @(string.IsNullOrEmpty(child.Icon) ? "bi-dash" : child.Icon) me-1"></i> @child.Title
+                                <a class="nav-link text-main small @(isChildActive ? "text-primary fw-bold" : "text-muted")" href="@child.Route"
+                                   data-sidebar-tooltip="tooltip" data-bs-placement="right" title="@child.Title">
+                                    <i class="bi @(string.IsNullOrEmpty(child.Icon) ? "bi-dash" : child.Icon) me-1"></i>
+                                    <span class="sidebar-text">@child.Title</span>
                                 </a>
                             </li>
                         }
@@ -35,8 +39,10 @@
             }
             else
             {
-                <a class="nav-link text-main @(isActive ? "fw-bold text-primary" : "")" href="@item.Route">
-                    <i class="bi @item.Icon me-2"></i> @item.Title
+                <a class="nav-link text-main @(isActive ? "fw-bold text-primary" : "")" href="@item.Route"
+                   data-sidebar-tooltip="tooltip" data-bs-placement="right" title="@item.Title">
+                    <i class="bi @item.Icon me-2"></i>
+                    <span class="sidebar-text">@item.Title</span>
                 </a>
             }
         </li>

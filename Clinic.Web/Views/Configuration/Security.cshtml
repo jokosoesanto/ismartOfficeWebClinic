@@ -1,0 +1,48 @@
+@{
+    ViewData["Title"] = "Security Configuration";
+}
+
+<div class="container-fluid px-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="mb-0 fw-bold text-dark"><i class="bi bi-shield-lock me-2 text-primary"></i>Security Configuration</h2>
+    </div>
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="bi bi-check-circle me-2"></i>@TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="bi bi-exclamation-circle me-2"></i>@TempData["ErrorMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    <div class="card shadow-sm border-0">
+        <div class="card-body p-4">
+            <form asp-controller="Configuration" asp-action="UpdateSecurity" method="post">
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <label for="sessionTimeoutMinutes" class="form-label fw-semibold">Session Timeout (Minutes)</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light"><i class="bi bi-clock-history"></i></span>
+                            <input type="number" class="form-control" id="sessionTimeoutMinutes" name="sessionTimeoutMinutes" value="@ViewBag.SessionTimeoutMinutes" min="5" max="480" required>
+                        </div>
+                        <div class="form-text">Minimum 5 minutes, Maximum 480 minutes (8 hours).</div>
+                    </div>
+                </div>
+
+                <div class="d-flex justify-content-end">
+                    <button type="submit" class="btn btn-primary px-4">
+                        <i class="bi bi-save me-2"></i>Save Configuration
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

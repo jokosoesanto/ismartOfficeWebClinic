@@ -19,9 +19,20 @@ namespace Clinic.Infrastructure.Data
         public DbSet<RolePermission> RolePermissions { get; set; } = null!;
         public DbSet<AuditLog> AuditLogs { get; set; } = null!;
         public DbSet<UserSession> UserSessions { get; set; } = null!;
+        public DbSet<UserLocation> UserLocations { get; set; } = null!;
+        public DbSet<Clinic.Domain.Entities.MasterData.Location> Locations { get; set; } = null!;
+        public DbSet<Clinic.Domain.Entities.MasterData.Chair> Chairs { get; set; } = null!;
+        public DbSet<Clinic.Domain.Entities.Configuration.AppConfiguration> AppConfigurations { get; set; } = null!;
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
+            modelBuilder.Entity<Clinic.Domain.Entities.Configuration.AppConfiguration>(entity =>
+            {
+                entity.ToTable("AppConfigurations");
+                entity.HasKey(e => e.Id);
+                entity.HasIndex(e => new { e.Category, e.Key }).IsUnique();
+            });
+
             base.OnModelCreating(modelBuilder);
             
             // Explicitly set max length for string to avoid NTEXT/TEXT
@@ -89,3 +100,4 @@ namespace Clinic.Infrastructure.Data
         }
     }
 }
+

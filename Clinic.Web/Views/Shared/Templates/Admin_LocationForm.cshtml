@@ -1,0 +1,125 @@
+@model Clinic.Application.UI.UIMetadata
+@{
+    var locationDto = Model.Data as Clinic.Application.DTOs.MasterData.LocationDto;
+    var isNew = locationDto == null || locationDto.Id == Guid.Empty;
+}
+
+<!-- Admin Location Form Template -->
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="mb-0 fw-bold">@Model.Title</h2>
+        <a href="/Admin/Locations" class="btn btn-outline-secondary shadow-sm"><i class="bi bi-arrow-left me-2"></i>Back to Locations</a>
+    </div>
+
+    <div class="card shadow-sm border-0" style="max-width: 800px; margin: 0 auto;">
+        <div class="card-header bg-white border-bottom-0 pt-4 pb-0">
+            <h5 class="fw-bold text-primary mb-0"><i class="bi bi-building me-2"></i>Location Details</h5>
+        </div>
+        <div class="card-body p-4">
+            <form method="post" action="/Admin/SaveLocation">
+                @if (!isNew)
+                {
+                    <input type="hidden" name="Id" value="@locationDto?.Id" />
+                }
+                
+                <h6 class="fw-bold border-bottom pb-2 mb-3 text-secondary">General Information</h6>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-bold">Clinic Code <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" name="ClinicCode" required value="@locationDto?.ClinicCode">
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-bold">Clinic Name <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" name="ClinicName" required value="@locationDto?.ClinicName">
+                    </div>
+                    <div class="col-12 mb-3">
+                        <label class="form-label fw-bold">Description</label>
+                        <textarea class="form-control" name="Description" rows="2">@locationDto?.Description</textarea>
+                    </div>
+                </div>
+
+                <h6 class="fw-bold border-bottom pb-2 mb-3 text-secondary mt-3">Contact Information</h6>
+                <div class="row">
+                    <div class="col-12 mb-3">
+                        <label class="form-label fw-bold">Address</label>
+                        <input type="text" class="form-control" name="Address" value="@locationDto?.Address">
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-bold">City</label>
+                        <input type="text" class="form-control" name="City" value="@locationDto?.City">
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-bold">State / Province</label>
+                        <input type="text" class="form-control" name="StateProvince" value="@locationDto?.StateProvince">
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-bold">Postal Code</label>
+                        <input type="text" class="form-control" name="PostalCode" value="@locationDto?.PostalCode">
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-bold">Country</label>
+                        <input type="text" class="form-control" name="Country" value="@locationDto?.Country">
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label fw-bold">Phone</label>
+                        <input type="text" class="form-control" name="Phone" value="@locationDto?.Phone">
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label fw-bold">Fax</label>
+                        <input type="text" class="form-control" name="Fax" value="@locationDto?.Fax">
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label fw-bold">Email</label>
+                        <input type="email" class="form-control" name="Email" value="@locationDto?.Email">
+                    </div>
+                </div>
+
+                <h6 class="fw-bold border-bottom pb-2 mb-3 text-secondary mt-3">Operational Hours</h6>
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label fw-bold">Opening Time</label>
+                        <input type="time" class="form-control" name="OpeningTime" value="@locationDto?.OpeningTime">
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label fw-bold">Closing Time</label>
+                        <input type="time" class="form-control" name="ClosingTime" value="@locationDto?.ClosingTime">
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label fw-bold">Timezone</label>
+                        <input type="text" class="form-control" name="Timezone" value="@locationDto?.Timezone" placeholder="e.g. UTC+7">
+                    </div>
+                </div>
+
+                <h6 class="fw-bold border-bottom pb-2 mb-3 text-secondary mt-3">Map Information</h6>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-bold">Latitude</label>
+                        <input type="number" step="any" class="form-control" name="Latitude" value="@locationDto?.Latitude">
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-bold">Longitude</label>
+                        <input type="number" step="any" class="form-control" name="Longitude" value="@locationDto?.Longitude">
+                    </div>
+                </div>
+
+                <h6 class="fw-bold border-bottom pb-2 mb-3 text-secondary mt-3">Status</h6>
+                <div class="row">
+                    <div class="col-md-6 mb-3 form-check form-switch ms-3">
+                        <input class="form-check-input" type="checkbox" id="isHeadquarters" name="IsHeadquarters" value="true" @(locationDto?.IsHeadquarters == true ? "checked" : "")>
+                        <label class="form-check-label fw-bold" for="isHeadquarters">Is Headquarters</label>
+                    </div>
+                    <div class="col-md-6 mb-3 form-check form-switch ms-3">
+                        <input class="form-check-input" type="checkbox" id="isActive" name="IsActive" value="true" @(isNew || locationDto!.IsActive ? "checked" : "")>
+                        <label class="form-check-label fw-bold" for="isActive">Location is Active</label>
+                    </div>
+                </div>
+                
+                <hr class="my-4">
+                <div class="d-flex justify-content-end gap-2">
+                    <a href="/Admin/Locations" class="btn btn-secondary shadow-sm">Cancel</a>
+                    <button type="submit" class="btn btn-primary shadow-sm"><i class="bi bi-save me-2"></i>Save Location</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

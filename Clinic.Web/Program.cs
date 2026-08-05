@@ -39,7 +39,21 @@ builder.Services.AddScoped<IAuditRepository, AuditRepository>();
 builder.Services.AddScoped<IPasswordHasher, IdentityPasswordHasher>();
 builder.Services.AddScoped<ICurrentUserService, Clinic.Web.Services.CurrentUserService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddSingleton<IPermissionCache, Clinic.Web.Services.Auth.PermissionCache>();
+builder.Services.AddScoped<IPermissionService, PermissionService>();
+builder.Services.AddScoped<Clinic.Application.Interfaces.Navigation.INavigationService, Clinic.Application.UseCases.Navigation.NavigationService>();
+builder.Services.AddMemoryCache();
+builder.Services.AddScoped<Clinic.Application.Interfaces.MasterData.ILocationRepository, Clinic.Infrastructure.Repositories.MasterData.LocationRepository>();
+builder.Services.AddScoped<Clinic.Application.Interfaces.MasterData.IChairRepository, Clinic.Infrastructure.Repositories.MasterData.ChairRepository>();
+builder.Services.AddScoped<Clinic.Application.Interfaces.MasterData.ILocationService, Clinic.Application.UseCases.MasterData.LocationService>();
+builder.Services.AddScoped<Clinic.Application.Interfaces.MasterData.IChairService, Clinic.Application.UseCases.MasterData.ChairService>();
 
+// System Services
+builder.Services.AddScoped<Clinic.Application.Interfaces.Configuration.IAppConfigurationRepository, Clinic.Infrastructure.Repositories.Configuration.AppConfigurationRepository>();
+builder.Services.AddScoped<Clinic.Application.Interfaces.Configuration.IAppConfigurationService, Clinic.Application.UseCases.Configuration.AppConfigurationService>();
+
+builder.Services.AddSingleton<Microsoft.AspNetCore.Authorization.IAuthorizationPolicyProvider, Clinic.Web.Security.PermissionPolicyProvider>();
+builder.Services.AddSingleton<Microsoft.AspNetCore.Authorization.IAuthorizationHandler, Clinic.Web.Security.PermissionAuthorizationHandler>();
 builder.Services.AddAuthorization();
 
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
@@ -47,8 +61,8 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
     {
         options.LoginPath = "/Auth/Login";
         options.LogoutPath = "/Auth/Logout";
+        options.AccessDeniedPath = "/Auth/AccessDenied";
         options.SlidingExpiration = true;
-        options.ExpireTimeSpan = System.TimeSpan.FromHours(8);
         options.Cookie.HttpOnly = true;
         options.Cookie.SecurePolicy = Microsoft.AspNetCore.Http.CookieSecurePolicy.Always;
         options.Cookie.SameSite = Microsoft.AspNetCore.Http.SameSiteMode.Strict;
@@ -75,7 +89,7 @@ using (var scope = app.Services.CreateScope())
             }
             
             AuthSeeder.Seed(context);
-            await Clinic.Web.Services.PermissionSynchronizer.SyncAsync(context, typeof(Program).Assembly);
+            await Clinic.Web.Services.PermissionSynchronizer.SyncAsync(context, typeof(Program).Assembly, app.Logger);
             break; // Success
         }
         catch (Exception ex)
@@ -121,3 +135,4 @@ app.MapControllerRoute(
     .WithStaticAssets();
 
 app.Run();
+

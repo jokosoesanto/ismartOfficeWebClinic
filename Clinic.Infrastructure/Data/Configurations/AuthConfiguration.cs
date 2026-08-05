@@ -19,8 +19,22 @@ namespace Clinic.Infrastructure.Data.Configurations
                 entity.Property(e => e.FullName).HasMaxLength(100).IsRequired();
                 entity.Property(e => e.PhoneNumber).HasMaxLength(20);
 
+                entity.Property(e => e.DisplayName).HasMaxLength(100);
+                entity.Property(e => e.Notes).HasMaxLength(500);
+
                 entity.HasIndex(e => e.NormalizedUsername).IsUnique();
                 entity.HasIndex(e => e.NormalizedEmail).IsUnique();
+                
+                entity.HasQueryFilter(e => !e.IsDeleted);
+                
+                entity.HasOne(u => u.PrimaryLocation).WithMany(l => l.Users).HasForeignKey(u => u.PrimaryLocationId).OnDelete(DeleteBehavior.SetNull);
+            });
+
+            modelBuilder.Entity<UserLocation>(entity =>
+            {
+                entity.HasKey(e => new { e.UserId, e.LocationId });
+                entity.HasOne(ul => ul.User).WithMany(u => u.UserAccessibleLocations).HasForeignKey(ul => ul.UserId);
+                entity.HasOne(ul => ul.Location).WithMany(l => l.UserLocations).HasForeignKey(ul => ul.LocationId);
             });
 
             modelBuilder.Entity<Role>(entity =>

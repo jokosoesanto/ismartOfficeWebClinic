@@ -1,0 +1,51 @@
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card shadow-sm border-0">
+            <div class="card-header bg-white border-bottom py-3">
+                <h5 class="mb-0 fw-bold"><i class="bi bi-gear me-2 text-secondary"></i>Personal Settings</h5>
+            </div>
+            <div class="card-body p-4">
+                <form>
+                    <div class="mb-4">
+                        <label class="form-label fw-bold">Language</label>
+                        <select class="form-select">
+                            <option value="en-US">English (United States)</option>
+                            <option value="id-ID">Bahasa Indonesia</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label fw-bold">Theme</label>
+                        <select class="form-select" id="themeSelect">
+                            <option value="medical-blue">Medical Blue (Default)</option>
+                            <option value="medical-green">Medical Green</option>
+                            <option value="corporate-indigo">Corporate Indigo</option>
+                            <option value="navy-professional">Navy Professional</option>
+                            <option value="dark-mode">Dark Mode</option>
+                            <option value="minimal-light">Minimal Light</option>
+                        </select>
+                        <div class="form-text mt-2"><i class="bi bi-info-circle me-1"></i>Theme preference is saved locally on this browser.</div>
+                    </div>
+
+                    <div class="d-flex justify-content-end mt-4">
+                        <button type="button" class="btn btn-primary shadow-sm" onclick="saveSettings()"><i class="bi bi-save me-2"></i>Save Preferences</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        const savedTheme = localStorage.getItem('clinic-theme') || 'medical-blue';
+        document.getElementById('themeSelect').value = savedTheme;
+    });
+
+    function saveSettings() {
+        const theme = document.getElementById('themeSelect').value;
+        document.documentElement.setAttribute('data-theme', theme);
+        localStorage.setItem('clinic-theme', theme);
+        alert('Settings saved successfully!');
+    }
+</script>

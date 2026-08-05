@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Mvc;
 using Clinic.Application.DTOs.Auth;
 using Clinic.Application.Interfaces.Auth;
+using Clinic.Application.Interfaces.Configuration;
 
 using Microsoft.AspNetCore.Authorization;
 
@@ -14,10 +15,12 @@ namespace Clinic.Web.Controllers
     public class AuthController : Controller
     {
         private readonly IAuthService _authService;
+        private readonly IAppConfigurationService _configurationService;
 
-        public AuthController(IAuthService authService)
+        public AuthController(IAuthService authService, IAppConfigurationService configurationService)
         {
             _authService = authService;
+            _configurationService = configurationService;
         }
 
         [HttpGet]
@@ -70,11 +73,20 @@ namespace Clinic.Web.Controllers
                 claims.Add(new Claim("Permission", permission));
             }
 
+            if (!string.IsNullOrEmpty(response.SessionToken))
+            {
+                claims.Add(new Claim("SessionToken", response.SessionToken));
+            }
+
             var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
+
+            // Read session timeout from DB, default to 30 mins
+            int sessionTimeoutMinutes = await _configurationService.GetIntValueAsync("SessionTimeoutMinutes", 30);
 
             var authProperties = new AuthenticationProperties
             {
-                IsPersistent = model.RememberMe
+                IsPersistent = false,
+                ExpiresUtc = DateTimeOffset.UtcNow.AddMinutes(sessionTimeoutMinutes)
             };
 
             await HttpContext.SignInAsync(
@@ -87,12 +99,48 @@ namespace Clinic.Web.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Logout()
+        public async Task<IActionResult> Logout([FromServices] IPermissionCache permissionCache)
         {
-            // Note: If you stored the session token in a claim, you'd retrieve it here to revoke.
-            // For simplicity, we just revoke the cookie.
+            var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (Guid.TryParse(userIdStr, out var userId))
+            {
+                permissionCache.InvalidateUserPermissions(userId);
+            }
+
+            var sessionToken = User.FindFirstValue("SessionToken");
+            if (!string.IsNullOrEmpty(sessionToken))
+            {
+                await _authService.LogoutAsync(sessionToken);
+            }
+
             await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
             return RedirectToAction(nameof(Login));
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> AccessDenied([FromServices] IAuditRepository auditRepository, string? returnUrl = null)
+        {
+            var userIdString = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (Guid.TryParse(userIdString, out Guid userId))
+            {
+                var role = User.FindFirstValue(ClaimTypes.Role) ?? "No Role";
+                var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "Unknown";
+                var userAgent = Request.Headers["User-Agent"].ToString();
+
+                await auditRepository.AddAsync(new Clinic.Domain.Entities.Auth.AuditLog
+                {
+                    UserId = userId,
+                    Action = "Unauthorized Access",
+                    Module = "Security",
+                    NewValue = $"Attempted to access: {returnUrl}. Role: {role}",
+                    IPAddress = ipAddress,
+                    UserAgent = userAgent,
+                    Timestamp = System.DateTime.UtcNow
+                });
+            }
+
+            ViewData["ReturnUrl"] = returnUrl;
+            return View();
         }
 
         private IActionResult RedirectToLocal(string? returnUrl)

@@ -86,16 +86,26 @@
             <div class="dropdown">
                 <button class="btn btn-light dropdown-toggle d-flex align-items-center" type="button"
                         data-bs-toggle="dropdown">
-                    <img src="https://ui-avatars.com/api/?name=Admin+User&background=0D8ABC&color=fff" alt="Profile"
+                    <img src="https://ui-avatars.com/api/?name=@(System.Net.WebUtility.UrlEncode(User.Identity?.Name ?? "User"))&background=0D8ABC&color=fff" alt="Profile"
                          class="rounded-circle me-2" width="32" height="32">
-                    <span>Admin</span>
+                    <span>@(User.Claims.FirstOrDefault(c => c.Type == "FullName")?.Value ?? User.Identity?.Name ?? "Unknown")</span>
                 </button>
-                <ul class="dropdown-menu dropdown-menu-end">
-                    <li><a class="dropdown-item" href="#"><i class="bi bi-person me-2"></i>Profile</a></li>
-                    <li><a class="dropdown-item" href="#"><i class="bi bi-gear me-2"></i>Settings</a></li>
-                    <li>
-                        <hr class="dropdown-divider">
+                <ul class="dropdown-menu dropdown-menu-end p-3 shadow" style="min-width: 280px;">
+                    <li class="text-center mb-2">
+                        <img src="https://ui-avatars.com/api/?name=@(System.Net.WebUtility.UrlEncode(User.Identity?.Name ?? "User"))&background=0D8ABC&color=fff" class="rounded-circle mb-2" width="64" height="64">
+                        <h6 class="mb-0 fw-bold">@(User.Claims.FirstOrDefault(c => c.Type == "FullName")?.Value ?? User.Identity?.Name)</h6>
+                        <small class="text-muted">@User.Identity?.Name</small>
                     </li>
+                    <li class="text-center mb-3">
+                        <span class="badge bg-primary">@(User.Claims.FirstOrDefault(c => c.Type == System.Security.Claims.ClaimTypes.Role)?.Value ?? "No Role")</span>
+                        <br/>
+                        <small class="text-muted">@(User.Claims.FirstOrDefault(c => c.Type == System.Security.Claims.ClaimTypes.Email)?.Value)</small>
+                    </li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li><a class="dropdown-item" href="/Profile"><i class="bi bi-person me-2"></i>My Profile</a></li>
+                    <li><a class="dropdown-item" href="/Settings"><i class="bi bi-gear me-2"></i>Personal Settings</a></li>
+                    <li><a class="dropdown-item" href="/Profile/ChangePassword"><i class="bi bi-key me-2"></i>Change Password</a></li>
+                    <li><hr class="dropdown-divider"></li>
                     <li>
                         <form asp-controller="Auth" asp-action="Logout" method="post" id="logoutForm" class="d-inline">
                             <button type="submit"
@@ -112,6 +122,13 @@
     <!-- Main Content -->
     <main class="main-content">
         <div class="container-fluid p-0">
+            @if (TempData["SuccessMessage"] != null)
+            {
+                <div class="alert alert-success alert-dismissible fade show m-3 shadow-sm" role="alert" style="border-left: 5px solid #198754;">
+                    <i class="bi bi-check-circle-fill me-2"></i> @TempData["SuccessMessage"]
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            }
             @RenderBody()
         </div>
     </main>
@@ -142,6 +159,27 @@
             // Sidebar Toggle
             document.getElementById('sidebarToggle').addEventListener('click', function () {
                 document.body.classList.toggle('sidebar-collapsed');
+                
+                // Tooltip logic: only enable tooltips when sidebar is collapsed
+                var isCollapsed = document.body.classList.contains('sidebar-collapsed');
+                sidebarTooltips.forEach(function(t) {
+                    if(isCollapsed) {
+                        t.enable();
+                    } else {
+                        t.disable();
+                        t.hide(); // Hide immediately if open
+                    }
+                });
+            });
+
+            // Initialize Sidebar Tooltips
+            var sidebarTooltipTriggers = [].slice.call(document.querySelectorAll('[data-sidebar-tooltip="tooltip"]'));
+            var sidebarTooltips = sidebarTooltipTriggers.map(function (el) {
+                var t = new bootstrap.Tooltip(el, { trigger: 'hover' });
+                if (!document.body.classList.contains('sidebar-collapsed')) {
+                    t.disable();
+                }
+                return t;
             });
 
             // Theme Switcher Logic (Disabled for Design Convergence Sprint)

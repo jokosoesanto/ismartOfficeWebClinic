@@ -5,15 +5,22 @@ using Microsoft.AspNetCore.Authorization;
 
 namespace Clinic.Web.Controllers
 {
-    [Authorize]
+    [Authorize(Policy = "Admin.Index")]
     [Route("[controller]")]
     public class AdminController : Controller
     {
         private readonly Clinic.Application.Interfaces.Auth.IAuthService _authService;
+        private readonly Clinic.Application.Interfaces.MasterData.ILocationService _locationService;
+        private readonly Clinic.Application.Interfaces.MasterData.IChairService _chairService;
 
-        public AdminController(Clinic.Application.Interfaces.Auth.IAuthService authService)
+        public AdminController(
+            Clinic.Application.Interfaces.Auth.IAuthService authService,
+            Clinic.Application.Interfaces.MasterData.ILocationService locationService,
+            Clinic.Application.Interfaces.MasterData.IChairService chairService)
         {
             _authService = authService;
+            _locationService = locationService;
+            _chairService = chairService;
         }
 
         [HttpGet]
@@ -23,12 +30,15 @@ namespace Clinic.Web.Controllers
         }
 
         [HttpGet("Users")]
-        public IActionResult Users()
+        [Authorize(Policy = "Admin.Users")]
+        public async System.Threading.Tasks.Task<IActionResult> Users()
         {
-            return GetAdminView("Manage Users");
+            var users = await _authService.GetAllUsersAsync();
+            return GetAdminView("Manage Users", users);
         }
 
         [HttpGet("Roles")]
+        [Authorize(Policy = "Admin.Roles")]
         public async System.Threading.Tasks.Task<IActionResult> Roles()
         {
             var roles = await _authService.GetRolesAsync();
@@ -36,6 +46,7 @@ namespace Clinic.Web.Controllers
         }
 
         [HttpGet("RoleForm/{id?}")]
+        [Authorize(Policy = "Admin.RoleForm")]
         public async System.Threading.Tasks.Task<IActionResult> RoleForm(Guid? id = null)
         {
             Clinic.Application.DTOs.Auth.RoleDto? role = null;
@@ -56,6 +67,7 @@ namespace Clinic.Web.Controllers
         }
 
         [HttpPost("SaveRole")]
+        [Authorize(Policy = "Admin.SaveRole")]
         public async System.Threading.Tasks.Task<IActionResult> SaveRole([FromForm] Clinic.Application.DTOs.Auth.RoleDto roleDto)
         {
             Guid? currentUserId = null;
@@ -67,6 +79,7 @@ namespace Clinic.Web.Controllers
         }
 
         [HttpPost("DeleteRole/{id}")]
+        [Authorize(Policy = "Admin.DeleteRole")]
         public async System.Threading.Tasks.Task<IActionResult> DeleteRole(Guid id)
         {
             Guid? currentUserId = null;
@@ -78,6 +91,7 @@ namespace Clinic.Web.Controllers
         }
 
         [HttpGet("Permissions")]
+        [Authorize(Policy = "Admin.Permissions")]
         public async System.Threading.Tasks.Task<IActionResult> Permissions()
         {
             var perms = await _authService.GetAllPermissionsAsync();
@@ -85,6 +99,7 @@ namespace Clinic.Web.Controllers
         }
 
         [HttpGet("PermissionForm/{id?}")]
+        [Authorize(Policy = "Admin.PermissionForm")]
         public async System.Threading.Tasks.Task<IActionResult> PermissionForm(Guid? id = null)
         {
             Clinic.Application.DTOs.Auth.PermissionDto? permission = null;
@@ -105,6 +120,7 @@ namespace Clinic.Web.Controllers
         }
 
         [HttpPost("SavePermission")]
+        [Authorize(Policy = "Admin.SavePermission")]
         public async System.Threading.Tasks.Task<IActionResult> SavePermission([FromForm] Clinic.Application.DTOs.Auth.PermissionDto permissionDto)
         {
             Guid? currentUserId = null;
@@ -116,6 +132,7 @@ namespace Clinic.Web.Controllers
         }
 
         [HttpGet("AssignPermissions/{roleId}")]
+        [Authorize(Policy = "Admin.AssignPermissions")]
         public async System.Threading.Tasks.Task<IActionResult> AssignPermissions(string roleId)
         {
             // For now, pass all roles and all permissions so the UI can filter by roleId
@@ -130,6 +147,7 @@ namespace Clinic.Web.Controllers
         }
 
         [HttpPost("SaveRolePermissions")]
+        [Authorize(Policy = "Admin.SaveRolePermissions")]
         public async System.Threading.Tasks.Task<IActionResult> SaveRolePermissions(string roleId, [FromForm] System.Collections.Generic.List<Guid> permissionIds)
         {
             if (Guid.TryParse(roleId, out var id))
@@ -140,15 +158,107 @@ namespace Clinic.Web.Controllers
         }
 
         [HttpGet("Locations")]
-        public IActionResult Locations()
+        [Authorize(Policy = "Admin.Locations")]
+        public async System.Threading.Tasks.Task<IActionResult> Locations()
         {
-            return GetAdminView("Manage Locations");
+            var data = await _locationService.GetAllLocationsAsync();
+            return GetAdminView("Manage Locations", data);
+        }
+
+        [HttpGet("LocationForm/{id?}")]
+        [Authorize(Policy = "Admin.LocationForm")]
+        public async System.Threading.Tasks.Task<IActionResult> LocationForm(Guid? id = null)
+        {
+            Clinic.Application.DTOs.MasterData.LocationDto? location = null;
+            if (id.HasValue && id.Value != Guid.Empty)
+            {
+                location = await _locationService.GetLocationByIdAsync(id.Value);
+            }
+            
+            var metadata = new UIMetadata 
+            { 
+                Title = id.HasValue && id.Value != Guid.Empty ? "Edit Location" : "Add Location", 
+                ModuleName = "Admin", 
+                Mode = RenderingMode.Template,
+                Data = location
+            };
+            return View("Templates/Admin_LocationForm", metadata);
+        }
+
+        [HttpPost("SaveLocation")]
+        [Authorize(Policy = "Admin.SaveLocation")]
+        public async System.Threading.Tasks.Task<IActionResult> SaveLocation([FromForm] Clinic.Application.DTOs.MasterData.LocationDto locationDto)
+        {
+            Guid? currentUserId = null;
+            if (Guid.TryParse(User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value, out var uid))
+                currentUserId = uid;
+
+            await _locationService.SaveLocationAsync(locationDto, currentUserId);
+            return RedirectToAction("Locations");
+        }
+
+        [HttpPost("DeleteLocation/{id}")]
+        [Authorize(Policy = "Admin.DeleteLocation")]
+        public async System.Threading.Tasks.Task<IActionResult> DeleteLocation(Guid id)
+        {
+            Guid? currentUserId = null;
+            if (Guid.TryParse(User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value, out var uid))
+                currentUserId = uid;
+
+            await _locationService.DeleteLocationAsync(id, currentUserId);
+            return RedirectToAction("Locations");
         }
 
         [HttpGet("Chairs")]
-        public IActionResult Chairs()
+        [Authorize(Policy = "Admin.Chairs")]
+        public async System.Threading.Tasks.Task<IActionResult> Chairs()
         {
-            return GetAdminView("Manage Chairs");
+            var data = await _chairService.GetAllChairsAsync();
+            return GetAdminView("Manage Chairs", data);
+        }
+
+        [HttpGet("ChairForm/{id?}")]
+        [Authorize(Policy = "Admin.ChairForm")]
+        public async System.Threading.Tasks.Task<IActionResult> ChairForm(Guid? id = null)
+        {
+            Clinic.Application.DTOs.MasterData.ChairDto? chair = null;
+            if (id.HasValue && id.Value != Guid.Empty)
+            {
+                chair = await _chairService.GetChairByIdAsync(id.Value);
+            }
+            
+            var metadata = new UIMetadata 
+            { 
+                Title = id.HasValue && id.Value != Guid.Empty ? "Edit Chair" : "Add Chair", 
+                ModuleName = "Admin", 
+                Mode = RenderingMode.Template,
+                Data = new { Chair = chair, Locations = await _locationService.GetAllLocationsAsync() }
+            };
+            return View("Templates/Admin_ChairForm", metadata);
+        }
+
+        [HttpPost("SaveChair")]
+        [Authorize(Policy = "Admin.SaveChair")]
+        public async System.Threading.Tasks.Task<IActionResult> SaveChair([FromForm] Clinic.Application.DTOs.MasterData.ChairDto chairDto)
+        {
+            Guid? currentUserId = null;
+            if (Guid.TryParse(User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value, out var uid))
+                currentUserId = uid;
+
+            await _chairService.SaveChairAsync(chairDto, currentUserId);
+            return RedirectToAction("Chairs");
+        }
+
+        [HttpPost("DeleteChair/{id}")]
+        [Authorize(Policy = "Admin.DeleteChair")]
+        public async System.Threading.Tasks.Task<IActionResult> DeleteChair(Guid id)
+        {
+            Guid? currentUserId = null;
+            if (Guid.TryParse(User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value, out var uid))
+                currentUserId = uid;
+
+            await _chairService.DeleteChairAsync(id, currentUserId);
+            return RedirectToAction("Chairs");
         }
 
         [HttpGet("Doctors")]
@@ -193,17 +303,48 @@ namespace Clinic.Web.Controllers
             return View("Templates/Admin_List", metadata);
         }
 
-        [HttpGet("CreateUser")]
-        public async System.Threading.Tasks.Task<IActionResult> CreateUser()
+        [HttpGet("UserForm/{id?}")]
+        [Authorize(Policy = "Admin.UserForm")]
+        public async System.Threading.Tasks.Task<IActionResult> UserForm(Guid? id = null)
         {
+            Clinic.Application.DTOs.Auth.UserDto? user = null;
+            if (id.HasValue && id.Value != Guid.Empty)
+            {
+                user = await _authService.GetUserByIdAsync(id.Value);
+            }
+
             var metadata = new UIMetadata 
             { 
-                Title = "Add User", 
+                Title = id.HasValue && id.Value != Guid.Empty ? "Edit User" : "Add User", 
                 ModuleName = "Admin", 
                 Mode = RenderingMode.Template,
-                Data = await _authService.GetRolesAsync()
+                Data = new { User = user, Roles = await _authService.GetRolesAsync(), Locations = await _locationService.GetAllLocationsAsync() }
             };
             return View("Templates/Admin_UserForm", metadata);
+        }
+
+        [HttpPost("SaveUser")]
+        [Authorize(Policy = "Admin.SaveUser")]
+        public async System.Threading.Tasks.Task<IActionResult> SaveUser([FromForm] Clinic.Application.DTOs.Auth.UserDto userDto, [FromForm] string? newPassword)
+        {
+            Guid? currentUserId = null;
+            if (Guid.TryParse(User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value, out var uid))
+                currentUserId = uid;
+
+            await _authService.SaveUserAsync(userDto, newPassword, currentUserId);
+            return RedirectToAction("Users");
+        }
+
+        [HttpPost("DeleteUser/{id}")]
+        [Authorize(Policy = "Admin.DeleteUser")]
+        public async System.Threading.Tasks.Task<IActionResult> DeleteUser(Guid id)
+        {
+            Guid? currentUserId = null;
+            if (Guid.TryParse(User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value, out var uid))
+                currentUserId = uid;
+
+            await _authService.DeleteUserAsync(id, currentUserId);
+            return RedirectToAction("Users");
         }
 
         [HttpGet("CreateProvider")]
@@ -214,9 +355,10 @@ namespace Clinic.Web.Controllers
         }
 
         [HttpGet("UserDetails/{id}")]
-        public IActionResult UserDetails(string id)
+        public async System.Threading.Tasks.Task<IActionResult> UserDetails(Guid id)
         {
-            var metadata = new UIMetadata { Title = "User Detail", ModuleName = "Admin", Mode = RenderingMode.Template };
+            var user = await _authService.GetUserByIdAsync(id);
+            var metadata = new UIMetadata { Title = "User Detail", ModuleName = "Admin", Mode = RenderingMode.Template, Data = user };
             return View("Templates/Admin_UserDetail", metadata);
         }
     }
