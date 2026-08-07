@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Clinic.Application.Interfaces.Operations;
 using Clinic.Application.Interfaces.MasterData;
+using Clinic.Web.Extensions;
 
 namespace Clinic.Web.Controllers
 {
@@ -32,8 +33,8 @@ namespace Clinic.Web.Controllers
             var locations = await _locationRepository.GetAllAsync();
             var specialties = await _specialtyRepository.GetAllAsync();
 
-            ViewBag.Locations = new SelectList(locations, "Id", "ClinicName");
-            ViewBag.Specialties = new SelectList(specialties, "Id", "Name");
+            ViewBag.Locations = locations.ToSelectList(x => x.Id, x => x.ClinicName);
+            ViewBag.Specialties = specialties.ToSelectList(x => x.Id, x => x.Name);
 
             return View();
         }

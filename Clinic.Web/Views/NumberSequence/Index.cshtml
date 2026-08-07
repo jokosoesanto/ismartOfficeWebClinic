@@ -12,7 +12,8 @@
             <i class="fas fa-info-circle"></i> This page is read-only. Number Sequences are managed by the system automatically.
         </div>
         <div class="table-responsive">
-            <table class="table table-hover table-bordered" id="sequenceTable">
+            <table class="table table-hover table-bordered enterprise-grid" id="sequenceTable"
+                   data-order="[[0, &quot;asc&quot;]]">
                 <thead class="table-light">
                     <tr>
                         <th>Sequence Code</th>
@@ -43,12 +44,3 @@
     </div>
 </div>
 
-@section Scripts {
-    <script>
-        $(document).ready(function () {
-            $('#sequenceTable').DataTable({
-                order: [[0, 'asc']]
-            });
-        });
-    </script>
-}

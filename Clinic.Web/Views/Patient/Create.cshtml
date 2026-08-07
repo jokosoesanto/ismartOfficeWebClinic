@@ -1,0 +1,375 @@
+@model Clinic.Web.Models.Patient.PatientFormViewModel
+@{
+    var meta = ViewBag.Meta as Clinic.Application.UI.UIMetadata;
+    var isDuplicate = ViewBag.IgnoreDuplicate as bool? ?? false;
+}
+
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="mb-0 fw-bold">@meta.Title</h2>
+        <a href="/Patient" class="btn btn-outline-secondary shadow-sm"><i class="bi bi-arrow-left me-2"></i>Back to Patients</a>
+    </div>
+
+    @if (!ViewData.ModelState.IsValid)
+    {
+        <div class="alert alert-danger shadow-sm border-0">
+            <i class="bi bi-exclamation-triangle-fill me-2"></i> Please correct the errors below.
+            @Html.ValidationSummary(false, "", new { @class = "mb-0" })
+        </div>
+    }
+
+    <form method="post" action="/Patient/Create" enctype="multipart/form-data" class="needs-validation" novalidate id="patientForm">
+        @Html.AntiForgeryToken()
+        
+        @if(isDuplicate)
+        {
+            <input type="hidden" name="ignoreDuplicate" value="true" />
+        }
+
+        <div class="row g-4">
+            <!-- Sidebar Navigation -->
+            <div class="col-md-3">
+                <div class="card shadow-sm border-0 sticky-top" style="top: 20px;">
+                    <div class="card-body p-0">
+                        <div class="nav flex-column nav-pills p-3" id="v-pills-tab" role="tablist" aria-orientation="vertical">
+                            <button class="nav-link active text-start mb-2" id="v-pills-general-tab" data-bs-toggle="pill" data-bs-target="#v-pills-general" type="button" role="tab" aria-selected="true">
+                                <i class="bi bi-person me-2"></i> General Info
+                            </button>
+                            <button class="nav-link text-start mb-2" id="v-pills-contact-tab" data-bs-toggle="pill" data-bs-target="#v-pills-contact" type="button" role="tab" aria-selected="false">
+                                <i class="bi bi-telephone me-2"></i> Contact Details
+                            </button>
+                            <button class="nav-link text-start mb-2" id="v-pills-emergency-tab" data-bs-toggle="pill" data-bs-target="#v-pills-emergency" type="button" role="tab" aria-selected="false">
+                                <i class="bi bi-heart-pulse me-2"></i> Emergency
+                            </button>
+                            <button class="nav-link text-start" id="v-pills-admin-tab" data-bs-toggle="pill" data-bs-target="#v-pills-admin" type="button" role="tab" aria-selected="false">
+                                <i class="bi bi-shield-check me-2"></i> Administration
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Form Content -->
+            <div class="col-md-9">
+                <div class="tab-content" id="v-pills-tabContent">
+                    
+                    <!-- General Tab -->
+                    <div class="tab-pane fade show active" id="v-pills-general" role="tabpanel">
+                        <div class="card shadow-sm border-0 mb-4">
+                            <div class="card-header bg-white border-bottom-0 pt-4 pb-0">
+                                <h5 class="fw-bold text-primary mb-0"><i class="bi bi-person me-2"></i>General Information</h5>
+                            </div>
+                            <div class="card-body p-4">
+                                <div class="row">
+                                    <!-- Photo Upload Section -->
+                                    <div class="col-12 mb-4 d-flex align-items-center gap-4">
+                                        <div class="position-relative">
+                                            <div class="bg-light rounded-circle d-flex align-items-center justify-content-center text-secondary border shadow-sm" style="width: 100px; height: 100px; overflow: hidden;" id="photoPreviewContainer">
+                                                <i class="bi bi-person-fill display-4" id="photoPlaceholder"></i>
+                                                <img id="photoPreview" src="#" alt="Photo Preview" class="object-fit-cover w-100 h-100 d-none" />
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <label class="form-label fw-bold">Patient Photo</label>
+                                            <input type="file" class="form-control" name="PhotoUpload" id="PhotoUpload" accept=".jpg,.jpeg,.png,.webp" onchange="previewImage(this);">
+                                            <div class="form-text">Allowed formats: JPG, PNG, WEBP. Max size: 5MB.</div>
+                                        </div>
+                                    </div>
+                                    <hr class="text-muted opacity-25">
+
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label fw-bold">MRN <span class="text-danger">*</span></label>
+                                        <input type="text" class="form-control bg-light" name="MRN" value="[ AUTO GENERATED ]" readonly disabled>
+                                        <div class="form-text">MRN is immutable and automatically generated.</div>
+                                    </div>
+                                    
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label fw-bold">Full Name <span class="text-danger">*</span></label>
+                                        <input type="text" class="form-control" name="FullName" required value="@Model.Patient.FullName">
+                                        <div class="invalid-feedback">Full Name is required.</div>
+                                    </div>
+
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label fw-bold">National ID (NIK)</label>
+                                        <input type="text" class="form-control" name="NationalId" value="@Model.Patient.NationalId">
+                                    </div>
+
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label fw-bold">Passport Number</label>
+                                        <input type="text" class="form-control" name="PassportNumber" value="@Model.Patient.PassportNumber">
+                                    </div>
+
+                                    <div class="col-md-4 mb-3">
+                                        <label class="form-label fw-bold">Birth Date</label>
+                                        <input type="date" class="form-control" name="BirthDate" value="@(Model.Patient.BirthDate?.ToString("yyyy-MM-dd"))">
+                                    </div>
+
+                                    <div class="col-md-4 mb-3">
+                                        <label class="form-label fw-bold">Gender</label>
+                                        <select class="form-select" name="Gender" asp-items="Model.Genders">
+                                            <option value="">-- Select --</option>
+                                        </select>
+                                    </div>
+
+                                    <div class="col-md-4 mb-3">
+                                        <label class="form-label fw-bold">Blood Type</label>
+                                        <select class="form-select" name="BloodType" asp-items="Model.BloodTypes">
+                                            <option value="">-- Select --</option>
+                                        </select>
+                                    </div>
+
+                                    <div class="col-md-4 mb-3">
+                                        <label class="form-label fw-bold">Religion</label>
+                                        <select class="form-select" name="Religion" asp-items="Model.Religions">
+                                            <option value="">-- Select --</option>
+                                        </select>
+                                    </div>
+
+                                    <div class="col-md-4 mb-3">
+                                        <label class="form-label fw-bold">Nationality</label>
+                                        <select class="form-select" name="Nationality" asp-items="Model.Nationalities">
+                                            <option value="">-- Select --</option>
+                                        </select>
+                                    </div>
+                                    
+                                    <div class="col-md-4 mb-3">
+                                        <label class="form-label fw-bold">Language</label>
+                                        <select class="form-select" name="Language" asp-items="Model.Languages">
+                                            <option value="">-- Select --</option>
+                                        </select>
+                                    </div>
+
+                                    <div class="col-md-4 mb-3">
+                                        <label class="form-label fw-bold">Occupation</label>
+                                        <select class="form-select" name="Occupation" asp-items="Model.Occupations">
+                                            <option value="">-- Select --</option>
+                                        </select>
+                                    </div>
+
+                                    <div class="col-md-4 mb-3">
+                                        <label class="form-label fw-bold">Education</label>
+                                        <select class="form-select" name="Education" asp-items="Model.Educations">
+                                            <option value="">-- Select --</option>
+                                        </select>
+                                    </div>
+
+                                    <div class="col-md-4 mb-3">
+                                        <label class="form-label fw-bold">Marital Status</label>
+                                        <select class="form-select" name="MaritalStatus" asp-items="Model.MaritalStatuses">
+                                            <option value="">-- Select --</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Contact Tab -->
+                    <div class="tab-pane fade" id="v-pills-contact" role="tabpanel">
+                        <div class="card shadow-sm border-0 mb-4">
+                            <div class="card-header bg-white border-bottom-0 pt-4 pb-0">
+                                <h5 class="fw-bold text-primary mb-0"><i class="bi bi-telephone me-2"></i>Contact Details</h5>
+                            </div>
+                            <div class="card-body p-4">
+                                <div class="row">
+                                    <div class="col-12 mb-3">
+                                        <label class="form-label fw-bold">Address</label>
+                                        <textarea class="form-control" name="Address" rows="2">@Model.Patient.Address</textarea>
+                                    </div>
+                                    
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label fw-bold">Country</label>
+                                        <select class="form-select" name="Country" asp-items="Model.Countries">
+                                            <option value="">-- Select --</option>
+                                        </select>
+                                    </div>
+
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label fw-bold">Province / State</label>
+                                        <select class="form-select" name="Province" asp-items="Model.Provinces">
+                                            <option value="">-- Select --</option>
+                                        </select>
+                                    </div>
+
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label fw-bold">City</label>
+                                        <input type="text" class="form-control" name="City" value="@Model.Patient.City">
+                                    </div>
+
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label fw-bold">Postal Code</label>
+                                        <input type="text" class="form-control" name="PostalCode" value="@Model.Patient.PostalCode">
+                                    </div>
+                                    
+                                    <hr class="text-muted opacity-25 my-4">
+
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label fw-bold">Mobile Phone <span class="text-danger">*</span></label>
+                                        <input type="text" class="form-control" name="Mobile" required value="@Model.Patient.Mobile">
+                                        <div class="invalid-feedback">Mobile is required.</div>
+                                    </div>
+
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label fw-bold">WhatsApp</label>
+                                        <input type="text" class="form-control" name="WhatsApp" value="@Model.Patient.WhatsApp">
+                                    </div>
+
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label fw-bold">Email</label>
+                                        <input type="email" class="form-control" name="Email" value="@Model.Patient.Email">
+                                    </div>
+                                    
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label fw-bold">Home Phone</label>
+                                        <input type="text" class="form-control" name="HomePhone" value="@Model.Patient.HomePhone">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Emergency Tab -->
+                    <div class="tab-pane fade" id="v-pills-emergency" role="tabpanel">
+                        <div class="card shadow-sm border-0 mb-4">
+                            <div class="card-header bg-white border-bottom-0 pt-4 pb-0">
+                                <h5 class="fw-bold text-primary mb-0"><i class="bi bi-heart-pulse me-2"></i>Emergency Contact</h5>
+                            </div>
+                            <div class="card-body p-4">
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label fw-bold">Emergency Contact Name</label>
+                                        <input type="text" class="form-control" name="EmergencyContactName" value="@Model.Patient.EmergencyContactName">
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label fw-bold">Relationship</label>
+                                        <select class="form-select" name="EmergencyRelationship" asp-items="Model.Relationships">
+                                            <option value="">-- Select --</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label fw-bold">Emergency Phone</label>
+                                        <input type="text" class="form-control" name="EmergencyPhone" value="@Model.Patient.EmergencyPhone">
+                                    </div>
+                                    <div class="col-12 mb-3">
+                                        <label class="form-label fw-bold">Emergency Address</label>
+                                        <textarea class="form-control" name="EmergencyAddress" rows="2">@Model.Patient.EmergencyAddress</textarea>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Administration Tab -->
+                    <div class="tab-pane fade" id="v-pills-admin" role="tabpanel">
+                        <div class="card shadow-sm border-0 mb-4">
+                            <div class="card-header bg-white border-bottom-0 pt-4 pb-0">
+                                <h5 class="fw-bold text-primary mb-0"><i class="bi bi-shield-check me-2"></i>Administration</h5>
+                            </div>
+                            <div class="card-body p-4">
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label fw-bold">Home Clinic (Preferred Clinic)</label>
+                                        <select class="form-select" name="HomeClinicId" asp-items="Model.Locations">
+                                            <option value="">-- Select Preferred Clinic --</option>
+                                        </select>
+                                        <div class="form-text">Patient can still visit all branches.</div>
+                                    </div>
+                                    
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label fw-bold">Patient Category</label>
+                                        <select class="form-select" name="Category" asp-items="Model.Categories">
+                                            <option value="">-- Select --</option>
+                                        </select>
+                                    </div>
+
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label fw-bold">Patient Status</label>
+                                        <select class="form-select" name="Status" asp-items="Model.Statuses">
+                                            <option value="">-- Select --</option>
+                                        </select>
+                                    </div>
+                                    
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label fw-bold">Registration Date</label>
+                                        <input type="date" class="form-control" name="RegistrationDate" value="@(Model.Patient.RegistrationDate?.ToString("yyyy-MM-dd") ?? DateTime.Now.ToString("yyyy-MM-dd"))">
+                                    </div>
+
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label fw-bold">Preferred Communication</label>
+                                        <select class="form-select" name="PreferredCommunication" asp-items="Model.PreferredCommunications">
+                                            <option value="">-- Select --</option>
+                                        </select>
+                                        <div class="form-text">Used for Appointment Reminders.</div>
+                                    </div>
+
+                                    <div class="col-12 mb-3">
+                                        <label class="form-label fw-bold">Internal Notes</label>
+                                        <textarea class="form-control" name="Notes" rows="3">@Model.Patient.Notes</textarea>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                </div>
+                
+                <div class="card shadow-sm border-0 mb-4">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-end gap-2">
+                            <a href="/Patient" class="btn btn-light border px-4">Cancel</a>
+                            <button type="submit" class="btn btn-primary px-4 shadow-sm"><i class="bi bi-save me-2"></i>Register Patient</button>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    
+    // Note: Selected values are now driven by the Selected property inside SelectListItem
+    // Auto-select dropdown values is no longer needed via JS for these Dropdowns, but kept for non-refactored ones just in case.
+
+    // UX Form Validation & Tab Switching
+    var form = document.getElementById('patientForm');
+    form.addEventListener('submit', function (event) {
+        if (!form.checkValidity()) {
+            event.preventDefault();
+            event.stopPropagation();
+            
+            var firstInvalid = form.querySelector(':invalid');
+            if (firstInvalid) {
+                var tabPane = firstInvalid.closest('.tab-pane');
+                if (tabPane) {
+                    var tabId = tabPane.id;
+                    var tabButton = document.querySelector('button[data-bs-target="#' + tabId + '"]');
+                    if (tabButton) {
+                        var bsTab = new bootstrap.Tab(tabButton);
+                        bsTab.show();
+                        setTimeout(function() { firstInvalid.focus(); }, 200);
+                    }
+                }
+            }
+        }
+        form.classList.add('was-validated');
+    }, false);
+});
+
+function previewImage(input) {
+    if (input.files && input.files[0]) {
+        var reader = new FileReader();
+        reader.onload = function(e) {
+            document.getElementById('photoPlaceholder').classList.add('d-none');
+            var img = document.getElementById('photoPreview');
+            img.src = e.target.result;
+            img.classList.remove('d-none');
+        }
+        reader.readAsDataURL(input.files[0]);
+    }
+}
+</script>
+}

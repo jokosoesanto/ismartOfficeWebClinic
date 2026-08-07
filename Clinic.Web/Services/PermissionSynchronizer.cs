@@ -160,7 +160,13 @@ namespace Clinic.Web.Services
                 new { Code = "User.ManageAllLocations", Name = "Manage All Locations Users", Module = "User", Category = "Security" },
                 new { Code = "ScheduleBoard.Export", Name = "Export Schedule Board", Module = "ScheduleBoard", Category = "Operations" },
                 new { Code = "MasterReference.Import", Name = "Import Master Reference", Module = "MasterReference", Category = "System" },
-                new { Code = "MasterReference.Export", Name = "Export Master Reference", Module = "MasterReference", Category = "System" }
+                new { Code = "MasterReference.Export", Name = "Export Master Reference", Module = "MasterReference", Category = "System" },
+                new { Code = "Patient.View", Name = "View Patient", Module = "Patient", Category = "Master Data" },
+                new { Code = "Patient.Create", Name = "Create Patient", Module = "Patient", Category = "Master Data" },
+                new { Code = "Patient.Edit", Name = "Edit Patient", Module = "Patient", Category = "Master Data" },
+                new { Code = "Patient.Delete", Name = "Delete Patient", Module = "Patient", Category = "Master Data" },
+                new { Code = "Patient.Export", Name = "Export Patient", Module = "Patient", Category = "Master Data" },
+                new { Code = "Patient.Import", Name = "Import Patient", Module = "Patient", Category = "Master Data" }
             };
 
             foreach(var cp in customPermissions)

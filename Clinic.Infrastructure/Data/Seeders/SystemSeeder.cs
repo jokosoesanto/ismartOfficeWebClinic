@@ -10,6 +10,7 @@ namespace Clinic.Infrastructure.Data.Seeders
         public static void Seed(AppDbContext context)
         {
             SeedMasterReferences(context);
+            SeedNumberSequences(context);
             context.SaveChanges();
         }
 
@@ -50,6 +51,7 @@ namespace Clinic.Infrastructure.Data.Seeders
             AddRefs("MaritalStatus", new[] { "Single", "Married", "Divorced", "Widowed" });
             AddRefs("Country", new[] { "Indonesia", "Malaysia", "Singapore" });
             AddRefs("Province", new[] { "DKI Jakarta", "West Java", "Central Java", "East Java", "Bali" });
+            AddRefs("PreferredCommunication", new[] { "Phone", "WhatsApp", "SMS", "Email" });
 
             foreach (var r in systemReferences)
             {
@@ -57,6 +59,24 @@ namespace Clinic.Infrastructure.Data.Seeders
                 {
                     context.MasterReferences.Add(r);
                 }
+            }
+        }
+
+        private static void SeedNumberSequences(AppDbContext context)
+        {
+            if (!context.NumberSequences.Any(x => x.SequenceCode == "MR"))
+            {
+                context.NumberSequences.Add(new NumberSequence
+                {
+                    Id = Guid.NewGuid(),
+                    SequenceCode = "MR",
+                    Prefix = "MR",
+                    Padding = 10,
+                    ResetPolicy = Clinic.Domain.Enums.SequenceResetPolicy.Never,
+                    IncrementStep = 1,
+                    CurrentValue = 0,
+                    CreatedAt = DateTime.UtcNow
+                });
             }
         }
     }

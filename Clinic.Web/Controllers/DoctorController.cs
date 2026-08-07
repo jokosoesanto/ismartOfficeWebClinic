@@ -8,6 +8,7 @@ using Clinic.Application.Interfaces.MasterData;
 using Clinic.Domain.Entities.MasterData;
 using Clinic.Application.DTOs.MasterData;
 using Clinic.Application.UI;
+using Clinic.Web.Extensions;
 
 namespace Clinic.Web.Controllers
 {
@@ -98,7 +99,7 @@ namespace Clinic.Web.Controllers
             }
             var meta = new UIMetadata { Title = "Create Doctor", ModuleName = "Master Data", Mode = RenderingMode.Template };
             ViewBag.Meta = meta;
-            await PopulateViewBags();
+            await PopulateViewBags(dto.SpecialtyId, dto.PrimaryLocationId);
             return View("Templates/Doctor_Form", dto);
         }
 
@@ -149,7 +150,7 @@ namespace Clinic.Web.Controllers
             
             var meta = new UIMetadata { Title = "Edit Doctor", ModuleName = "Master Data", Mode = RenderingMode.Template };
             ViewBag.Meta = meta;
-            await PopulateViewBags();
+            await PopulateViewBags(dto.SpecialtyId, dto.PrimaryLocationId);
             return View("Templates/Doctor_Form", dto);
         }
 
@@ -215,7 +216,7 @@ namespace Clinic.Web.Controllers
 
             var meta = new UIMetadata { Title = "Edit Doctor", ModuleName = "Master Data", Mode = RenderingMode.Template };
             ViewBag.Meta = meta;
-            await PopulateViewBags();
+            await PopulateViewBags(dto.SpecialtyId, dto.PrimaryLocationId);
             return View("Templates/Doctor_Form", dto);
         }
 
@@ -275,7 +276,7 @@ namespace Clinic.Web.Controllers
             var meta = new UIMetadata { Title = "Add Schedule", ModuleName = "Master Data", Mode = RenderingMode.Template };
             ViewBag.Meta = meta;
             ViewBag.DoctorId = doctorId;
-            await PopulateViewBags();
+            await PopulateViewBags(null, dto.LocationId);
             return View("Templates/DoctorSchedule_Form", dto);
         }
 
@@ -307,7 +308,7 @@ namespace Clinic.Web.Controllers
             var meta = new UIMetadata { Title = "Edit Schedule - " + doctor.FullName, ModuleName = "Master Data", Mode = RenderingMode.Template };
             ViewBag.Meta = meta;
             ViewBag.DoctorId = doctorId;
-            await PopulateViewBags();
+            await PopulateViewBags(null, dto.LocationId);
             return View("Templates/DoctorSchedule_Form", dto);
         }
 
@@ -345,7 +346,7 @@ namespace Clinic.Web.Controllers
             var meta = new UIMetadata { Title = "Edit Schedule", ModuleName = "Master Data", Mode = RenderingMode.Template };
             ViewBag.Meta = meta;
             ViewBag.DoctorId = doctorId;
-            await PopulateViewBags();
+            await PopulateViewBags(null, dto.LocationId);
             return View("Templates/DoctorSchedule_Form", dto);
         }
 
@@ -358,13 +359,13 @@ namespace Clinic.Web.Controllers
             return RedirectToAction("Edit", new { id = doctorId });
         }
 
-        private async Task PopulateViewBags()
+        private async Task PopulateViewBags(Guid? selectedSpecialty = null, Guid? selectedLocation = null)
         {
             var specialties = await _specialtyService.GetAllActiveAsync();
-            ViewBag.Specialties = new SelectList(specialties, "Id", "Name");
+            ViewBag.Specialties = specialties.ToSelectList(x => x.Id, x => x.Name, selectedSpecialty);
 
             var locations = await _locationService.GetAllLocationsAsync();
-            ViewBag.Locations = new SelectList(locations, "Id", "ClinicName");
+            ViewBag.Locations = locations.ToSelectList(x => x.Id, x => x.ClinicName, selectedLocation);
         }
 
         private void ValidateSchedule(DoctorScheduleDto dto, Doctor doctor)

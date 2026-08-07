@@ -30,7 +30,7 @@
             </div>
             <div class="card-body">
                 <div class="table-responsive">
-                    <table class="table table-hover table-bordered w-100" id="referenceTable">
+                    <table class="table table-hover table-bordered w-100 enterprise-grid" id="referenceTable">
                         <thead class="table-light">
                             <tr>
                                 <th>Code</th>
@@ -61,42 +61,46 @@
     </div>
 </div>
 
+<script>
+    // TIER 2: Register advanced DataTable config BEFORE $(document).ready()
+    window.EnterpriseDataTables.register('referenceTable', {
+        columns: [
+            { data: 'code' },
+            { data: 'name' },
+            { data: 'description' },
+            { data: 'sortOrder' },
+            { 
+                data: 'isSystem',
+                render: function(data) {
+                    return data ? '<span class="badge bg-secondary">System</span>' : '<span class="badge bg-primary">Custom</span>';
+                }
+            },
+            { 
+                data: 'isActive',
+                render: function(data) {
+                    return data ? '<span class="badge bg-success">Active</span>' : '<span class="badge bg-danger">Inactive</span>';
+                }
+            },
+            {
+                data: 'id',
+                orderable: false,
+                render: function(data, type, row) {
+                    var btns = '<button class="btn btn-sm btn-outline-secondary btn-edit" data-id="' + data + '"><i class="fas fa-edit"></i> Edit</button>';
+                    if (!row.isSystem) {
+                        btns += ' <button class="btn btn-sm btn-outline-danger btn-delete" data-id="' + data + '"><i class="fas fa-trash"></i> Delete</button>';
+                    }
+                    return btns;
+                }
+            }
+        ]
+    });
+</script>
+
 @section Scripts {
     <script>
         $(document).ready(function () {
-            let currentCategory = '';
-            
-            var table = $('#referenceTable').DataTable({
-                columns: [
-                    { data: 'code' },
-                    { data: 'name' },
-                    { data: 'description' },
-                    { data: 'sortOrder' },
-                    { 
-                        data: 'isSystem',
-                        render: function(data) {
-                            return data ? '<span class="badge bg-secondary">System</span>' : '<span class="badge bg-primary">Custom</span>';
-                        }
-                    },
-                    { 
-                        data: 'isActive',
-                        render: function(data) {
-                            return data ? '<span class="badge bg-success">Active</span>' : '<span class="badge bg-danger">Inactive</span>';
-                        }
-                    },
-                    {
-                        data: 'id',
-                        orderable: false,
-                        render: function(data, type, row) {
-                            let btns = `<button class="btn btn-sm btn-outline-secondary btn-edit" data-id="${data}"><i class="fas fa-edit"></i> Edit</button>`;
-                            if (!row.isSystem) {
-                                btns += ` <button class="btn btn-sm btn-outline-danger btn-delete" data-id="${data}"><i class="fas fa-trash"></i> Delete</button>`;
-                            }
-                            return btns;
-                        }
-                    }
-                ]
-            });
+            var currentCategory = '';
+            var table = $('#referenceTable').DataTable();
 
             $('.category-item').on('click', function(e) {
                 e.preventDefault();
@@ -161,3 +165,4 @@
         });
     </script>
 }
+

@@ -28,6 +28,7 @@ namespace Clinic.Infrastructure.Data
         public DbSet<Clinic.Domain.Entities.MasterData.Doctor> Doctors { get; set; } = null!;
         public DbSet<Clinic.Domain.Entities.MasterData.DoctorLocation> DoctorLocations { get; set; } = null!;
         public DbSet<Clinic.Domain.Entities.MasterData.DoctorSchedule> DoctorSchedules { get; set; } = null!;
+        public DbSet<Clinic.Domain.Entities.MasterData.Patient> Patients { get; set; } = null!;
         public DbSet<Clinic.Domain.Entities.Configuration.AppConfiguration> AppConfigurations { get; set; } = null!;
         public DbSet<Clinic.Domain.Entities.System.FileMetadata> FileMetadatas { get; set; } = null!;
 
@@ -57,6 +58,14 @@ namespace Clinic.Infrastructure.Data
             modelBuilder.Entity<Clinic.Domain.Entities.MasterData.Specialty>(entity =>
             {
                 entity.HasIndex(e => e.Code).IsUnique();
+            });
+
+            modelBuilder.Entity<Clinic.Domain.Entities.MasterData.Patient>(entity =>
+            {
+                entity.HasIndex(e => e.MRN).IsUnique();
+                
+                // Add soft delete query filter
+                entity.HasQueryFilter(e => !e.IsDeleted);
             });
 
             base.OnModelCreating(modelBuilder);

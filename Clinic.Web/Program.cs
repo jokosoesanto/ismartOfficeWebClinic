@@ -10,59 +10,26 @@ using Clinic.Application.Interfaces.Auth;
 using Clinic.Application.UseCases.Auth;
 using Clinic.Infrastructure.Repositories.Auth;
 using Clinic.Infrastructure.Security;
+using Clinic.Web.Extensions;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
 builder.Services.AddHttpContextAccessor();
-builder.Services.AddSingleton<Clinic.Application.Navigation.INavigationProvider, Clinic.Infrastructure.MockProviders.NavigationProvider>();
-
-// Component Services
-builder.Services.AddSingleton<Clinic.Web.Services.Diagnostics.IComponentResolver, Clinic.Web.Services.Diagnostics.ComponentResolver>();
-builder.Services.AddSingleton<Clinic.Web.Services.Diagnostics.IComponentDiagnosticsService, Clinic.Web.Services.Diagnostics.ComponentDiagnosticsService>();
-builder.Services.AddSingleton<Clinic.Web.Services.Diagnostics.IRegistryValidatorService, Clinic.Web.Services.Diagnostics.RegistryValidatorService>();
-builder.Services.AddSingleton<Clinic.Web.Services.IComponentRegistry, Clinic.Web.Services.ComponentRegistry>();
+builder.Services.AddMemoryCache();
 
 // Database Configuration
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlite(connectionString, b => b.MigrationsAssembly("Clinic.Infrastructure")));
-builder.Services.AddScoped<Clinic.Application.Interfaces.IUnitOfWork>(provider => provider.GetRequiredService<AppDbContext>());
 
-// Auth Services
-builder.Services.AddScoped<IUserRepository, UserRepository>();
-builder.Services.AddScoped<IRoleRepository, RoleRepository>();
-builder.Services.AddScoped<IPermissionRepository, PermissionRepository>();
-builder.Services.AddScoped<IUserSessionRepository, UserSessionRepository>();
-builder.Services.AddScoped<IAuditRepository, AuditRepository>();
-builder.Services.AddScoped<IPasswordHasher, IdentityPasswordHasher>();
-builder.Services.AddScoped<ICurrentUserService, Clinic.Web.Services.CurrentUserService>();
-builder.Services.AddScoped<IAuthService, AuthService>();
-builder.Services.AddSingleton<IPermissionCache, Clinic.Web.Services.Auth.PermissionCache>();
-builder.Services.AddScoped<IPermissionService, PermissionService>();
-builder.Services.AddScoped<Clinic.Application.Interfaces.Navigation.INavigationService, Clinic.Application.UseCases.Navigation.NavigationService>();
-builder.Services.AddMemoryCache();
-builder.Services.AddScoped<Clinic.Application.Interfaces.MasterData.ILocationRepository, Clinic.Infrastructure.Repositories.MasterData.LocationRepository>();
-builder.Services.AddScoped<Clinic.Application.Interfaces.MasterData.IChairRepository, Clinic.Infrastructure.Repositories.MasterData.ChairRepository>();
-builder.Services.AddScoped<Clinic.Application.Interfaces.MasterData.ISpecialtyRepository, Clinic.Infrastructure.Repositories.MasterData.SpecialtyRepository>();
-builder.Services.AddScoped<Clinic.Application.Interfaces.MasterData.IDoctorRepository, Clinic.Infrastructure.Repositories.MasterData.DoctorRepository>();
-builder.Services.AddScoped<Clinic.Application.Interfaces.MasterData.ILocationService, Clinic.Application.UseCases.MasterData.LocationService>();
-builder.Services.AddScoped<Clinic.Application.Interfaces.MasterData.IChairService, Clinic.Application.UseCases.MasterData.ChairService>();
-builder.Services.AddScoped<Clinic.Application.Interfaces.MasterData.ISpecialtyService, Clinic.Application.UseCases.MasterData.SpecialtyService>();
-builder.Services.AddScoped<Clinic.Application.Interfaces.MasterData.IDoctorService, Clinic.Application.UseCases.MasterData.DoctorService>();
-builder.Services.AddScoped<Clinic.Application.Interfaces.Operations.IScheduleBoardRepository, Clinic.Infrastructure.Repositories.Operations.ScheduleBoardRepository>();
+// Enterprise Services
+builder.Services.AddSystemFoundation();
+builder.Services.AddInfrastructureServices();
+builder.Services.AddApplicationServices();
+builder.Services.AddStorageServices(builder.Configuration);
 
-// System Services
-builder.Services.AddScoped<Clinic.Application.Interfaces.Configuration.IAppConfigurationRepository, Clinic.Infrastructure.Repositories.Configuration.AppConfigurationRepository>();
-builder.Services.AddScoped<Clinic.Application.Interfaces.Configuration.IAppConfigurationService, Clinic.Application.UseCases.Configuration.AppConfigurationService>();
-builder.Services.AddScoped<Clinic.Application.Interfaces.Configuration.INumberSequenceRepository, Clinic.Infrastructure.Repositories.Configuration.NumberSequenceRepository>();
-builder.Services.AddScoped<Clinic.Application.Interfaces.Configuration.INumberSequenceService, Clinic.Application.UseCases.Configuration.NumberSequenceService>();
-builder.Services.AddScoped<Clinic.Application.Interfaces.MasterData.IMasterReferenceRepository, Clinic.Infrastructure.Repositories.MasterData.MasterReferenceRepository>();
-builder.Services.AddScoped<Clinic.Application.Interfaces.MasterData.IMasterReferenceService, Clinic.Application.UseCases.MasterData.MasterReferenceService>();
-
-builder.Services.AddSingleton<Microsoft.AspNetCore.Authorization.IAuthorizationPolicyProvider, Clinic.Web.Security.PermissionPolicyProvider>();
-builder.Services.AddSingleton<Microsoft.AspNetCore.Authorization.IAuthorizationHandler, Clinic.Web.Security.PermissionAuthorizationHandler>();
 builder.Services.AddAuthorization();
 
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
@@ -78,6 +45,8 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
     });
 
 var app = builder.Build();
+
+app.ValidateEnterpriseDependencies();
 
 // Automatically apply migrations at startup
 using (var scope = app.Services.CreateScope())

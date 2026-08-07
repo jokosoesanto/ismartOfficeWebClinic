@@ -26,7 +26,7 @@ namespace Clinic.Infrastructure.Repositories.Operations
                 {
                     ScheduleId = s.Id,
                     DoctorId = s.DoctorId,
-                    DoctorName = s.Doctor.Title != null ? $"{s.Doctor.Title} {s.Doctor.FullName}" : s.Doctor.FullName,
+                    DoctorName = s.Doctor.Title != null ? (s.Doctor.Title + " " + s.Doctor.FullName) : s.Doctor.FullName,
                     Specialty = s.Doctor.Specialty.Name,
                     DoctorColor = s.Doctor.Color,
                     LocationId = s.LocationId,
