@@ -54,12 +54,16 @@
                         <a href="/Admin/Locations" class="list-group-item list-group-item-action @(Model.Title == "Manage Locations" ? "active fw-bold" : "")"><i class="bi bi-building me-2"></i>Locations</a>
                         <a href="/Admin/Chairs" class="list-group-item list-group-item-action @(Model.Title == "Manage Chairs" ? "active fw-bold" : "")"><i class="bi bi-usb-drive me-2"></i>Chairs</a>
                     </div>
-                    <div class="list-group list-group-flush border rounded">
+                    <div class="list-group list-group-flush border rounded mb-3">
                         <h6 class="dropdown-header fw-bold bg-light border-bottom">Master Data</h6>
-                        <a href="/Admin/Doctors" class="list-group-item list-group-item-action @(Model.Title == "Manage Doctors" ? "active fw-bold" : "")"><i class="bi bi-person-badge me-2"></i>Doctors / Providers</a>
+                        <a href="/Doctor" class="list-group-item list-group-item-action @(Model.Title == "Doctors / Providers" ? "active fw-bold" : "")"><i class="bi bi-person-badge me-2"></i>Doctors / Providers</a>
+                        <a href="/Specialty" class="list-group-item list-group-item-action @(Model.Title == "Specialties" ? "active fw-bold" : "")"><i class="bi bi-award me-2"></i>Specialties</a>
                         <a href="/Admin/Insurance" class="list-group-item list-group-item-action @(Model.Title == "Manage Insurance" ? "active fw-bold" : "")"><i class="bi bi-card-checklist me-2"></i>Insurance</a>
                         <a href="/Admin/Procedures" class="list-group-item list-group-item-action @(Model.Title == "Manage Procedures" ? "active fw-bold" : "")"><i class="bi bi-list-check me-2"></i>Procedures</a>
                         <a href="/Admin/Lookup" class="list-group-item list-group-item-action @(Model.Title == "Master Lookup" ? "active fw-bold" : "")"><i class="bi bi-tags me-2"></i>Master Lookup</a>
+                    </div>
+                    <div class="list-group list-group-flush border rounded">
+                        <h6 class="dropdown-header fw-bold bg-light border-bottom">System Configuration</h6>
                     @if (User.HasClaim("Permission", "Configuration.Security"))
                     {
                         <a href="/Configuration/Security" class="list-group-item list-group-item-action @(Model.Title == "Configuration" || Model.Title == "Security Configuration" ? "active fw-bold" : "")"><i class="bi bi-gear me-2"></i>Configuration</a>

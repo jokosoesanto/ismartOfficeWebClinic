@@ -1,7 +1,9 @@
-# Foundation Finalization & Configuration Foundation Sprint
+# Master Data Foundation: Doctors / Providers
 
-## Completed Tasks
-- [x] Configuration Module Infrastructure (Entity, DbContext, Repository, Service)
-- [x] Migration applied for AppConfigurations`n- [x] Session Timeout Configuration implemented in AuthController.cs`n- [x] User Interface for Security Configuration in Admin_List.cshtml`n- [x] Fixed Sidebar Collapse CSS (Perfect Center alignment)
-- [x] Foundation Regression tests passed
-- [x] Documentation generated (357-360 in support_documents/)
+## Tasks
+- [ ] Task 1: Create Entity Doctor`n- [ ] Task 2: Create Entity Specialty`n- [ ] Task 4 & 6: Create Entities DoctorSchedule and DoctorLocation`n- [ ] Task 1 & 2 & 4 & 6: DbContext & Migrations
+- [ ] Task 7: Update PermissionSynchronizer to auto-assign new permissions to Administrator
+- [ ] Task 8: Update Sidebar navigation for Doctors & Specialties
+- [ ] Task 3 & 5 & 9 & 10: Controllers, DTOs, and Views for Specialty and Doctor (CRUD + Schedule + DataTables)
+- [ ] Task 12: Regression & Build Testing
+- [ ] Documentation (324, 325, 326, 327, 328)

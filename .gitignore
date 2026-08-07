@@ -4,8 +4,14 @@ obj/
 *.suo
 .vs/
 support_documents/
+*.sqlite3
 *.sqlite3-wal
 *.sqlite3-shm
+*.db-wal
+*.db-shm
+*.journal
 logs/
 publish/
 cache/
+Storage/
+Temp/

@@ -9,6 +9,22 @@
     {
       "library": "font-awesome@6.4.2",
       "destination": "wwwroot/lib/fontawesome"
+    },
+    {
+      "library": "datatables.net-buttons@2.4.2",
+      "destination": "wwwroot/lib/datatables-buttons"
+    },
+    {
+      "library": "jszip@3.10.1",
+      "destination": "wwwroot/lib/jszip"
+    },
+    {
+      "library": "pdfmake@0.2.7",
+      "destination": "wwwroot/lib/pdfmake"
+    },
+    {
+      "library": "fullcalendar@6.1.10",
+      "destination": "wwwroot/lib/fullcalendar"
     }
   ]
 }

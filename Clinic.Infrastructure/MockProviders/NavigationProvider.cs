@@ -25,6 +25,12 @@ namespace Clinic.Infrastructure.MockProviders
                 new NavigationItem { Id = "billing", Title = "Billing & Payment", Icon = "bi-cash-coin", Route = "/Billing", BreadcrumbTitle = "Billing", Description = "Invoices and Payments", RequiredPermission = "Billing.Index" },
                 new NavigationItem { Id = "inventory", Title = "Inventory", Icon = "bi-box-seam", Route = "/Inventory", BreadcrumbTitle = "Inventory", Description = "Stock Management", RequiredPermission = "Inventory.Index" },
                 new NavigationItem { Id = "report", Title = "Reports", Icon = "bi-bar-chart", Route = "/Report", BreadcrumbTitle = "Reports", Description = "Analytics and Reports", RequiredPermission = "Report.Index" },
+                new NavigationItem { Id = "operations", Title = "Operations", Icon = "bi-activity", Route = "/Operations", BreadcrumbTitle = "Operations", Description = "Operational Modules", RequiredPermission = "ScheduleBoard.View",
+                    Children = new List<NavigationItem>
+                    {
+                        new NavigationItem { Id = "schedule-board", Title = "Doctor Schedule Board", Icon = "bi-calendar2-week", Route = "/ScheduleBoard", BreadcrumbTitle = "Schedule Board", RequiredPermission = "ScheduleBoard.View" }
+                    }
+                },
                 new NavigationItem { Id = "admin", Title = "Administration", Icon = "bi-gear", Route = "/Admin", BreadcrumbTitle = "Admin", Description = "System Administration", RequiredPermission = "Admin.Index",
                     Children = new List<NavigationItem>
                     {
@@ -32,6 +38,13 @@ namespace Clinic.Infrastructure.MockProviders
                         new NavigationItem { Id = "admin-roles", Title = "Roles", Icon = "bi-shield-lock", Route = "/Admin/Roles", BreadcrumbTitle = "Roles", RequiredPermission = "Admin.Roles" },
                         new NavigationItem { Id = "admin-locations", Title = "Locations", Icon = "bi-buildings", Route = "/Admin/Locations", BreadcrumbTitle = "Locations", RequiredPermission = "Admin.Locations" },
                         new NavigationItem { Id = "admin-chairs", Title = "Chairs", Icon = "bi-display", Route = "/Admin/Chairs", BreadcrumbTitle = "Chairs", RequiredPermission = "Admin.Chairs" }
+                    }
+                },
+                new NavigationItem { Id = "system", Title = "System", Icon = "bi-hdd-network", Route = "/System", BreadcrumbTitle = "System", Description = "System Configuration", RequiredPermission = "MasterReference.Index",
+                    Children = new List<NavigationItem>
+                    {
+                        new NavigationItem { Id = "system-master-reference", Title = "Master References", Icon = "bi-journal-text", Route = "/MasterReference", BreadcrumbTitle = "Master References", RequiredPermission = "MasterReference.Index" },
+                        new NavigationItem { Id = "system-number-sequence", Title = "Number Sequences", Icon = "bi-123", Route = "/NumberSequence", BreadcrumbTitle = "Number Sequences", RequiredPermission = "NumberSequence.Index" }
                     }
                 }
             };

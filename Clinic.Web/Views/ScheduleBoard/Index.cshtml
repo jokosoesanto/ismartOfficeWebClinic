@@ -1,0 +1,354 @@
+@{
+    ViewData["Title"] = "Doctor Schedule Board";
+}
+
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="mb-0 text-primary"><i class="bi bi-calendar2-week me-2"></i>Doctor Schedule Board</h2>
+            <p class="text-muted mb-0">Operational view of all doctor schedules</p>
+        </div>
+        <div class="btn-group" role="group">
+            <button type="button" id="btnListView" class="btn btn-primary active"><i class="bi bi-list-task me-1"></i> List View</button>
+            <button type="button" id="btnCalendarView" class="btn btn-outline-primary"><i class="bi bi-calendar-month me-1"></i> Calendar View</button>
+        </div>
+    </div>
+
+    <div class="card shadow-sm border-0 mb-4">
+        <div class="card-body bg-light rounded">
+            <div class="row g-3">
+                <div class="col-md-3">
+                    <label class="form-label fw-bold small text-muted">Date</label>
+                    <input type="date" id="filterDate" class="form-control" />
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label fw-bold small text-muted">Clinic / Location</label>
+                    <select id="filterLocation" class="form-select" asp-items="ViewBag.Locations">
+                        <option value="">All Locations</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label fw-bold small text-muted">Specialty</label>
+                    <select id="filterSpecialty" class="form-select" asp-items="ViewBag.Specialties">
+                        <option value="">All Specialties</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label fw-bold small text-muted">Availability</label>
+                    <select id="filterAvailability" class="form-select">
+                        <option value="">All Statuses</option>
+                        <option value="Available">Available</option>
+                        <option value="Leave">Leave</option>
+                        <option value="Inactive">Inactive</option>
+                    </select>
+                </div>
+            </div>
+            <div class="row mt-3">
+                <div class="col-12 text-end">
+                    <button type="button" id="btnReset" class="btn btn-secondary btn-sm"><i class="bi bi-x-circle me-1"></i> Reset Filters</button>
+                    <button type="button" id="btnSearch" class="btn btn-primary btn-sm ms-2"><i class="bi bi-search me-1"></i> Apply Filters</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- List View -->
+    <div id="listViewContainer" class="card shadow-sm border-0">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table id="scheduleTable" class="table table-hover align-middle w-100">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Doctor Name</th>
+                            <th>Specialty</th>
+                            <th>Clinic / Location</th>
+                            <th>Chair</th>
+                            <th>Day</th>
+                            <th>Date</th>
+                            <th>Start</th>
+                            <th>End</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                </table>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Calendar View -->
+    <div id="calendarViewContainer" class="card shadow-sm border-0 d-none">
+        <div class="card-body">
+            <div id="calendar"></div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <!-- DataTables Export Libraries (Local) -->
+    <script src="~/lib/jszip/jszip.min.js"></script>
+    <script src="~/lib/pdfmake/pdfmake.min.js"></script>
+    <script src="~/lib/pdfmake/vfs_fonts.min.js"></script>
+    <script src="~/lib/datatables-buttons/js/dataTables.buttons.min.js"></script>
+    <script src="~/lib/datatables-buttons/js/buttons.html5.min.js"></script>
+    <script src="~/lib/datatables-buttons/js/buttons.print.min.js"></script>
+    
+    <!-- FullCalendar (Local) -->
+    <script src="~/lib/fullcalendar/index.global.min.js"></script>
+
+    <script>
+        $(document).ready(function () {
+            
+            // Format time string from TimeSpan format
+            function formatTime(timeSpan) {
+                if (!timeSpan) return "-";
+                var parts = timeSpan.split(':');
+                if (parts.length >= 2) {
+                    return parts[0] + ":" + parts[1];
+                }
+                return timeSpan;
+            }
+            
+            // Toggle Views
+            $('#btnListView').click(function() {
+                $(this).addClass('active').removeClass('btn-outline-primary').addClass('btn-primary');
+                $('#btnCalendarView').removeClass('active').addClass('btn-outline-primary').removeClass('btn-primary');
+                $('#listViewContainer').removeClass('d-none');
+                $('#calendarViewContainer').addClass('d-none');
+            });
+            
+            var calendarRendered = false;
+            var calendar;
+
+            $('#btnCalendarView').click(function() {
+                $(this).addClass('active').removeClass('btn-outline-primary').addClass('btn-primary');
+                $('#btnListView').removeClass('active').addClass('btn-outline-primary').removeClass('btn-primary');
+                $('#listViewContainer').addClass('d-none');
+                $('#calendarViewContainer').removeClass('d-none');
+                
+                if (!calendarRendered) {
+                    var calendarEl = document.getElementById('calendar');
+                    calendar = new FullCalendar.Calendar(calendarEl, {
+                        initialView: 'timeGridWeek',
+                        headerToolbar: {
+                            left: 'prev,next today',
+                            center: 'title',
+                            right: 'dayGridMonth,timeGridWeek,timeGridDay'
+                        },
+                        events: function(fetchInfo, successCallback, failureCallback) {
+                            $.ajax({
+                                url: '/ScheduleBoard/GetCalendarData',
+                                type: 'GET',
+                                cache: false,
+                                data: {
+                                    start: fetchInfo.startStr,
+                                    end: fetchInfo.endStr,
+                                    locationId: $('#filterLocation').val(),
+                                    specialtyId: $('#filterSpecialty').val(),
+                                    availability: $('#filterAvailability').val()
+                                },
+                                success: function(data) {
+                                    var events = [];
+                                    data.forEach(function(item) {
+                                        events.push({
+                                            title: item.doctorName + ' (' + item.status + ')',
+                                            start: item.eventStart,
+                                            end: item.eventEnd,
+                                            backgroundColor: item.color,
+                                            borderColor: item.color,
+                                            extendedProps: {
+                                                specialty: item.specialty,
+                                                location: item.locationName,
+                                                chair: item.chair,
+                                                status: item.status
+                                            }
+                                        });
+                                    });
+                                    successCallback(events);
+                                },
+                                error: function() {
+                                    failureCallback();
+                                }
+                            });
+                        },
+                        eventContent: function(arg) {
+                            var timeText = arg.timeText;
+                            var title = arg.event.title;
+                            var loc = arg.event.extendedProps.location;
+                            var chair = arg.event.extendedProps.chair;
+                            var status = arg.event.extendedProps.status;
+                            var icon = "";
+                            if (status === "Available") icon = "bi-check-circle-fill";
+                            else if (status === "Break") icon = "bi-cup-hot-fill";
+                            else if (status === "Leave") icon = "bi-dash-circle-fill";
+                            else icon = "bi-hospital";
+                            
+                            var html = `
+                                <div class="fc-content p-1" style="font-size: 0.8em; line-height: 1.2;">
+                                    <div class="fw-bold">${timeText}</div>
+                                    <div><i class="bi ${icon}"></i> ${title}</div>
+                                    <div><i class="bi bi-geo-alt"></i> ${loc}</div>
+                                    ${chair !== "-" ? `<div><i class="bi bi-display"></i> ${chair}</div>` : ""}
+                                </div>
+                            `;
+                            return { html: html };
+                        }
+                    });
+                    calendar.render();
+                    calendarRendered = true;
+                } else {
+                    calendar.refetchEvents();
+                }
+            });
+
+            var table = $('#scheduleTable').DataTable({
+                "processing": true,
+                "serverSide": true,
+                "ajax": {
+                    "url": "/ScheduleBoard/GetData",
+                    "type": "POST",
+                    "datatype": "json",
+                    "data": function (d) {
+                        d.locationId = $('#filterLocation').val();
+                        d.specialtyId = $('#filterSpecialty').val();
+                        d.date = $('#filterDate').val();
+                        d.availability = $('#filterAvailability').val();
+                    }
+                },
+                "columns": [
+                    { 
+                        "data": "doctorName", "name": "DoctorName",
+                        "render": function(data, type, row) {
+                            var color = row.doctorColor ? row.doctorColor : "#0d6efd";
+                            return `<div class="d-flex align-items-center">
+                                        <div class="rounded-circle me-2" style="width:12px;height:12px;background-color:${color}"></div>
+                                        <span class="fw-bold">${data}</span>
+                                    </div>`;
+                        }
+                    },
+                    { "data": "specialty", "name": "Specialty" },
+                    { "data": "locationName", "name": "LocationName" },
+                    { "data": "chair", "name": "Chair" },
+                    { 
+                        "data": "dayName", "name": "DayName",
+                        "render": function(data, type, row) {
+                            return `<span class="badge bg-light text-dark border">${data}</span>`;
+                        }
+                    },
+                    { 
+                        "data": "specificDate", "name": "SpecificDate",
+                        "render": function (data) {
+                            if (!data) return "-";
+                            var date = new Date(data);
+                            return date.toLocaleDateString();
+                        }
+                    },
+                    { 
+                        "data": "startTime", "name": "StartTime",
+                        "render": function(data, type, row) {
+                            return formatTime(data);
+                        }
+                    },
+                    { 
+                        "data": "endTime", "name": "EndTime",
+                        "render": function(data, type, row) {
+                            return formatTime(data);
+                        }
+                    },
+                    { 
+                        "data": "status", "name": "Status",
+                        "render": function (data) {
+                            if (data === "Available") return '<span class="badge bg-success-subtle text-success border border-success-subtle"><i class="bi bi-check-circle-fill me-1"></i> Available</span>';
+                            if (data === "Break") return '<span class="badge bg-warning-subtle text-warning border border-warning-subtle"><i class="bi bi-cup-hot-fill me-1"></i> Break</span>';
+                            if (data === "Leave") return '<span class="badge bg-danger-subtle text-danger border border-danger-subtle"><i class="bi bi-dash-circle-fill me-1"></i> Leave</span>';
+                            if (data === "InSession") return '<span class="badge bg-primary-subtle text-primary border border-primary-subtle"><i class="bi bi-hospital me-1"></i> In Session</span>';
+                            return '<span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle"><i class="bi bi-x-circle-fill me-1"></i> Inactive</span>';
+                        }
+                    }
+                ],
+                "language": {
+                    "emptyTable": "No schedules found matching the criteria"
+                },
+                "order": [[4, "asc"]],
+                "dom": '<"d-flex justify-content-between align-items-center mb-3"Bf>rt<"d-flex justify-content-between align-items-center mt-3"ip>',
+                "buttons": [
+                    {
+                        extend: 'excelHtml5',
+                        className: 'btn btn-sm btn-outline-success',
+                        text: '<i class="bi bi-file-earmark-excel me-1"></i> Excel',
+                        exportOptions: { columns: ':visible' }
+                    },
+                    {
+                        extend: 'pdfHtml5',
+                        className: 'btn btn-sm btn-outline-danger',
+                        text: '<i class="bi bi-file-earmark-pdf me-1"></i> PDF',
+                        orientation: 'landscape',
+                        pageSize: 'A4',
+                        exportOptions: { columns: ':visible' },
+                        customize: function (doc) {
+                            // Fit width
+                            if(doc.content && doc.content.length > 1 && doc.content[1].table) {
+                                var colCount = doc.content[1].table.body[0].length;
+                                doc.content[1].table.widths = Array(colCount).fill('*');
+                            }
+                        }
+                    },
+                    {
+                        extend: 'print',
+                        className: 'btn btn-sm btn-outline-primary',
+                        text: '<i class="bi bi-printer me-1"></i> Print',
+                        exportOptions: { columns: ':visible' },
+                        customize: function (win) {
+                            var filterText = 'Active Filters: ';
+                            if ($('#filterLocation').val()) filterText += 'Location: ' + $('#filterLocation option:selected').text() + ' | ';
+                            if ($('#filterSpecialty').val()) filterText += 'Specialty: ' + $('#filterSpecialty option:selected').text() + ' | ';
+                            if ($('#filterDate').val()) filterText += 'Date: ' + $('#filterDate').val() + ' | ';
+                            if ($('#filterAvailability').val()) filterText += 'Availability: ' + $('#filterAvailability option:selected').text();
+                            
+                            if (filterText === 'Active Filters: ') filterText = 'Active Filters: None';
+
+                            $(win.document.body).css('font-size', '10pt');
+                            $(win.document.body).find('table')
+                                .addClass('compact')
+                                .css('font-size', 'inherit');
+                            
+                            $(win.document.body).prepend(
+                                '<div style="margin-bottom: 20px;">' +
+                                '<h3><i class="bi bi-heart-pulse-fill"></i> iSmartOffice Clinic</h3>' +
+                                '<p><strong>Date Printed:</strong> ' + new Date().toLocaleDateString() + ' ' + new Date().toLocaleTimeString() + '</p>' +
+                                '<p>' + filterText + '</p>' +
+                                '<hr/></div>'
+                            );
+                            
+                            var css = '@@page { size: landscape; }',
+                                head = win.document.head || win.document.getElementsByTagName('head')[0],
+                                style = win.document.createElement('style');
+                            style.type = 'text/css';
+                            style.media = 'print';
+                            if (style.styleSheet){
+                              style.styleSheet.cssText = css;
+                            } else {
+                              style.appendChild(win.document.createTextNode(css));
+                            }
+                            head.appendChild(style);
+                        }
+                    }
+                ],
+                "responsive": true
+            });
+
+            $('#btnSearch').click(function () {
+                table.ajax.reload();
+                if (calendarRendered) calendar.refetchEvents();
+            });
+
+            $('#btnReset').click(function () {
+                $('#filterLocation').val('');
+                $('#filterSpecialty').val('');
+                $('#filterDate').val('');
+                $('#filterAvailability').val('');
+                table.ajax.reload();
+                if (calendarRendered) calendar.refetchEvents();
+            });
+        });
+    </script>
+}

@@ -1,0 +1,59 @@
+@model Clinic.Domain.Entities.System.MasterReference
+
+<form id="referenceForm" action="/MasterReference/@(Model.Id == Guid.Empty ? "Create" : "Edit")" method="post">
+    <div class="modal-header">
+        <h5 class="modal-title">@(Model.Id == Guid.Empty ? "Create" : "Edit") Master Reference</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+    </div>
+    <div class="modal-body">
+        @if (Model.Id != Guid.Empty)
+        {
+            <input type="hidden" asp-for="Id" />
+            <input type="hidden" asp-for="IsSystem" />
+        }
+        
+        <input type="hidden" asp-for="Category" />
+
+        <div class="mb-3">
+            <label asp-for="Code" class="form-label">Code</label>
+            <input asp-for="Code" class="form-control" readonly="@(Model.IsSystem)" required />
+            @if(Model.IsSystem)
+            {
+                <small class="text-muted">System codes cannot be changed.</small>
+            }
+        </div>
+
+        <div class="mb-3">
+            <label asp-for="Name" class="form-label">Name</label>
+            <input asp-for="Name" class="form-control" readonly="@(Model.IsSystem)" required />
+        </div>
+
+        <div class="mb-3">
+            <label asp-for="Description" class="form-label">Description</label>
+            <textarea asp-for="Description" class="form-control" rows="2"></textarea>
+        </div>
+
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                <label asp-for="SortOrder" class="form-label">Sort Order</label>
+                <input asp-for="SortOrder" class="form-control" type="number" />
+            </div>
+            <div class="col-md-6 mb-3">
+                <label class="form-label d-block">Status</label>
+                <div class="form-check form-switch mt-2">
+                    <input class="form-check-input" type="checkbox" asp-for="IsActive" disabled="@(Model.IsSystem ? "disabled" : null)">
+                    <label class="form-check-label" asp-for="IsActive">Active</label>
+                </div>
+                @if(Model.IsSystem)
+                {
+                    <input type="hidden" asp-for="IsActive" />
+                    <small class="text-muted d-block mt-1">System records are always active.</small>
+                }
+            </div>
+        </div>
+    </div>
+    <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button type="submit" class="btn btn-primary">Save Changes</button>
+    </div>
+</form>

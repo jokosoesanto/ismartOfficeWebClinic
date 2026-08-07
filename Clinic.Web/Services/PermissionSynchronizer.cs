@@ -15,6 +15,8 @@ namespace Clinic.Web.Services
     {
         public static async Task SyncAsync(AppDbContext context, Assembly assembly, ILogger logger)
         {
+            var adminRole = await context.Roles.FirstOrDefaultAsync(r => r.Name == "Administrator");
+            var newPermissionsList = new List<Permission>();
             var controllerTypes = assembly.GetTypes()
                 .Where(t => typeof(ControllerBase).IsAssignableFrom(t) && !t.IsAbstract)
                 .ToList();
@@ -94,6 +96,7 @@ namespace Clinic.Web.Services
                         };
                         context.Permissions.Add(newPerm);
                         dbPermissions.Add(newPerm); // Prevent duplicates in same run
+                        newPermissionsList.Add(newPerm);
 
                         context.AuditLogs.Add(new AuditLog
                         {
@@ -142,6 +145,10 @@ namespace Clinic.Web.Services
 
             var customPermissions = new[]
             {
+                new { Code = "DoctorSchedule.View", Name = "View Doctor Schedule", Module = "DoctorSchedule", Category = "Master Data" },
+                new { Code = "DoctorSchedule.Create", Name = "Create Doctor Schedule", Module = "DoctorSchedule", Category = "Master Data" },
+                new { Code = "DoctorSchedule.Edit", Name = "Edit Doctor Schedule", Module = "DoctorSchedule", Category = "Master Data" },
+                new { Code = "DoctorSchedule.Delete", Name = "Delete Doctor Schedule", Module = "DoctorSchedule", Category = "Master Data" },
                 new { Code = "Location.ViewAll", Name = "View All Locations", Module = "Location", Category = "Master Data" },
                 new { Code = "Location.EditOwn", Name = "Edit Own Location", Module = "Location", Category = "Master Data" },
                 new { Code = "Location.EditAll", Name = "Edit All Locations", Module = "Location", Category = "Master Data" },
@@ -150,7 +157,10 @@ namespace Clinic.Web.Services
                 new { Code = "Chair.EditAll", Name = "Edit All Chairs", Module = "Chair", Category = "Master Data" },
                 new { Code = "User.ViewAllLocations", Name = "View All Locations Users", Module = "User", Category = "Security" },
                 new { Code = "User.ManageOwnLocation", Name = "Manage Own Location Users", Module = "User", Category = "Security" },
-                new { Code = "User.ManageAllLocations", Name = "Manage All Locations Users", Module = "User", Category = "Security" }
+                new { Code = "User.ManageAllLocations", Name = "Manage All Locations Users", Module = "User", Category = "Security" },
+                new { Code = "ScheduleBoard.Export", Name = "Export Schedule Board", Module = "ScheduleBoard", Category = "Operations" },
+                new { Code = "MasterReference.Import", Name = "Import Master Reference", Module = "MasterReference", Category = "System" },
+                new { Code = "MasterReference.Export", Name = "Export Master Reference", Module = "MasterReference", Category = "System" }
             };
 
             foreach(var cp in customPermissions)
@@ -172,6 +182,7 @@ namespace Clinic.Web.Services
                     };
                     context.Permissions.Add(newPerm);
                     dbPermissions.Add(newPerm);
+                    newPermissionsList.Add(newPerm);
                 }
                 else
                 {
@@ -184,6 +195,28 @@ namespace Clinic.Web.Services
                         existing.Type = PermissionType.System;
                         existing.UpdatedAt = DateTime.UtcNow;
                         context.Permissions.Update(existing);
+                    }
+                }
+            }
+
+            // Auto-assign new permissions to Administrator role
+            if (adminRole != null && newPermissionsList.Any())
+            {
+                var existingRolePerms = await context.RolePermissions
+                    .Where(rp => rp.RoleId == adminRole.Id)
+                    .Select(rp => rp.PermissionId)
+                    .ToListAsync();
+
+                foreach (var newPerm in newPermissionsList)
+                {
+                    // Add only if not already there (shouldn't be, since it's a new permission, but safe check)
+                    if (!existingRolePerms.Contains(newPerm.Id))
+                    {
+                        context.RolePermissions.Add(new RolePermission
+                        {
+                            RoleId = adminRole.Id,
+                            PermissionId = newPerm.Id
+                        });
                     }
                 }
             }
@@ -202,6 +235,9 @@ namespace Clinic.Web.Services
                 "Reporting" => "Reporting",
                 "MedicalRecord" => "Transaction",
                 "Odontogram" => "Transaction",
+                "ScheduleBoard" => "Operations",
+                "MasterReference" => "System",
+                "NumberSequence" => "System",
                 _ => "General"
             };
         }

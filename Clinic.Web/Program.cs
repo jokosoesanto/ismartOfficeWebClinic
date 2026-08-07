@@ -45,12 +45,21 @@ builder.Services.AddScoped<Clinic.Application.Interfaces.Navigation.INavigationS
 builder.Services.AddMemoryCache();
 builder.Services.AddScoped<Clinic.Application.Interfaces.MasterData.ILocationRepository, Clinic.Infrastructure.Repositories.MasterData.LocationRepository>();
 builder.Services.AddScoped<Clinic.Application.Interfaces.MasterData.IChairRepository, Clinic.Infrastructure.Repositories.MasterData.ChairRepository>();
+builder.Services.AddScoped<Clinic.Application.Interfaces.MasterData.ISpecialtyRepository, Clinic.Infrastructure.Repositories.MasterData.SpecialtyRepository>();
+builder.Services.AddScoped<Clinic.Application.Interfaces.MasterData.IDoctorRepository, Clinic.Infrastructure.Repositories.MasterData.DoctorRepository>();
 builder.Services.AddScoped<Clinic.Application.Interfaces.MasterData.ILocationService, Clinic.Application.UseCases.MasterData.LocationService>();
 builder.Services.AddScoped<Clinic.Application.Interfaces.MasterData.IChairService, Clinic.Application.UseCases.MasterData.ChairService>();
+builder.Services.AddScoped<Clinic.Application.Interfaces.MasterData.ISpecialtyService, Clinic.Application.UseCases.MasterData.SpecialtyService>();
+builder.Services.AddScoped<Clinic.Application.Interfaces.MasterData.IDoctorService, Clinic.Application.UseCases.MasterData.DoctorService>();
+builder.Services.AddScoped<Clinic.Application.Interfaces.Operations.IScheduleBoardRepository, Clinic.Infrastructure.Repositories.Operations.ScheduleBoardRepository>();
 
 // System Services
 builder.Services.AddScoped<Clinic.Application.Interfaces.Configuration.IAppConfigurationRepository, Clinic.Infrastructure.Repositories.Configuration.AppConfigurationRepository>();
 builder.Services.AddScoped<Clinic.Application.Interfaces.Configuration.IAppConfigurationService, Clinic.Application.UseCases.Configuration.AppConfigurationService>();
+builder.Services.AddScoped<Clinic.Application.Interfaces.Configuration.INumberSequenceRepository, Clinic.Infrastructure.Repositories.Configuration.NumberSequenceRepository>();
+builder.Services.AddScoped<Clinic.Application.Interfaces.Configuration.INumberSequenceService, Clinic.Application.UseCases.Configuration.NumberSequenceService>();
+builder.Services.AddScoped<Clinic.Application.Interfaces.MasterData.IMasterReferenceRepository, Clinic.Infrastructure.Repositories.MasterData.MasterReferenceRepository>();
+builder.Services.AddScoped<Clinic.Application.Interfaces.MasterData.IMasterReferenceService, Clinic.Application.UseCases.MasterData.MasterReferenceService>();
 
 builder.Services.AddSingleton<Microsoft.AspNetCore.Authorization.IAuthorizationPolicyProvider, Clinic.Web.Security.PermissionPolicyProvider>();
 builder.Services.AddSingleton<Microsoft.AspNetCore.Authorization.IAuthorizationHandler, Clinic.Web.Security.PermissionAuthorizationHandler>();
@@ -89,6 +98,7 @@ using (var scope = app.Services.CreateScope())
             }
             
             AuthSeeder.Seed(context);
+            SystemSeeder.Seed(context);
             await Clinic.Web.Services.PermissionSynchronizer.SyncAsync(context, typeof(Program).Assembly, app.Logger);
             break; // Success
         }

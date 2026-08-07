@@ -13,6 +13,8 @@ namespace Clinic.Infrastructure.Data
 
         public DbSet<SystemSetting> SystemSettings { get; set; } = null!;
         public DbSet<User> Users { get; set; } = null!;
+        public DbSet<Clinic.Domain.Entities.System.MasterReference> MasterReferences { get; set; } = null!;
+        public DbSet<Clinic.Domain.Entities.System.NumberSequence> NumberSequences { get; set; } = null!;
         public DbSet<Role> Roles { get; set; } = null!;
         public DbSet<Permission> Permissions { get; set; } = null!;
         public DbSet<UserRole> UserRoles { get; set; } = null!;
@@ -22,15 +24,39 @@ namespace Clinic.Infrastructure.Data
         public DbSet<UserLocation> UserLocations { get; set; } = null!;
         public DbSet<Clinic.Domain.Entities.MasterData.Location> Locations { get; set; } = null!;
         public DbSet<Clinic.Domain.Entities.MasterData.Chair> Chairs { get; set; } = null!;
+        public DbSet<Clinic.Domain.Entities.MasterData.Specialty> Specialties { get; set; } = null!;
+        public DbSet<Clinic.Domain.Entities.MasterData.Doctor> Doctors { get; set; } = null!;
+        public DbSet<Clinic.Domain.Entities.MasterData.DoctorLocation> DoctorLocations { get; set; } = null!;
+        public DbSet<Clinic.Domain.Entities.MasterData.DoctorSchedule> DoctorSchedules { get; set; } = null!;
         public DbSet<Clinic.Domain.Entities.Configuration.AppConfiguration> AppConfigurations { get; set; } = null!;
+        public DbSet<Clinic.Domain.Entities.System.FileMetadata> FileMetadatas { get; set; } = null!;
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
+            modelBuilder.ApplyConfiguration(new Configurations.FileMetadataConfiguration());
+            modelBuilder.ApplyConfiguration(new Configurations.NumberSequenceConfiguration());
+            modelBuilder.ApplyConfiguration(new Configurations.MasterReferenceConfiguration());
+
             modelBuilder.Entity<Clinic.Domain.Entities.Configuration.AppConfiguration>(entity =>
             {
                 entity.ToTable("AppConfigurations");
                 entity.HasKey(e => e.Id);
                 entity.HasIndex(e => new { e.Category, e.Key }).IsUnique();
+            });
+
+            modelBuilder.Entity<Clinic.Domain.Entities.MasterData.DoctorLocation>(entity =>
+            {
+                entity.HasKey(e => new { e.DoctorId, e.LocationId });
+            });
+
+            modelBuilder.Entity<Clinic.Domain.Entities.MasterData.Doctor>(entity =>
+            {
+                entity.HasIndex(e => e.DoctorCode).IsUnique();
+            });
+
+            modelBuilder.Entity<Clinic.Domain.Entities.MasterData.Specialty>(entity =>
+            {
+                entity.HasIndex(e => e.Code).IsUnique();
             });
 
             base.OnModelCreating(modelBuilder);
