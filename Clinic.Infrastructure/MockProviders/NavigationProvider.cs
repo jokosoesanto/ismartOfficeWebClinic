@@ -13,13 +13,7 @@ namespace Clinic.Infrastructure.MockProviders
             _menu = new List<NavigationItem>
             {
                 new NavigationItem { Id = "dashboard", Title = "Dashboard", Icon = "bi-speedometer2", Route = "/", BreadcrumbTitle = "Dashboard", Description = "Main Dashboard" },
-                new NavigationItem { Id = "patient", Title = "Patient", Icon = "bi-person-lines-fill", Route = "/Patient", BreadcrumbTitle = "Patients", Description = "Patient Management", RequiredPermission = "Patient.Index",
-                    Children = new List<NavigationItem>
-                    {
-                        new NavigationItem { Id = "patient-list", Title = "All Patients", Icon = "bi-people", Route = "/Patient", BreadcrumbTitle = "All Patients", RequiredPermission = "Patient.Index" },
-                        new NavigationItem { Id = "patient-add", Title = "Add Patient", Icon = "bi-person-plus", Route = "/Patient/Create", BreadcrumbTitle = "Add Patient", RequiredPermission = "Patient.Create" }
-                    }
-                },
+                new NavigationItem { Id = "patient", Title = "Patient Management", Icon = "bi-person-lines-fill", Route = "/Patient", BreadcrumbTitle = "Patients", Description = "Patient Management", RequiredPermission = "Patient.Index" },
                 new NavigationItem { Id = "appointment", Title = "Appointment", Icon = "bi-calendar-check", Route = "/Appointment", BreadcrumbTitle = "Appointments", Description = "Manage Appointments", RequiredPermission = "Appointment.Index" },
                 new NavigationItem { Id = "medicalrecord", Title = "Medical Record", Icon = "bi-clipboard2-pulse", Route = "/MedicalRecord", BreadcrumbTitle = "Medical Records", Description = "Patient Medical Records", RequiredPermission = "MedicalRecord.Index" },
                 new NavigationItem { Id = "billing", Title = "Billing & Payment", Icon = "bi-cash-coin", Route = "/Billing", BreadcrumbTitle = "Billing", Description = "Invoices and Payments", RequiredPermission = "Billing.Index" },

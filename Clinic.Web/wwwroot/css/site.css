@@ -1,40 +1,48 @@
 html {
-  font-size: 14px;
+    font-size: 14px;
 }
 
 @media (min-width: 768px) {
-  html {
-    font-size: 16px;
-  }
+    html {
+        font-size: 16px;
+    }
 }
 
-.btn:focus, .btn:active:focus, .btn-link.nav-link:focus, .form-control:focus, .form-check-input:focus {
-  box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #258cfb;
+.btn:focus,
+.btn:active:focus,
+.btn-link.nav-link:focus,
+.form-control:focus,
+.form-check-input:focus {
+    box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #258cfb;
 }
 
 html {
-  position: relative;
-  min-height: 100%;
+    position: relative;
+    min-height: 100%;
 }
 
 body {
-  margin-bottom: 60px;
+    margin-bottom: 60px;
 }
 
-.form-floating > .form-control-plaintext::placeholder, .form-floating > .form-control::placeholder {
-  color: var(--bs-secondary-color);
-  text-align: end;
+.form-floating>.form-control-plaintext::placeholder,
+.form-floating>.form-control::placeholder {
+    color: var(--bs-secondary-color);
+    text-align: end;
 }
 
-.form-floating > .form-control-plaintext:focus::placeholder, .form-floating > .form-control:focus::placeholder {
-  text-align: start;
+.form-floating>.form-control-plaintext:focus::placeholder,
+.form-floating>.form-control:focus::placeholder {
+    text-align: start;
 }
+
 /* Design System Standardization */
 .card {
     border-radius: 0.625rem;
-    box-shadow: 0 1px 3px 0 rgba(0,0,0,0.1), 0 1px 2px -1px rgba(0,0,0,0.1);
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.1);
     border: 1px solid var(--border-color);
 }
+
 .card-header {
     background-color: var(--bg-card);
     border-bottom: 1px solid var(--border-color);
@@ -56,18 +64,188 @@ table.dataTable,
 }
 
 /* Base button and form standard radius */
-.btn, .form-control, .form-select {
-    border-radius: 0.375rem;
+.btn,
+.form-control,
+.form-select {
+    border-radius: var(--radius-sm);
 }
 
 
 /* Force Design Token Consistency overriding inline Bootstrap utilities */
 .card {
-    border-radius: 0.625rem !important;
-    box-shadow: 0 1px 3px 0 rgba(0,0,0,0.1), 0 1px 2px -1px rgba(0,0,0,0.1) !important;
-    border: 1px solid var(--border-color) !important;
-}
-.btn, .form-control, .form-select {
-    border-radius: 0.375rem !important;
+    border-radius: var(--radius-lg) !important;
+    box-shadow: var(--shadow-md) !important;
+    border: 1px solid var(--color-border) !important;
 }
 
+.btn {
+    border-radius: var(--radius-md) !important;
+    font-weight: 500;
+    padding: var(--spacing-sm) var(--spacing-md);
+    transition: var(--transition-base);
+}
+
+.btn-sm {
+    padding: var(--spacing-xs) 0.75rem;
+    font-size: 0.875rem;
+}
+
+.form-control,
+.form-select {
+    border-radius: var(--radius-md) !important;
+    border: 1px solid var(--color-border);
+}
+
+.form-control {
+    padding: var(--form-control-padding-y) var(--form-control-padding-x);
+}
+
+.form-select {
+    padding-top: var(--form-control-padding-y);
+    padding-bottom: var(--form-control-padding-y);
+    padding-left: var(--form-control-padding-x);
+    padding-right: var(--form-select-caret-space);
+}
+
+.form-control:focus,
+.form-select:focus {
+    box-shadow: 0 0 0 4px rgba(15, 138, 202, 0.15);
+    /* Primary color rgba */
+    border-color: var(--color-primary);
+}
+
+/* Icon Alignment within Buttons */
+.btn i.bi,
+.btn i.fas {
+    display: inline-flex;
+    align-items: center;
+    vertical-align: text-bottom;
+}
+
+/* Breadcrumb Polish */
+.breadcrumb {
+    font-size: 0.9rem;
+    font-weight: 500;
+    margin-bottom: 0;
+}
+
+.breadcrumb-item a {
+    color: var(--bs-primary);
+    text-decoration: none;
+}
+
+.breadcrumb-item a:hover {
+    text-decoration: underline;
+}
+
+/* Toolbar and Search area spacing */
+.header-right .input-group {
+    box-shadow: var(--shadow-sm);
+}
+
+/* Enterprise DataTables Standard */
+.dataTables_wrapper .dataTables_length select {
+    display: inline-block !important;
+    width: auto !important;
+}
+
+/* Sidebar Branding Refinement */
+.sidebar {
+    background: linear-gradient(180deg, var(--color-primary) 0%, var(--color-primary-dark) 100%) !important;
+}
+
+.brand-container {
+    background-color: var(--color-surface);
+    border-radius: var(--radius-pill);
+    padding: var(--spacing-sm) var(--spacing-md);
+    border: 1px solid rgba(0, 0, 0, 0.05);
+    box-shadow: var(--shadow-sm);
+    width: 90%;
+    margin: 0 auto;
+    transition: var(--transition-base);
+}
+
+.brand-expanded {
+    max-height: 40px;
+}
+
+.brand-collapsed {
+    display: none !important;
+    max-height: 35px;
+}
+
+body:not(.sidebar-collapsed) .brand-expanded {
+    animation: logoFadeIn 0.4s ease-in forwards;
+}
+
+body.sidebar-collapsed .brand-container {
+    padding: var(--spacing-xs);
+    width: 45px;
+    height: 45px;
+    border-radius: var(--radius-md);
+    display: flex !important;
+}
+
+body.sidebar-collapsed .brand-expanded {
+    display: none !important;
+}
+
+body.sidebar-collapsed .brand-collapsed {
+    display: block !important;
+    max-height: 100%;
+    animation: logoFadeIn 0.4s ease-in forwards;
+}
+
+@keyframes logoFadeIn {
+    0% {
+        opacity: 0;
+    }
+
+    100% {
+        opacity: 1;
+    }
+}
+
+/* Sidebar Navigation Polish */
+.sidebar .nav-link:hover,
+.sidebar .nav-link[aria-expanded="true"] {
+    background-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+.sidebar .nav-link.fw-bold {
+    background-color: rgba(255, 255, 255, 0.15) !important;
+    border-left: 4px solid var(--color-primary-light);
+    font-weight: 700 !important;
+    color: #ffffff !important;
+}
+
+.sidebar .nav-link.fw-bold i {
+    color: #ffffff !important;
+    text-shadow: 0 0 10px rgba(255, 255, 255, 0.4);
+}
+
+/* Footer Branding */
+.footer-brand-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+}
+
+.footer-logo {
+    height: 34px;
+    width: auto;
+    object-fit: contain;
+}
+
+@media (min-width: 768px) {
+    .footer-logo {
+        height: 38px;
+    }
+}
+
+@media (min-width: 992px) {
+    .footer-logo {
+        height: 120px;
+    }
+}

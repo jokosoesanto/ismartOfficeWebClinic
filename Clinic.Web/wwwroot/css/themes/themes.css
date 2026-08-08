@@ -171,7 +171,6 @@ body {
 }
 
 /* Sidebar Text Color Overrides for generic Bootstrap utilities */
-.sidebar .sidebar-brand h5,
 .sidebar .sidebar-brand .text-primary,
 .sidebar .text-main,
 .sidebar .text-muted,
@@ -262,18 +261,6 @@ body.sidebar-collapsed .sidebar .nav-link .bi-chevron-down {
     display: none !important;
 }
 
-body.sidebar-collapsed .sidebar .sidebar-brand h5 {
-    display: none !important;
-}
-
-body.sidebar-collapsed .sidebar .sidebar-brand::before {
-    content: "\F41B"; /* Bootstrap bi-heart-pulse-fill icon code */
-    font-family: "bootstrap-icons";
-    font-size: 1.5rem;
-    color: var(--sidebar-text);
-    display: block;
-    text-align: center;
-}
 
 body.sidebar-collapsed .sidebar .nav-link {
     display: flex !important;

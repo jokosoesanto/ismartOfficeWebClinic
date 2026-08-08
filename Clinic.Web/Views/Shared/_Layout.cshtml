@@ -17,6 +17,7 @@
     <!-- Theme CSS -->
     <link rel="stylesheet" href="~/css/themes/themes.css" asp-append-version="true" />
     <!-- Custom Site CSS -->
+    <link rel="stylesheet" href="~/css/theme.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     @await RenderSectionAsync("Styles", required: false)
 </head>
@@ -24,8 +25,11 @@
 <body>
     <!-- Sidebar -->
     <nav class="sidebar">
-        <div class="sidebar-brand p-3 border-bottom">
-            <h5 class="m-0 text-primary"><i class="bi bi-heart-pulse-fill me-2"></i>iSmartOffice</h5>
+        <div class="sidebar-brand p-3 border-bottom d-flex align-items-center justify-content-center">
+            <a href="/" class="brand-container d-flex align-items-center justify-content-center">
+                <img src="~/images/branding/brand-header.png" alt="iSmartOffice" class="brand-expanded img-fluid" />
+                <img src="~/images/branding/logo-square.webp" alt="iSmartOffice Logo" class="brand-collapsed img-fluid" />
+            </a>
         </div>
 
         <!-- Navigation ViewComponent -->
@@ -136,8 +140,9 @@
     <!-- Footer -->
     <footer class="footer mt-auto py-3 bg-card border-top"
             style="margin-left: var(--sidebar-width); transition: margin-left 0.3s ease;">
-        <div class="container-fluid text-center">
-            <span class="text-muted">&copy; 2026 - iSmartOffice Clinic Web</span>
+        <div class="container-fluid footer-brand-container text-muted">
+            <img src="~/images/branding/logo-bulat.png" alt="iSmartOffice Logo" class="footer-logo" />
+            <small class="fw-semibold">&copy; 2026 iSmartOffice &bull; Getting Smarter</small>
         </div>
     </footer>
 
