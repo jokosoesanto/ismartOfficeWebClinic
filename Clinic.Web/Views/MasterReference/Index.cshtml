@@ -68,43 +68,41 @@
     </div>
 </div>
 
-<script>
-    // TIER 2: Register advanced DataTable config BEFORE $(document).ready()
-    window.EnterpriseDataTables.register('referenceTable', {
-        columns: [
-            { data: 'code' },
-            { data: 'name' },
-            { data: 'description' },
-            { data: 'sortOrder' },
-            { 
-                data: 'isSystem',
-                render: function(data) {
-                    return data ? '<span class="badge bg-secondary">System</span>' : '<span class="badge bg-primary">Custom</span>';
-                }
-            },
-            { 
-                data: 'isActive',
-                render: function(data) {
-                    return data ? '<span class="badge bg-success">Active</span>' : '<span class="badge bg-danger">Inactive</span>';
-                }
-            },
-            {
-                data: 'id',
-                orderable: false,
-                render: function(data, type, row) {
-                    var btns = '<button class="btn btn-sm btn-outline-secondary btn-edit" data-id="' + data + '"><i class="fas fa-edit"></i> Edit</button>';
-                    if (!row.isSystem) {
-                        btns += ' <button class="btn btn-sm btn-outline-danger btn-delete" data-id="' + data + '"><i class="fas fa-trash"></i> Delete</button>';
-                    }
-                    return btns;
-                }
-            }
-        ]
-    });
-</script>
-
 @section Scripts {
     <script>
+        // TIER 2: Register advanced DataTable config BEFORE $(document).ready()
+        window.EnterpriseDataTables.register('referenceTable', {
+            columns: [
+                { data: 'code' },
+                { data: 'name' },
+                { data: 'description' },
+                { data: 'sortOrder' },
+                { 
+                    data: 'isSystem',
+                    render: function(data) {
+                        return data ? '<span class="badge bg-secondary">System</span>' : '<span class="badge bg-primary">Custom</span>';
+                    }
+                },
+                { 
+                    data: 'isActive',
+                    render: function(data) {
+                        return data ? '<span class="badge bg-success">Active</span>' : '<span class="badge bg-danger">Inactive</span>';
+                    }
+                },
+                {
+                    data: 'id',
+                    orderable: false,
+                    render: function(data, type, row) {
+                        var btns = '<button class="btn btn-sm btn-outline-secondary btn-edit" data-id="' + data + '"><i class="fas fa-edit"></i> Edit</button>';
+                        if (!row.isSystem) {
+                            btns += ' <button class="btn btn-sm btn-outline-danger btn-delete" data-id="' + data + '"><i class="fas fa-trash"></i> Delete</button>';
+                        }
+                        return btns;
+                    }
+                }
+            ]
+        });
+
         $(document).ready(function () {
             var currentCategory = '';
             var table = $('#referenceTable').DataTable();

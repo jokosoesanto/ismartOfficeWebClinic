@@ -42,6 +42,11 @@
     // Registry for advanced table configurations
     var _registry = {};
 
+    // Restore any premature registrations from the developer guard
+    if (window.EnterpriseDataTables && window.EnterpriseDataTables._earlyRegisters) {
+        _registry = window.EnterpriseDataTables._earlyRegisters;
+    }
+
     window.EnterpriseDataTables = {
         /**
          * Register an advanced DataTable configuration.

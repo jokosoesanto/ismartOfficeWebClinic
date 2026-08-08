@@ -20,6 +20,17 @@
     <link rel="stylesheet" href="~/css/theme.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     @await RenderSectionAsync("Styles", required: false)
+
+    <!-- Enterprise DataTables Developer Guard -->
+    <script>
+        window.EnterpriseDataTables = {
+            _earlyRegisters: {},
+            register: function(id, config) {
+                console.warn("[EnterpriseDataTables] register() called before Foundation initialization. Move the registration into @@section Scripts.");
+                this._earlyRegisters[id] = config;
+            }
+        };
+    </script>
 </head>
 
 <body>
