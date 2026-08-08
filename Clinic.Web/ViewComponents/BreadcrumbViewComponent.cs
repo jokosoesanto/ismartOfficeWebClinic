@@ -20,6 +20,19 @@ namespace Clinic.Web.ViewComponents
             if (string.IsNullOrEmpty(path)) path = "/";
             
             var breadcrumbs = _navigationProvider.GetBreadcrumbs(path);
+            
+            // Enterprise Breadcrumb Standard: Dashboard must be Level 1
+            if (breadcrumbs.Count > 0 && breadcrumbs[0].Id != "dashboard")
+            {
+                breadcrumbs.Insert(0, new NavigationItem 
+                { 
+                    Id = "dashboard", 
+                    Title = "Dashboard", 
+                    Route = "/", 
+                    BreadcrumbTitle = "Dashboard" 
+                });
+            }
+
             return View(breadcrumbs);
         }
     }

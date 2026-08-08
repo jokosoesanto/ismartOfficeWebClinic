@@ -5,9 +5,15 @@
         {
             var item = Model[i];
             var isLast = i == Model.Count - 1;
+            var isGroup = item.Children != null && item.Children.Count > 0;
+            
             if (isLast)
             {
                 <li class="breadcrumb-item active" aria-current="page">@item.BreadcrumbTitle</li>
+            }
+            else if (isGroup)
+            {
+                <li class="breadcrumb-item">@item.BreadcrumbTitle</li>
             }
             else
             {
