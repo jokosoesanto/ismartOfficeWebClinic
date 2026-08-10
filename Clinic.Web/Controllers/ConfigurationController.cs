@@ -13,10 +13,12 @@ namespace Clinic.Web.Controllers
     public class ConfigurationController : Controller
     {
         private readonly IAppConfigurationService _configurationService;
+        private readonly Clinic.Application.Interfaces.MasterData.IMasterReferenceService _masterReferenceService;
 
-        public ConfigurationController(IAppConfigurationService configurationService)
+        public ConfigurationController(IAppConfigurationService configurationService, Clinic.Application.Interfaces.MasterData.IMasterReferenceService masterReferenceService)
         {
             _configurationService = configurationService;
+            _masterReferenceService = masterReferenceService;
         }
 
         [HttpGet("Security")]
@@ -61,6 +63,46 @@ namespace Clinic.Web.Controllers
             await _configurationService.UpdateAsync(dto, userId);
             TempData["SuccessMessage"] = "Security configuration updated successfully.";
             return RedirectToAction(nameof(Security));
+        }
+        [HttpGet("Currency")]
+        [Authorize(Policy = "Configuration.Currency")]
+        public async Task<IActionResult> Currency()
+        {
+            var currentCurrency = await _configurationService.GetValueAsync("ApplicationCurrency", "IDR");
+            var currencies = await _masterReferenceService.GetByCategoryAsync("Currency");
+
+            ViewBag.CurrentCurrency = currentCurrency;
+            ViewBag.Currencies = System.Linq.Enumerable.ToList(currencies);
+
+            return View();
+        }
+
+        [HttpPost("UpdateCurrency")]
+        [Authorize(Policy = "Configuration.UpdateCurrency")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> UpdateCurrency(string currencyCode)
+        {
+            if (string.IsNullOrWhiteSpace(currencyCode))
+            {
+                TempData["ErrorMessage"] = "Currency Code is required.";
+                return RedirectToAction(nameof(Currency));
+            }
+
+            var userIdString = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            Guid? userId = null;
+            if (Guid.TryParse(userIdString, out Guid parsedId)) userId = parsedId;
+
+            var dto = new AppConfigurationDto
+            {
+                Category = "System",
+                Key = "ApplicationCurrency",
+                Value = currencyCode.ToUpperInvariant(),
+                Description = "Application-wide currency format"
+            };
+
+            await _configurationService.UpdateAsync(dto, userId);
+            TempData["SuccessMessage"] = "Application currency updated successfully.";
+            return RedirectToAction(nameof(Currency));
         }
     }
 }

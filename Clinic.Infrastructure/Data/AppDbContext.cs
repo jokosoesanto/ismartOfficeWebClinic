@@ -31,12 +31,18 @@ namespace Clinic.Infrastructure.Data
         public DbSet<Clinic.Domain.Entities.MasterData.Patient> Patients { get; set; } = null!;
         public DbSet<Clinic.Domain.Entities.Configuration.AppConfiguration> AppConfigurations { get; set; } = null!;
         public DbSet<Clinic.Domain.Entities.System.FileMetadata> FileMetadatas { get; set; } = null!;
+        public DbSet<Clinic.Domain.Entities.MasterData.TreatmentCategory> TreatmentCategories { get; set; } = null!;
+        public DbSet<Clinic.Domain.Entities.MasterData.TreatmentSubCategory> TreatmentSubCategories { get; set; } = null!;
+        public DbSet<Clinic.Domain.Entities.MasterData.TreatmentCatalog> TreatmentCatalogs { get; set; } = null!;
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.ApplyConfiguration(new Configurations.FileMetadataConfiguration());
             modelBuilder.ApplyConfiguration(new Configurations.NumberSequenceConfiguration());
             modelBuilder.ApplyConfiguration(new Configurations.MasterReferenceConfiguration());
+            modelBuilder.ApplyConfiguration(new Configurations.TreatmentCategoryConfiguration());
+            modelBuilder.ApplyConfiguration(new Configurations.TreatmentSubCategoryConfiguration());
+            modelBuilder.ApplyConfiguration(new Configurations.TreatmentCatalogConfiguration());
 
             modelBuilder.Entity<Clinic.Domain.Entities.Configuration.AppConfiguration>(entity =>
             {
@@ -70,6 +76,11 @@ namespace Clinic.Infrastructure.Data
 
             base.OnModelCreating(modelBuilder);
             
+            modelBuilder.Entity<Clinic.Domain.Entities.MasterData.Doctor>().HasQueryFilter(e => !e.IsDeleted);
+            modelBuilder.Entity<Clinic.Domain.Entities.MasterData.TreatmentCategory>().HasQueryFilter(e => !e.IsDeleted);
+            modelBuilder.Entity<Clinic.Domain.Entities.MasterData.TreatmentSubCategory>().HasQueryFilter(e => !e.IsDeleted);
+            modelBuilder.Entity<Clinic.Domain.Entities.MasterData.TreatmentCatalog>().HasQueryFilter(e => !e.IsDeleted);
+
             // Explicitly set max length for string to avoid NTEXT/TEXT
             modelBuilder.Entity<SystemSetting>(entity =>
             {

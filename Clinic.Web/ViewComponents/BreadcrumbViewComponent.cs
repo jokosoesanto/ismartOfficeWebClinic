@@ -33,6 +33,11 @@ namespace Clinic.Web.ViewComponents
                 });
             }
 
+            if (ViewContext?.ViewData["DynamicBreadcrumbs"] is System.Collections.Generic.List<NavigationItem> dynamicBreadcrumbs)
+            {
+                breadcrumbs.AddRange(dynamicBreadcrumbs);
+            }
+
             return View(breadcrumbs);
         }
     }

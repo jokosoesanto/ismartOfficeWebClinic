@@ -52,6 +52,7 @@ namespace Clinic.Infrastructure.Data.Seeders
             AddRefs("Country", new[] { "Indonesia", "Malaysia", "Singapore" });
             AddRefs("Province", new[] { "DKI Jakarta", "West Java", "Central Java", "East Java", "Bali" });
             AddRefs("PreferredCommunication", new[] { "Phone", "WhatsApp", "SMS", "Email" });
+            AddRefs("Currency", new[] { "IDR", "USD", "EUR", "SGD", "MYR", "AUD", "JPY" });
 
             foreach (var r in systemReferences)
             {

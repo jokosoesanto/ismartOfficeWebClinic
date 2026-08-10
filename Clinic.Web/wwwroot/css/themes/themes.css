@@ -168,9 +168,28 @@ body {
     z-index: 100;
     transition: width 0.3s ease;
     color: var(--sidebar-text);
+    display: flex;
+    flex-direction: column;
+}
+
+/* Sidebar Scroll Area */
+.sidebar-nav-scroll {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    -ms-overflow-style: none;  /* IE and Edge */
+    scrollbar-width: none;  /* Firefox */
+}
+
+/* Hide scrollbar for Chrome, Safari and Opera */
+.sidebar-nav-scroll::-webkit-scrollbar {
+    display: none;
 }
 
 /* Sidebar Text Color Overrides for generic Bootstrap utilities */
+.sidebar .sidebar-brand {
+    flex-shrink: 0;
+}
 .sidebar .sidebar-brand .text-primary,
 .sidebar .text-main,
 .sidebar .text-muted,

@@ -68,6 +68,7 @@ using (var scope = app.Services.CreateScope())
             
             AuthSeeder.Seed(context);
             SystemSeeder.Seed(context);
+            TreatmentSeeder.Seed(context);
             await Clinic.Web.Services.PermissionSynchronizer.SyncAsync(context, typeof(Program).Assembly, app.Logger);
             break; // Success
         }

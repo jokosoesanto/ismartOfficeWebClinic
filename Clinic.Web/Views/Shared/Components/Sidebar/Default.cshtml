@@ -25,13 +25,45 @@
                     <ul class="nav flex-column ms-3 mt-1">
                         @foreach (var child in item.Children ?? Enumerable.Empty<Clinic.Application.Navigation.NavigationItem>())
                         {
-                            var isChildActive = currentPath == child.Route;
+                            var hasGrandChildren = child.Children != null && child.Children.Any();
+                            var isChildActive = currentPath.StartsWith(child.Route, StringComparison.OrdinalIgnoreCase) && child.Route != "/" || currentPath == child.Route;
+
                             <li class="nav-item mb-1">
-                                <a class="nav-link text-main small @(isChildActive ? "text-primary fw-bold" : "text-muted")" href="@child.Route"
-                                   data-sidebar-tooltip="tooltip" data-bs-placement="right" title="@child.Title">
-                                    <i class="bi @(string.IsNullOrEmpty(child.Icon) ? "bi-dash" : child.Icon) me-1"></i>
-                                    <span class="sidebar-text">@child.Title</span>
-                                </a>
+                                @if (hasGrandChildren)
+                                {
+                                    <a class="nav-link text-main small d-flex justify-content-between align-items-center @(isChildActive ? "fw-bold" : "")" 
+                                       data-bs-toggle="collapse" href="#collapse-@child.Id" role="button" aria-expanded="@(isChildActive ? "true" : "false")"
+                                       data-sidebar-tooltip="tooltip" data-bs-placement="right" title="@child.Title">
+                                        <div class="d-flex align-items-center">
+                                            <i class="bi @(string.IsNullOrEmpty(child.Icon) ? "bi-dash" : child.Icon) me-2"></i>
+                                            <span class="sidebar-text">@child.Title</span>
+                                        </div>
+                                        <i class="bi bi-chevron-down small"></i>
+                                    </a>
+                                    <div class="collapse @(isChildActive ? "show" : "")" id="collapse-@child.Id">
+                                        <ul class="nav flex-column ms-3 mt-1">
+                                            @foreach (var grandChild in child.Children)
+                                            {
+                                                var isGrandChildActive = currentPath == grandChild.Route;
+                                                <li class="nav-item mb-1">
+                                                    <a class="nav-link text-main small @(isGrandChildActive ? "text-primary fw-bold" : "text-muted")" href="@grandChild.Route"
+                                                       data-sidebar-tooltip="tooltip" data-bs-placement="right" title="@grandChild.Title">
+                                                        <i class="bi @(string.IsNullOrEmpty(grandChild.Icon) ? "bi-dash" : grandChild.Icon) me-1"></i>
+                                                        <span class="sidebar-text">@grandChild.Title</span>
+                                                    </a>
+                                                </li>
+                                            }
+                                        </ul>
+                                    </div>
+                                }
+                                else
+                                {
+                                    <a class="nav-link text-main small @(isChildActive ? "text-primary fw-bold" : "text-muted")" href="@child.Route"
+                                       data-sidebar-tooltip="tooltip" data-bs-placement="right" title="@child.Title">
+                                        <i class="bi @(string.IsNullOrEmpty(child.Icon) ? "bi-dash" : child.Icon) me-1"></i>
+                                        <span class="sidebar-text">@child.Title</span>
+                                    </a>
+                                }
                             </li>
                         }
                     </ul>

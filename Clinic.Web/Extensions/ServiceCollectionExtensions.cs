@@ -41,6 +41,10 @@ namespace Clinic.Web.Extensions
             // System/Config Services
             services.AddScoped<INumberSequenceService, NumberSequenceService>();
             services.AddScoped<IAppConfigurationService, AppConfigurationService>();
+            services.AddScoped<Clinic.Application.Interfaces.Configuration.ICurrencyService, Clinic.Application.UseCases.Configuration.CurrencyService>();
+            services.AddScoped<ITreatmentCategoryService, TreatmentCategoryService>();
+            services.AddScoped<ITreatmentSubCategoryService, Clinic.Application.Services.MasterData.TreatmentSubCategoryService>();
+            services.AddScoped<ITreatmentCatalogService, Clinic.Application.Services.MasterData.TreatmentCatalogService>();
 
             return services;
         }
@@ -65,6 +69,9 @@ namespace Clinic.Web.Extensions
             services.AddScoped<IDoctorRepository, DoctorRepository>();
             services.AddScoped<IPatientRepository, PatientRepository>();
             services.AddScoped<IMasterReferenceRepository, MasterReferenceRepository>();
+            services.AddScoped<ITreatmentCategoryRepository, TreatmentCategoryRepository>();
+            services.AddScoped<ITreatmentSubCategoryRepository, TreatmentSubCategoryRepository>();
+            services.AddScoped<ITreatmentCatalogRepository, TreatmentCatalogRepository>();
 
             // Operations Repositories
             services.AddScoped<IScheduleBoardRepository, ScheduleBoardRepository>();

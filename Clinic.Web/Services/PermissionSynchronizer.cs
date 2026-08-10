@@ -166,7 +166,19 @@ namespace Clinic.Web.Services
                 new { Code = "Patient.Edit", Name = "Edit Patient", Module = "Patient", Category = "Master Data" },
                 new { Code = "Patient.Delete", Name = "Delete Patient", Module = "Patient", Category = "Master Data" },
                 new { Code = "Patient.Export", Name = "Export Patient", Module = "Patient", Category = "Master Data" },
-                new { Code = "Patient.Import", Name = "Import Patient", Module = "Patient", Category = "Master Data" }
+                new { Code = "Patient.Import", Name = "Import Patient", Module = "Patient", Category = "Master Data" },
+                new { Code = "MasterData.TreatmentCategory.View", Name = "View Treatment Category", Module = "TreatmentCategory", Category = "Master Data" },
+                new { Code = "MasterData.TreatmentCategory.Create", Name = "Create Treatment Category", Module = "TreatmentCategory", Category = "Master Data" },
+                new { Code = "MasterData.TreatmentCategory.Edit", Name = "Edit Treatment Category", Module = "TreatmentCategory", Category = "Master Data" },
+                new { Code = "MasterData.TreatmentCategory.Delete", Name = "Delete Treatment Category", Module = "TreatmentCategory", Category = "Master Data" },
+                new { Code = "MasterData.TreatmentSubCategory.View", Name = "View Treatment SubCategory", Module = "TreatmentSubCategory", Category = "Master Data" },
+                new { Code = "MasterData.TreatmentSubCategory.Create", Name = "Create Treatment SubCategory", Module = "TreatmentSubCategory", Category = "Master Data" },
+                new { Code = "MasterData.TreatmentSubCategory.Edit", Name = "Edit Treatment SubCategory", Module = "TreatmentSubCategory", Category = "Master Data" },
+                new { Code = "MasterData.TreatmentSubCategory.Delete", Name = "Delete Treatment SubCategory", Module = "TreatmentSubCategory", Category = "Master Data" },
+                new { Code = "MasterData.TreatmentCatalog.View", Name = "View Treatment Catalog", Module = "TreatmentCatalog", Category = "Master Data" },
+                new { Code = "MasterData.TreatmentCatalog.Create", Name = "Create Treatment Catalog", Module = "TreatmentCatalog", Category = "Master Data" },
+                new { Code = "MasterData.TreatmentCatalog.Edit", Name = "Edit Treatment Catalog", Module = "TreatmentCatalog", Category = "Master Data" },
+                new { Code = "MasterData.TreatmentCatalog.Delete", Name = "Delete Treatment Catalog", Module = "TreatmentCatalog", Category = "Master Data" }
             };
 
             foreach(var cp in customPermissions)

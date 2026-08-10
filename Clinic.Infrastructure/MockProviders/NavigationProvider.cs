@@ -38,7 +38,22 @@ namespace Clinic.Infrastructure.MockProviders
                     Children = new List<NavigationItem>
                     {
                         new NavigationItem { Id = "system-master-reference", Title = "Master References", Icon = "bi-journal-text", Route = "/MasterReference", BreadcrumbTitle = "Master References", RequiredPermission = "MasterReference.Index" },
-                        new NavigationItem { Id = "system-number-sequence", Title = "Number Sequences", Icon = "bi-123", Route = "/NumberSequence", BreadcrumbTitle = "Number Sequences", RequiredPermission = "NumberSequence.Index" }
+                        new NavigationItem { Id = "system-number-sequence", Title = "Number Sequences", Icon = "bi-123", Route = "/NumberSequence", BreadcrumbTitle = "Number Sequences", RequiredPermission = "NumberSequence.Index" },
+                        new NavigationItem { 
+                            Id = "system-treatment-management", 
+                            Title = "Treatment Management", 
+                            Icon = "bi-journal-medical", 
+                            Route = "/TreatmentManagement", 
+                            BreadcrumbTitle = "Treatment Management", 
+                            RequiredPermission = "MasterData.TreatmentCategory.View",
+                            Children = new List<NavigationItem>
+                            {
+                                new NavigationItem { Id = "system-treatment-category", Title = "Treatment Categories", Icon = "bi-tags", Route = "/TreatmentCategory", BreadcrumbTitle = "Treatment Categories", RequiredPermission = "MasterData.TreatmentCategory.View" },
+                                new NavigationItem { Id = "system-treatment-subcategory", Title = "Treatment SubCategories", Icon = "bi-tag", Route = "/TreatmentSubCategory", BreadcrumbTitle = "Treatment SubCategories", RequiredPermission = "MasterData.TreatmentSubCategory.View" },
+                                new NavigationItem { Id = "system-treatment-catalog", Title = "Treatment Catalog", Icon = "bi-card-list", Route = "/TreatmentCatalog", BreadcrumbTitle = "Treatment Catalog", RequiredPermission = "MasterData.TreatmentCatalog.View" }
+                            }
+                        },
+                        new NavigationItem { Id = "system-currency", Title = "Application Currency", Icon = "bi-currency-exchange", Route = "/Configuration/Currency", BreadcrumbTitle = "Application Currency", RequiredPermission = "Configuration.Currency" }
                     }
                 }
             };
@@ -62,6 +77,8 @@ namespace Clinic.Infrastructure.MockProviders
                     return breadcrumbs;
                 }
                 
+                if (item.Children == null) continue;
+                
                 foreach (var child in item.Children)
                 {
                     if (child.Route.Equals(currentRoute, System.StringComparison.OrdinalIgnoreCase))
@@ -69,6 +86,19 @@ namespace Clinic.Infrastructure.MockProviders
                         breadcrumbs.Add(item);
                         breadcrumbs.Add(child);
                         return breadcrumbs;
+                    }
+                    
+                    if (child.Children == null) continue;
+                    
+                    foreach (var grandChild in child.Children)
+                    {
+                        if (grandChild.Route.Equals(currentRoute, System.StringComparison.OrdinalIgnoreCase))
+                        {
+                            breadcrumbs.Add(item);
+                            breadcrumbs.Add(child);
+                            breadcrumbs.Add(grandChild);
+                            return breadcrumbs;
+                        }
                     }
                 }
             }

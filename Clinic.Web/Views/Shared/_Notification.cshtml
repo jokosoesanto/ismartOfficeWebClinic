@@ -1,0 +1,68 @@
+@{
+    var successMsg = TempData["SuccessMessage"] as string;
+    var errorMsg = TempData["ErrorMessage"] as string;
+    var warningMsg = TempData["WarningMessage"] as string;
+    var infoMsg = TempData["InfoMessage"] as string;
+}
+
+@if (!string.IsNullOrEmpty(successMsg) || !string.IsNullOrEmpty(errorMsg) || !string.IsNullOrEmpty(warningMsg) || !string.IsNullOrEmpty(infoMsg))
+{
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            @if (!string.IsNullOrEmpty(successMsg))
+            {
+                <text>
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Success',
+                    text: '@Html.Raw(successMsg.Replace("'", "\\'").Replace("\n", " ").Replace("\r", ""))',
+                    timer: 3000,
+                    showConfirmButton: false,
+                    toast: true,
+                    position: 'top-end'
+                });
+                </text>
+            }
+
+            @if (!string.IsNullOrEmpty(errorMsg))
+            {
+                <text>
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: '@Html.Raw(errorMsg.Replace("'", "\\'").Replace("\n", " ").Replace("\r", ""))',
+                    confirmButtonColor: '#dc3545'
+                });
+                </text>
+            }
+
+            @if (!string.IsNullOrEmpty(warningMsg))
+            {
+                <text>
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Warning',
+                    text: '@Html.Raw(warningMsg.Replace("'", "\\'").Replace("\n", " ").Replace("\r", ""))',
+                    confirmButtonColor: '#ffc107'
+                });
+                </text>
+            }
+
+            @if (!string.IsNullOrEmpty(infoMsg))
+            {
+                <text>
+                Swal.fire({
+                    icon: 'info',
+                    title: 'Information',
+                    text: '@Html.Raw(infoMsg.Replace("'", "\\'").Replace("\n", " ").Replace("\r", ""))',
+                    timer: 3000,
+                    showConfirmButton: false,
+                    toast: true,
+                    position: 'top-end'
+                });
+                </text>
+            }
+        });
+    </script>
+}

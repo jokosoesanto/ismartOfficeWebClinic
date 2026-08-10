@@ -44,7 +44,9 @@
         </div>
 
         <!-- Navigation ViewComponent -->
-        @await Component.InvokeAsync("Sidebar")
+        <div class="sidebar-nav-scroll">
+            @await Component.InvokeAsync("Sidebar")
+        </div>
     </nav>
 
     <!-- Header -->
@@ -137,13 +139,7 @@
     <!-- Main Content -->
     <main class="main-content">
         <div class="container-fluid p-0">
-            @if (TempData["SuccessMessage"] != null)
-            {
-                <div class="alert alert-success alert-dismissible fade show m-3 shadow-sm" role="alert" style="border-left: 5px solid #198754;">
-                    <i class="bi bi-check-circle-fill me-2"></i> @TempData["SuccessMessage"]
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                </div>
-            }
+
             @RenderBody()
         </div>
     </main>
@@ -216,6 +212,7 @@
             */
     </script>
 
+    @await Html.PartialAsync("_Notification")
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 

@@ -1,0 +1,141 @@
+@model IEnumerable<Clinic.Domain.Entities.MasterData.TreatmentCategory>
+@{
+    var meta = ViewBag.Meta as Clinic.Application.UI.UIMetadata;
+}
+
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="mb-1 fw-bold text-dark">Treatment Categories</h2>
+            <p class="text-muted mb-0">Manage high-level clinical treatment classifications.</p>
+        </div>
+        <a href="/TreatmentCategory/Create" class="btn btn-primary shadow-sm">
+            <i class="bi bi-plus-lg me-2"></i>Create Category
+        </a>
+    </div>
+
+
+
+    <div class="card shadow-sm border-0">
+        <div class="card-body p-4">
+            
+            @if (!Model.Any())
+            {
+                <div class="text-center py-5">
+                    <i class="bi bi-folder2-open text-muted" style="font-size: 3rem;"></i>
+                    <h5 class="mt-3 fw-semibold text-dark">No Treatment Categories Found</h5>
+                    <p class="text-muted">Get started by creating your first enterprise treatment category.</p>
+                    <a href="/TreatmentCategory/Create" class="btn btn-primary mt-2 shadow-sm">
+                        <i class="bi bi-plus-lg me-2"></i>Create Category
+                    </a>
+                </div>
+            }
+            else
+            {
+                <div class="d-flex mb-3 align-items-center">
+                    <label class="me-2 fw-semibold text-muted">Status Filter:</label>
+                    <select id="statusFilter" class="form-select w-auto shadow-sm">
+                        <option value="">All Statuses</option>
+                        <option value="Active">Active</option>
+                        <option value="Inactive">Inactive</option>
+                    </select>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle enterprise-grid" id="categoriesTable"
+                           data-order='[[ 3, "asc" ]]'
+                           data-page-length="10"
+                           data-search-placeholder="Search categories...">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Code</th>
+                                <th>Name</th>
+                                <th>Description</th>
+                                <th>Display Order</th>
+                                <th>Status</th>
+                                <th class="text-end">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var cat in Model)
+                            {
+                                <tr>
+                                    <td><span class="fw-bold font-monospace text-primary">@cat.CategoryCode</span></td>
+                                    <td>
+                                        <div class="fw-semibold">@cat.CategoryName</div>
+                                    </td>
+                                    <td>
+                                        <div class="small text-muted">@cat.Description</div>
+                                    </td>
+                                    <td>@cat.DisplayOrder</td>
+                                    <td>
+                                        @if(cat.IsActive)
+                                        {
+                                            <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 px-2 py-1 rounded-pill">Active</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-secondary bg-opacity-10 text-secondary border border-secondary border-opacity-25 px-2 py-1 rounded-pill">Inactive</span>
+                                        }
+                                    </td>
+                                    <td class="text-end">
+                                        <a href="/TreatmentCategory/Edit/@cat.Id" class="btn btn-sm btn-outline-primary shadow-sm" title="Edit">
+                                            <i class="bi bi-pencil"></i> Edit
+                                        </a>
+                                        <a href="/TreatmentSubCategory?categoryId=@cat.Id" class="btn btn-sm btn-outline-info shadow-sm ms-1" title="Manage SubCategories">
+                                            <i class="bi bi-diagram-2"></i> Manage SubCategories
+                                        </a>
+                                        <button type="button" class="btn btn-sm btn-outline-danger shadow-sm ms-1" onclick="deleteCategory('@cat.Id', '@cat.CategoryName')" title="Delete">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+<form id="deleteForm" method="post" style="display:none;">
+    @Html.AntiForgeryToken()
+</form>
+
+@section Scripts {
+    <script>
+        function deleteCategory(id, name) {
+            if (confirm(`Are you sure you want to delete category '${name}'?`)) {
+                var form = $('#deleteForm');
+                form.attr('action', '/TreatmentCategory/Delete/' + id);
+                form.submit();
+            }
+        }
+
+        $(document).ready(function() {
+            if (typeof $.fn.DataTable !== 'undefined') {
+                // Ensure no duplicate filters are pushed if script runs multiple times
+                while ($.fn.dataTable.ext.search.length > 0) {
+                    $.fn.dataTable.ext.search.pop();
+                }
+
+                $.fn.dataTable.ext.search.push(function(settings, data, dataIndex) {
+                    if (settings.nTable.id !== 'categoriesTable') {
+                        return true;
+                    }
+                    var statusFilter = $('#statusFilter').val();
+                    if (!statusFilter) return true;
+                    
+                    var status = data[4] || ""; // 5th column
+                    return status.indexOf(statusFilter) !== -1;
+                });
+
+                $('#statusFilter').on('change', function() {
+                    var table = $('#categoriesTable').DataTable();
+                    table.draw();
+                });
+            }
+        });
+    </script>
+}
