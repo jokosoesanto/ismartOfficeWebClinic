@@ -43,7 +43,7 @@
                     </div>
                     
                     <div class="col-12">
-                        <label class="form-label fw-bold">Treatment / Procedure</label>
+                        <label class="form-label fw-bold">Treatment</label>
                         <select class="form-select">
                             <option>Composite Filling</option>
                             <option selected>Root Canal Treatment</option>
@@ -93,10 +93,10 @@
             
             // Simple Parity Validation
             const toothNo = document.querySelector("input[value='14']");
-            const procedure = document.querySelector("select").value; // Treatment/Procedure
+            const treatment = document.querySelector("select").value; // Treatment
             
-            if (procedure === "") {
-                alert("Please select a procedure.");
+            if (treatment === "") {
+                alert("Please select a treatment.");
                 return;
             }
             

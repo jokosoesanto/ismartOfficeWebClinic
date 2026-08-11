@@ -37,6 +37,22 @@ namespace Clinic.Web.ViewComponents
             {
                 breadcrumbs.AddRange(dynamicBreadcrumbs);
             }
+            
+            // Append current page context if it's a child route not explicitly in the menu
+            var last = breadcrumbs.LastOrDefault();
+            if (last != null && !last.Route.Equals(path, StringComparison.OrdinalIgnoreCase) && path != "/")
+            {
+                var pageTitle = ViewContext?.ViewData["Title"]?.ToString();
+                if (!string.IsNullOrEmpty(pageTitle) && !pageTitle.Equals(last.BreadcrumbTitle, StringComparison.OrdinalIgnoreCase))
+                {
+                    breadcrumbs.Add(new NavigationItem 
+                    { 
+                        Title = pageTitle, 
+                        BreadcrumbTitle = pageTitle, 
+                        Route = path 
+                    });
+                }
+            }
 
             return View(breadcrumbs);
         }

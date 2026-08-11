@@ -26,15 +26,7 @@ namespace Clinic.Web.Controllers
         public async Task<IActionResult> Security()
         {
             var timeout = await _configurationService.GetIntValueAsync("SessionTimeoutMinutes", 30);
-            
-            var metadata = new Clinic.Application.UI.UIMetadata
-            {
-                Title = "Security Configuration",
-                ModuleName = "Admin",
-                Mode = Clinic.Application.UI.RenderingMode.Template,
-                Data = timeout
-            };
-            return View("~/Views/Shared/Templates/Admin_List.cshtml", metadata);
+            return View(timeout);
         }
 
         [HttpPost("UpdateSecurity")]

@@ -15,42 +15,8 @@
     </div>
 
     <div class="row g-4 h-100">
-        <!-- Settings Menu -->
-        <div class="col-md-3">
-            <div class="card shadow-sm border-0 h-100">
-                <div class="card-header bg-white border-bottom-0 pt-4 pb-0">
-                    <h6 class="fw-bold text-muted text-uppercase mb-0">System Setup</h6>
-                </div>
-                <div class="card-body">
-                    <div class="list-group list-group-flush border rounded mb-3">
-                        <h6 class="dropdown-header fw-bold bg-light border-bottom">Administration</h6>
-                        <a href="/Admin/Users" class="list-group-item list-group-item-action"><i class="bi bi-people me-2"></i>Users</a>
-                        <a href="/Admin/Roles" class="list-group-item list-group-item-action"><i class="bi bi-shield-lock me-2"></i>Roles</a>
-                        <a href="/Admin/Permissions" class="list-group-item list-group-item-action"><i class="bi bi-ui-checks-grid me-2"></i>Permissions</a>
-                        <a href="/Admin/Locations" class="list-group-item list-group-item-action"><i class="bi bi-building me-2"></i>Locations</a>
-                        <a href="/Admin/Chairs" class="list-group-item list-group-item-action"><i class="bi bi-usb-drive me-2"></i>Chairs</a>
-                    </div>
-                    <div class="list-group list-group-flush border rounded mb-3">
-                        <h6 class="dropdown-header fw-bold bg-light border-bottom">Master Data</h6>
-                        <a href="/Doctor" class="list-group-item list-group-item-action"><i class="bi bi-person-badge me-2"></i>Doctors / Providers</a>
-                        <a href="/Specialty" class="list-group-item list-group-item-action active fw-bold"><i class="bi bi-award me-2"></i>Specialties</a>
-                        <a href="/Admin/Insurance" class="list-group-item list-group-item-action"><i class="bi bi-card-checklist me-2"></i>Insurance</a>
-                        <a href="/Admin/Procedures" class="list-group-item list-group-item-action"><i class="bi bi-list-check me-2"></i>Procedures</a>
-                        <a href="/Admin/Lookup" class="list-group-item list-group-item-action"><i class="bi bi-tags me-2"></i>Master Lookup</a>
-                    </div>
-                    <div class="list-group list-group-flush border rounded">
-                        <h6 class="dropdown-header fw-bold bg-light border-bottom">System Configuration</h6>
-                    @if (User.HasClaim("Permission", "Configuration.Security"))
-                    {
-                        <a href="/Configuration/Security" class="list-group-item list-group-item-action"><i class="bi bi-gear me-2"></i>Configuration</a>
-                    }
-                    </div>
-                </div>
-            </div>
-        </div>
-
         <!-- Data Grid -->
-        <div class="col-md-9">
+        <div class="col-md-12">
             <div class="card shadow-sm border-0 h-100">
                 <div class="card-header bg-white border-bottom-0 pt-4 pb-0 d-flex justify-content-between align-items-center">
                     <h6 class="fw-bold text-muted text-uppercase mb-0">Registered @meta.Title</h6>

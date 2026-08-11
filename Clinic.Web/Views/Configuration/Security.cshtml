@@ -1,30 +1,31 @@
 @{
-    ViewData["Title"] = "Security Configuration";
+    ViewData["Title"] = "Session Timeout Configuration";
+    var timeout = Model as int?;
 }
 
 <div class="container-fluid px-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2 class="mb-0 fw-bold text-dark"><i class="bi bi-shield-lock me-2 text-primary"></i>Security Configuration</h2>
+        <h2 class="mb-0 fw-bold text-dark"><i class="bi bi-clock-history me-2 text-primary"></i>Session Timeout Configuration</h2>
     </div>
-
-
 
     <div class="card shadow-sm border-0">
         <div class="card-body p-4">
             <form asp-controller="Configuration" asp-action="UpdateSecurity" method="post">
                 <div class="row mb-4">
                     <div class="col-md-6">
-                        <label for="sessionTimeoutMinutes" class="form-label fw-semibold">Session Timeout (Minutes)</label>
-                        <div class="input-group">
-                            <span class="input-group-text bg-light"><i class="bi bi-clock-history"></i></span>
-                            <input type="number" class="form-control" id="sessionTimeoutMinutes" name="sessionTimeoutMinutes" value="@ViewBag.SessionTimeoutMinutes" min="5" max="480" required>
+                        <label for="sessionTimeoutMinutes" class="form-label fw-semibold">Session Timeout</label>
+                        <div class="input-group shadow-sm">
+                            <span class="input-group-text bg-light text-muted border-end-0"><i class="bi bi-clock"></i></span>
+                            <input type="number" class="form-control bg-light border-start-0" id="sessionTimeoutMinutes" name="sessionTimeoutMinutes" value="@timeout" min="5" max="480" required>
                         </div>
-                        <div class="form-text">Minimum 5 minutes, Maximum 480 minutes (8 hours).</div>
+                        <div class="form-text mt-2">
+                            Configure how long an authenticated session remains active without user activity. Minimum 5 minutes, Maximum 480 minutes (8 hours).
+                        </div>
                     </div>
                 </div>
 
                 <div class="d-flex justify-content-end">
-                    <button type="submit" class="btn btn-primary px-4">
+                    <button type="submit" class="btn btn-primary px-4 shadow-sm">
                         <i class="bi bi-save me-2"></i>Save Configuration
                     </button>
                 </div>

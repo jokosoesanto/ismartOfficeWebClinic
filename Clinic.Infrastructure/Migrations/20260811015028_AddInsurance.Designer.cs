@@ -3,6 +3,7 @@ using System;
 using Clinic.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -10,9 +11,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Clinic.Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260811015028_AddInsurance")]
+    partial class AddInsurance
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "10.0.10");
@@ -70,7 +73,7 @@ namespace Clinic.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("AuditLogs", (string)null);
+                    b.ToTable("AuditLogs");
                 });
 
             modelBuilder.Entity("Clinic.Domain.Entities.Auth.Permission", b =>
@@ -121,7 +124,7 @@ namespace Clinic.Infrastructure.Migrations
                     b.HasIndex("Name")
                         .IsUnique();
 
-                    b.ToTable("Permissions", (string)null);
+                    b.ToTable("Permissions");
                 });
 
             modelBuilder.Entity("Clinic.Domain.Entities.Auth.Role", b =>
@@ -171,7 +174,7 @@ namespace Clinic.Infrastructure.Migrations
                     b.HasIndex("Name")
                         .IsUnique();
 
-                    b.ToTable("Roles", (string)null);
+                    b.ToTable("Roles");
                 });
 
             modelBuilder.Entity("Clinic.Domain.Entities.Auth.RolePermission", b =>
@@ -186,7 +189,7 @@ namespace Clinic.Infrastructure.Migrations
 
                     b.HasIndex("PermissionId");
 
-                    b.ToTable("RolePermissions", (string)null);
+                    b.ToTable("RolePermissions");
                 });
 
             modelBuilder.Entity("Clinic.Domain.Entities.Auth.User", b =>
@@ -300,7 +303,7 @@ namespace Clinic.Infrastructure.Migrations
 
                     b.HasIndex("PrimaryLocationId");
 
-                    b.ToTable("Users", (string)null);
+                    b.ToTable("Users");
                 });
 
             modelBuilder.Entity("Clinic.Domain.Entities.Auth.UserLocation", b =>
@@ -318,7 +321,7 @@ namespace Clinic.Infrastructure.Migrations
 
                     b.HasIndex("LocationId");
 
-                    b.ToTable("UserLocations", (string)null);
+                    b.ToTable("UserLocations");
                 });
 
             modelBuilder.Entity("Clinic.Domain.Entities.Auth.UserRole", b =>
@@ -333,7 +336,7 @@ namespace Clinic.Infrastructure.Migrations
 
                     b.HasIndex("RoleId");
 
-                    b.ToTable("UserRoles", (string)null);
+                    b.ToTable("UserRoles");
                 });
 
             modelBuilder.Entity("Clinic.Domain.Entities.Auth.UserSession", b =>
@@ -372,7 +375,7 @@ namespace Clinic.Infrastructure.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("UserSessions", (string)null);
+                    b.ToTable("UserSessions");
                 });
 
             modelBuilder.Entity("Clinic.Domain.Entities.Configuration.AppConfiguration", b =>
@@ -459,7 +462,7 @@ namespace Clinic.Infrastructure.Migrations
 
                     b.HasIndex("LocationId");
 
-                    b.ToTable("Chairs", (string)null);
+                    b.ToTable("Chairs");
                 });
 
             modelBuilder.Entity("Clinic.Domain.Entities.MasterData.Doctor", b =>
@@ -557,7 +560,7 @@ namespace Clinic.Infrastructure.Migrations
 
                     b.HasIndex("SpecialtyId");
 
-                    b.ToTable("Doctors", (string)null);
+                    b.ToTable("Doctors");
                 });
 
             modelBuilder.Entity("Clinic.Domain.Entities.MasterData.DoctorLocation", b =>
@@ -575,7 +578,7 @@ namespace Clinic.Infrastructure.Migrations
 
                     b.HasIndex("LocationId");
 
-                    b.ToTable("DoctorLocations", (string)null);
+                    b.ToTable("DoctorLocations");
                 });
 
             modelBuilder.Entity("Clinic.Domain.Entities.MasterData.DoctorSchedule", b =>
@@ -641,7 +644,7 @@ namespace Clinic.Infrastructure.Migrations
 
                     b.HasIndex("LocationId");
 
-                    b.ToTable("DoctorSchedules", (string)null);
+                    b.ToTable("DoctorSchedules");
                 });
 
             modelBuilder.Entity("Clinic.Domain.Entities.MasterData.Insurance", b =>
@@ -811,7 +814,7 @@ namespace Clinic.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Locations", (string)null);
+                    b.ToTable("Locations");
                 });
 
             modelBuilder.Entity("Clinic.Domain.Entities.MasterData.Patient", b =>
@@ -954,7 +957,7 @@ namespace Clinic.Infrastructure.Migrations
 
                     b.HasIndex("PhotoFileMetadataId");
 
-                    b.ToTable("Patients", (string)null);
+                    b.ToTable("Patients");
                 });
 
             modelBuilder.Entity("Clinic.Domain.Entities.MasterData.Specialty", b =>
@@ -1006,7 +1009,7 @@ namespace Clinic.Infrastructure.Migrations
                     b.HasIndex("Code")
                         .IsUnique();
 
-                    b.ToTable("Specialties", (string)null);
+                    b.ToTable("Specialties");
                 });
 
             modelBuilder.Entity("Clinic.Domain.Entities.MasterData.TreatmentCatalog", b =>
@@ -1288,7 +1291,7 @@ namespace Clinic.Infrastructure.Migrations
 
                     b.HasIndex("Module", "EntityId");
 
-                    b.ToTable("FileMetadatas", (string)null);
+                    b.ToTable("FileMetadatas");
                 });
 
             modelBuilder.Entity("Clinic.Domain.Entities.System.MasterReference", b =>
@@ -1362,7 +1365,7 @@ namespace Clinic.Infrastructure.Migrations
                     b.HasIndex("Category", "Code")
                         .IsUnique();
 
-                    b.ToTable("MasterReferences", (string)null);
+                    b.ToTable("MasterReferences");
                 });
 
             modelBuilder.Entity("Clinic.Domain.Entities.System.NumberSequence", b =>
@@ -1422,7 +1425,7 @@ namespace Clinic.Infrastructure.Migrations
                     b.HasIndex("SequenceCode")
                         .IsUnique();
 
-                    b.ToTable("NumberSequences", (string)null);
+                    b.ToTable("NumberSequences");
                 });
 
             modelBuilder.Entity("Clinic.Domain.Entities.SystemSetting", b =>
@@ -1446,7 +1449,7 @@ namespace Clinic.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("SystemSettings", (string)null);
+                    b.ToTable("SystemSettings");
                 });
 
             modelBuilder.Entity("Clinic.Domain.Entities.Auth.RolePermission", b =>

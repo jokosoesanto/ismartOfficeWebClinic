@@ -178,7 +178,11 @@ namespace Clinic.Web.Services
                 new { Code = "MasterData.TreatmentCatalog.View", Name = "View Treatment Catalog", Module = "TreatmentCatalog", Category = "Master Data" },
                 new { Code = "MasterData.TreatmentCatalog.Create", Name = "Create Treatment Catalog", Module = "TreatmentCatalog", Category = "Master Data" },
                 new { Code = "MasterData.TreatmentCatalog.Edit", Name = "Edit Treatment Catalog", Module = "TreatmentCatalog", Category = "Master Data" },
-                new { Code = "MasterData.TreatmentCatalog.Delete", Name = "Delete Treatment Catalog", Module = "TreatmentCatalog", Category = "Master Data" }
+                new { Code = "MasterData.TreatmentCatalog.Delete", Name = "Delete Treatment Catalog", Module = "TreatmentCatalog", Category = "Master Data" },
+                new { Code = "MasterData.Insurance.View", Name = "View Insurance", Module = "Insurance", Category = "Master Data" },
+                new { Code = "MasterData.Insurance.Create", Name = "Create Insurance", Module = "Insurance", Category = "Master Data" },
+                new { Code = "MasterData.Insurance.Edit", Name = "Edit Insurance", Module = "Insurance", Category = "Master Data" },
+                new { Code = "MasterData.Insurance.Delete", Name = "Delete Insurance", Module = "Insurance", Category = "Master Data" }
             };
 
             foreach(var cp in customPermissions)

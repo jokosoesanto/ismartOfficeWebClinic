@@ -34,6 +34,8 @@ namespace Clinic.Infrastructure.Data
         public DbSet<Clinic.Domain.Entities.MasterData.TreatmentCategory> TreatmentCategories { get; set; } = null!;
         public DbSet<Clinic.Domain.Entities.MasterData.TreatmentSubCategory> TreatmentSubCategories { get; set; } = null!;
         public DbSet<Clinic.Domain.Entities.MasterData.TreatmentCatalog> TreatmentCatalogs { get; set; } = null!;
+        public DbSet<Clinic.Domain.Entities.MasterData.Insurance> Insurances { get; set; } = null!;
+
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -43,6 +45,8 @@ namespace Clinic.Infrastructure.Data
             modelBuilder.ApplyConfiguration(new Configurations.TreatmentCategoryConfiguration());
             modelBuilder.ApplyConfiguration(new Configurations.TreatmentSubCategoryConfiguration());
             modelBuilder.ApplyConfiguration(new Configurations.TreatmentCatalogConfiguration());
+            modelBuilder.ApplyConfiguration(new Configurations.InsuranceConfiguration());
+
 
             modelBuilder.Entity<Clinic.Domain.Entities.Configuration.AppConfiguration>(entity =>
             {
@@ -80,6 +84,8 @@ namespace Clinic.Infrastructure.Data
             modelBuilder.Entity<Clinic.Domain.Entities.MasterData.TreatmentCategory>().HasQueryFilter(e => !e.IsDeleted);
             modelBuilder.Entity<Clinic.Domain.Entities.MasterData.TreatmentSubCategory>().HasQueryFilter(e => !e.IsDeleted);
             modelBuilder.Entity<Clinic.Domain.Entities.MasterData.TreatmentCatalog>().HasQueryFilter(e => !e.IsDeleted);
+            modelBuilder.Entity<Clinic.Domain.Entities.MasterData.Insurance>().HasQueryFilter(e => !e.IsDeleted);
+
 
             // Explicitly set max length for string to avoid NTEXT/TEXT
             modelBuilder.Entity<SystemSetting>(entity =>

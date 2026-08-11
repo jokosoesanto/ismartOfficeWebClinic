@@ -273,11 +273,6 @@ namespace Clinic.Web.Controllers
             return GetAdminView("Manage Insurance");
         }
 
-        [HttpGet("Procedures")]
-        public IActionResult Procedures()
-        {
-            return GetAdminView("Manage Procedures");
-        }
 
         [HttpGet("Configuration")]
         public IActionResult Configuration()

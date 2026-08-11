@@ -2,12 +2,71 @@
 @{
     var currentPath = Context.Request.Path.Value;
     if (string.IsNullOrEmpty(currentPath)) currentPath = "/";
+    var activeNode = GetActiveNode(Model, currentPath);
 }
+
+@functions {
+    Clinic.Application.Navigation.NavigationItem GetActiveNode(List<Clinic.Application.Navigation.NavigationItem> menu, string currentPath)
+    {
+        Clinic.Application.Navigation.NavigationItem bestMatch = null;
+        int maxMatchLength = -1;
+
+        void Traverse(Clinic.Application.Navigation.NavigationItem item)
+        {
+            if (!string.IsNullOrEmpty(item.Route) && currentPath.StartsWith(item.Route, StringComparison.OrdinalIgnoreCase))
+            {
+                if (item.Route == "/" && currentPath != "/")
+                {
+                    // Ignore root route matching for non-root paths
+                }
+                else if (item.Route.Length > maxMatchLength)
+                {
+                    maxMatchLength = item.Route.Length;
+                    bestMatch = item;
+                }
+            }
+
+            if (item.Children != null)
+            {
+                foreach (var child in item.Children)
+                {
+                    Traverse(child);
+                }
+            }
+        }
+
+        if (menu != null)
+        {
+            foreach (var item in menu)
+            {
+                Traverse(item);
+            }
+        }
+
+        return bestMatch;
+    }
+
+    bool IsNodeOrDescendant(Clinic.Application.Navigation.NavigationItem item, Clinic.Application.Navigation.NavigationItem target)
+    {
+        if (target == null || item == null) return false;
+        if (item.Id == target.Id) return true;
+        
+        if (item.Children != null)
+        {
+            foreach (var child in item.Children)
+            {
+                if (IsNodeOrDescendant(child, target)) return true;
+            }
+        }
+        return false;
+    }
+}
+
 <ul class="nav flex-column mt-3">
     @foreach (var item in Model)
     {
         var hasChildren = item.Children != null && item.Children.Any();
-        var isActive = currentPath.StartsWith(item.Route, StringComparison.OrdinalIgnoreCase) && item.Route != "/" || currentPath == item.Route;
+        var isActive = IsNodeOrDescendant(item, activeNode);
         
         <li class="nav-item">
             @if (hasChildren)
@@ -26,7 +85,7 @@
                         @foreach (var child in item.Children ?? Enumerable.Empty<Clinic.Application.Navigation.NavigationItem>())
                         {
                             var hasGrandChildren = child.Children != null && child.Children.Any();
-                            var isChildActive = currentPath.StartsWith(child.Route, StringComparison.OrdinalIgnoreCase) && child.Route != "/" || currentPath == child.Route;
+                            var isChildActive = IsNodeOrDescendant(child, activeNode);
 
                             <li class="nav-item mb-1">
                                 @if (hasGrandChildren)
@@ -44,7 +103,7 @@
                                         <ul class="nav flex-column ms-3 mt-1">
                                             @foreach (var grandChild in child.Children)
                                             {
-                                                var isGrandChildActive = currentPath == grandChild.Route;
+                                                var isGrandChildActive = IsNodeOrDescendant(grandChild, activeNode);
                                                 <li class="nav-item mb-1">
                                                     <a class="nav-link text-main small @(isGrandChildActive ? "text-primary fw-bold" : "text-muted")" href="@grandChild.Route"
                                                        data-sidebar-tooltip="tooltip" data-bs-placement="right" title="@grandChild.Title">

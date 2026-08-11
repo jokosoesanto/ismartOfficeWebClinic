@@ -25,20 +25,42 @@ namespace Clinic.Infrastructure.MockProviders
                         new NavigationItem { Id = "schedule-board", Title = "Doctor Schedule Board", Icon = "bi-calendar2-week", Route = "/ScheduleBoard", BreadcrumbTitle = "Schedule Board", RequiredPermission = "ScheduleBoard.View" }
                     }
                 },
-                new NavigationItem { Id = "admin", Title = "Administration", Icon = "bi-gear", Route = "/Admin", BreadcrumbTitle = "Admin", Description = "System Administration", RequiredPermission = "Admin.Index",
+                new NavigationItem { Id = "system", Title = "System", Icon = "bi-hdd-network", Route = "/System", BreadcrumbTitle = "System", Description = "System Configuration", RequiredPermission = "Configuration.Currency",
+                    Children = new List<NavigationItem>
+                    {
+                        new NavigationItem { 
+                            Id = "system-configuration", 
+                            Title = "System Configuration", 
+                            Icon = "bi-gear-wide-connected", 
+                            Route = "/SystemConfiguration", 
+                            BreadcrumbTitle = "System Configuration", 
+                            RequiredPermission = "Configuration.Currency",
+                            Children = new List<NavigationItem>
+                            {
+                                new NavigationItem { Id = "system-currency", Title = "Application Currency", Icon = "bi-currency-exchange", Route = "/Configuration/Currency", BreadcrumbTitle = "Application Currency", RequiredPermission = "Configuration.Currency" },
+                                new NavigationItem { Id = "system-timeout", Title = "Session Timeout", Icon = "bi-clock-history", Route = "/Configuration/Security", BreadcrumbTitle = "Session Timeout", RequiredPermission = "Configuration.Security" }
+                            }
+                        }
+                    }
+                },
+                new NavigationItem { Id = "admin", Title = "Administration", Icon = "bi-shield-lock", Route = "/Admin", BreadcrumbTitle = "Admin", Description = "Security & Identity", RequiredPermission = "Admin.Index",
                     Children = new List<NavigationItem>
                     {
                         new NavigationItem { Id = "admin-users", Title = "Users", Icon = "bi-person", Route = "/Admin/Users", BreadcrumbTitle = "Users", RequiredPermission = "Admin.Users" },
-                        new NavigationItem { Id = "admin-roles", Title = "Roles", Icon = "bi-shield-lock", Route = "/Admin/Roles", BreadcrumbTitle = "Roles", RequiredPermission = "Admin.Roles" },
-                        new NavigationItem { Id = "admin-locations", Title = "Locations", Icon = "bi-buildings", Route = "/Admin/Locations", BreadcrumbTitle = "Locations", RequiredPermission = "Admin.Locations" },
-                        new NavigationItem { Id = "admin-chairs", Title = "Chairs", Icon = "bi-display", Route = "/Admin/Chairs", BreadcrumbTitle = "Chairs", RequiredPermission = "Admin.Chairs" }
+                        new NavigationItem { Id = "admin-roles", Title = "Roles", Icon = "bi-person-badge", Route = "/Admin/Roles", BreadcrumbTitle = "Roles", RequiredPermission = "Admin.Roles" },
+                        new NavigationItem { Id = "admin-permissions", Title = "Permissions", Icon = "bi-ui-checks-grid", Route = "/Admin/Permissions", BreadcrumbTitle = "Permissions", RequiredPermission = "Admin.Permissions" }
                     }
                 },
-                new NavigationItem { Id = "system", Title = "System", Icon = "bi-hdd-network", Route = "/System", BreadcrumbTitle = "System", Description = "System Configuration", RequiredPermission = "MasterReference.Index",
+                new NavigationItem { Id = "master-data", Title = "Master Data", Icon = "bi-journal-text", Route = "/MasterData", BreadcrumbTitle = "Master Data", Description = "Business References", RequiredPermission = "MasterReference.Index",
                     Children = new List<NavigationItem>
                     {
-                        new NavigationItem { Id = "system-master-reference", Title = "Master References", Icon = "bi-journal-text", Route = "/MasterReference", BreadcrumbTitle = "Master References", RequiredPermission = "MasterReference.Index" },
-                        new NavigationItem { Id = "system-number-sequence", Title = "Number Sequences", Icon = "bi-123", Route = "/NumberSequence", BreadcrumbTitle = "Number Sequences", RequiredPermission = "NumberSequence.Index" },
+                        new NavigationItem { Id = "master-reference", Title = "Master References", Icon = "bi-journal-text", Route = "/MasterReference", BreadcrumbTitle = "Master References", RequiredPermission = "MasterReference.Index" },
+                        new NavigationItem { Id = "master-number-sequence", Title = "Number Sequences", Icon = "bi-123", Route = "/NumberSequence", BreadcrumbTitle = "Number Sequences", RequiredPermission = "NumberSequence.Index" },
+                        new NavigationItem { Id = "master-locations", Title = "Locations", Icon = "bi-buildings", Route = "/Admin/Locations", BreadcrumbTitle = "Locations", RequiredPermission = "Admin.Locations" },
+                        new NavigationItem { Id = "master-chairs", Title = "Chairs", Icon = "bi-display", Route = "/Admin/Chairs", BreadcrumbTitle = "Chairs", RequiredPermission = "Admin.Chairs" },
+                        new NavigationItem { Id = "master-doctors", Title = "Doctors / Providers", Icon = "bi-person-badge", Route = "/Doctor", BreadcrumbTitle = "Doctors", RequiredPermission = "Doctor.Index" },
+                        new NavigationItem { Id = "master-specialties", Title = "Specialties", Icon = "bi-award", Route = "/Specialty", BreadcrumbTitle = "Specialties", RequiredPermission = "Specialty.Index" },
+                        new NavigationItem { Id = "master-insurance", Title = "Insurance", Icon = "bi-card-checklist", Route = "/Insurance", BreadcrumbTitle = "Insurance", RequiredPermission = "MasterData.Insurance.View" },
                         new NavigationItem { 
                             Id = "system-treatment-management", 
                             Title = "Treatment Management", 
@@ -52,8 +74,7 @@ namespace Clinic.Infrastructure.MockProviders
                                 new NavigationItem { Id = "system-treatment-subcategory", Title = "Treatment SubCategories", Icon = "bi-tag", Route = "/TreatmentSubCategory", BreadcrumbTitle = "Treatment SubCategories", RequiredPermission = "MasterData.TreatmentSubCategory.View" },
                                 new NavigationItem { Id = "system-treatment-catalog", Title = "Treatment Catalog", Icon = "bi-card-list", Route = "/TreatmentCatalog", BreadcrumbTitle = "Treatment Catalog", RequiredPermission = "MasterData.TreatmentCatalog.View" }
                             }
-                        },
-                        new NavigationItem { Id = "system-currency", Title = "Application Currency", Icon = "bi-currency-exchange", Route = "/Configuration/Currency", BreadcrumbTitle = "Application Currency", RequiredPermission = "Configuration.Currency" }
+                        }
                     }
                 }
             };
@@ -67,42 +88,68 @@ namespace Clinic.Infrastructure.MockProviders
         public List<NavigationItem> GetBreadcrumbs(string currentRoute)
         {
             var breadcrumbs = new List<NavigationItem>();
-            
-            // Simple logic to find breadcrumb by route matching
+            NavigationItem bestMatch = null;
+            int maxMatchLength = -1;
+            List<NavigationItem> bestPath = new List<NavigationItem>();
+
+            int GetCommonPrefixLength(string s1, string s2)
+            {
+                if (string.IsNullOrEmpty(s1) || string.IsNullOrEmpty(s2)) return 0;
+                int i = 0;
+                int minLen = System.Math.Min(s1.Length, s2.Length);
+                while (i < minLen && char.ToLowerInvariant(s1[i]) == char.ToLowerInvariant(s2[i]))
+                {
+                    i++;
+                }
+                return i;
+            }
+
+            void Traverse(NavigationItem item, List<NavigationItem> currentPath)
+            {
+                currentPath.Add(item);
+
+                if (!string.IsNullOrEmpty(item.Route) && item.Route != "/")
+                {
+                    int matchLen = GetCommonPrefixLength(item.Route, currentRoute);
+                    if (matchLen > maxMatchLength)
+                    {
+                        maxMatchLength = matchLen;
+                        bestMatch = item;
+                        bestPath = new List<NavigationItem>(currentPath);
+                    }
+                }
+                else if (item.Route == "/" && currentRoute == "/")
+                {
+                    if (1 > maxMatchLength)
+                    {
+                        maxMatchLength = 1;
+                        bestMatch = item;
+                        bestPath = new List<NavigationItem>(currentPath);
+                    }
+                }
+
+                if (item.Children != null)
+                {
+                    foreach (var child in item.Children)
+                    {
+                        Traverse(child, currentPath);
+                    }
+                }
+                
+                currentPath.RemoveAt(currentPath.Count - 1);
+            }
+
             foreach (var item in _menu)
             {
-                if (item.Route.Equals(currentRoute, System.StringComparison.OrdinalIgnoreCase))
-                {
-                    breadcrumbs.Add(item);
-                    return breadcrumbs;
-                }
-                
-                if (item.Children == null) continue;
-                
-                foreach (var child in item.Children)
-                {
-                    if (child.Route.Equals(currentRoute, System.StringComparison.OrdinalIgnoreCase))
-                    {
-                        breadcrumbs.Add(item);
-                        breadcrumbs.Add(child);
-                        return breadcrumbs;
-                    }
-                    
-                    if (child.Children == null) continue;
-                    
-                    foreach (var grandChild in child.Children)
-                    {
-                        if (grandChild.Route.Equals(currentRoute, System.StringComparison.OrdinalIgnoreCase))
-                        {
-                            breadcrumbs.Add(item);
-                            breadcrumbs.Add(child);
-                            breadcrumbs.Add(grandChild);
-                            return breadcrumbs;
-                        }
-                    }
-                }
+                Traverse(item, new List<NavigationItem>());
             }
             
+            if (bestMatch != null)
+            {
+                breadcrumbs = new List<NavigationItem>(bestPath);
+                return breadcrumbs;
+            }
+
             // Default fallback
             breadcrumbs.Add(new NavigationItem { Title = "Home", Route = "/" });
             return breadcrumbs;
