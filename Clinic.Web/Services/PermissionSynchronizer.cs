@@ -260,6 +260,9 @@ namespace Clinic.Web.Services
                 "ScheduleBoard" => "Operations",
                 "MasterReference" => "System",
                 "NumberSequence" => "System",
+                "Specialty" => "Master Data",
+                "Location" => "Master Data",
+                "Chair" => "Master Data",
                 _ => "General"
             };
         }

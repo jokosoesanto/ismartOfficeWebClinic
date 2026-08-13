@@ -56,8 +56,8 @@ namespace Clinic.Infrastructure.MockProviders
                     {
                         new NavigationItem { Id = "master-reference", Title = "Master References", Icon = "bi-journal-text", Route = "/MasterReference", BreadcrumbTitle = "Master References", RequiredPermission = "MasterReference.Index" },
                         new NavigationItem { Id = "master-number-sequence", Title = "Number Sequences", Icon = "bi-123", Route = "/NumberSequence", BreadcrumbTitle = "Number Sequences", RequiredPermission = "NumberSequence.Index" },
-                        new NavigationItem { Id = "master-locations", Title = "Locations", Icon = "bi-buildings", Route = "/Admin/Locations", BreadcrumbTitle = "Locations", RequiredPermission = "Admin.Locations" },
-                        new NavigationItem { Id = "master-chairs", Title = "Chairs", Icon = "bi-display", Route = "/Admin/Chairs", BreadcrumbTitle = "Chairs", RequiredPermission = "Admin.Chairs" },
+                        new NavigationItem { Id = "master-locations", Title = "Locations", Icon = "bi-buildings", Route = "/Location", BreadcrumbTitle = "Locations", RequiredPermission = "Location.Index" },
+                        new NavigationItem { Id = "master-chairs", Title = "Chairs", Icon = "bi-display", Route = "/Chair", BreadcrumbTitle = "Chairs", RequiredPermission = "Chair.Index" },
                         new NavigationItem { Id = "master-doctors", Title = "Doctors / Providers", Icon = "bi-person-badge", Route = "/Doctor", BreadcrumbTitle = "Doctors", RequiredPermission = "Doctor.Index" },
                         new NavigationItem { Id = "master-specialties", Title = "Specialties", Icon = "bi-award", Route = "/Specialty", BreadcrumbTitle = "Specialties", RequiredPermission = "Specialty.Index" },
                         new NavigationItem { Id = "master-insurance", Title = "Insurance", Icon = "bi-card-checklist", Route = "/Insurance", BreadcrumbTitle = "Insurance", RequiredPermission = "MasterData.Insurance.View" },

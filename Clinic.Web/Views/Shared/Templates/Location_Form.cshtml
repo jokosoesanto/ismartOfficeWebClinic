@@ -1,0 +1,114 @@
+@model Clinic.Application.DTOs.MasterData.LocationDto
+@{
+    var isNew = Model.Id == Guid.Empty;
+    var meta = ViewBag.Meta as Clinic.Application.UI.UIMetadata;
+}
+
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="mb-0 fw-bold">@meta?.Title</h2>
+        <a href="/Location" class="btn btn-outline-secondary shadow-sm"><i class="bi bi-arrow-left me-2"></i>Back to Locations</a>
+    </div>
+
+    <div class="card shadow-sm border-0" style="max-width: 900px; margin: 0 auto;">
+        <div class="card-header bg-white border-bottom-0 pt-4 pb-0">
+            <h5 class="fw-bold text-primary mb-0"><i class="bi bi-building me-2"></i>Location Details</h5>
+        </div>
+        <div class="card-body p-4">
+            <form method="post" action="/Location/@(isNew ? "Create" : "Edit/" + Model.Id)" class="needs-validation" novalidate>
+                @Html.AntiForgeryToken()
+                @if (!isNew)
+                {
+                    <input type="hidden" name="Id" value="@Model.Id" />
+                }
+                
+                <h6 class="fw-bold border-bottom pb-2 mb-3 text-secondary">General Information</h6>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-bold">Clinic Code <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" name="ClinicCode" required value="@Model.ClinicCode">
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-bold">Clinic Name <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" name="ClinicName" required value="@Model.ClinicName">
+                    </div>
+                    <div class="col-md-12 mb-3">
+                        <label class="form-label fw-bold">Address</label>
+                        <textarea class="form-control" name="Address" rows="2">@Model.Address</textarea>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-bold">City</label>
+                        <input type="text" class="form-control" name="City" value="@Model.City">
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-bold">State / Province</label>
+                        <input type="text" class="form-control" name="StateProvince" value="@Model.StateProvince">
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-bold">Postal Code</label>
+                        <input type="text" class="form-control" name="PostalCode" value="@Model.PostalCode">
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-bold">Country</label>
+                        <input type="text" class="form-control" name="Country" value="@Model.Country">
+                    </div>
+                </div>
+
+                <h6 class="fw-bold border-bottom pb-2 mb-3 text-secondary mt-4">Contact Information</h6>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-bold">Phone</label>
+                        <input type="text" class="form-control" name="Phone" value="@Model.Phone">
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-bold">Email</label>
+                        <input type="email" class="form-control" name="Email" value="@Model.Email">
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-bold">Fax</label>
+                        <input type="text" class="form-control" name="Fax" value="@Model.Fax">
+                    </div>
+                </div>
+
+                <h6 class="fw-bold border-bottom pb-2 mb-3 text-secondary mt-4">Settings</h6>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-bold">Timezone</label>
+                        <input type="text" class="form-control" name="Timezone" value="@Model.Timezone">
+                    </div>
+                    <div class="col-md-12 mb-3">
+                        <div class="form-check form-switch mt-2">
+                            <input class="form-check-input" type="checkbox" role="switch" id="IsHeadquarters" name="IsHeadquarters" value="true" @(Model.IsHeadquarters ? "checked" : "")>
+                            <label class="form-check-label fw-bold" for="IsHeadquarters">Is Headquarters</label>
+                            <input type="hidden" name="IsHeadquarters" value="false" />
+                        </div>
+                        <div class="form-check form-switch mt-3">
+                            <input class="form-check-input" type="checkbox" role="switch" id="IsActive" name="IsActive" value="true" @(Model.IsActive ? "checked" : "")>
+                            <label class="form-check-label fw-bold" for="IsActive">Is Active</label>
+                            <input type="hidden" name="IsActive" value="false" />
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-4 pt-3 border-top d-flex justify-content-end gap-2">
+                    <a href="/Location" class="btn btn-light border px-4">Cancel</a>
+                    <button type="submit" class="btn btn-primary px-4 shadow-sm"><i class="bi bi-save me-2"></i>Save Location</button>
+                </div>
+            </form>
+            <script>
+                document.addEventListener('DOMContentLoaded', function () {
+                    var forms = document.querySelectorAll('.needs-validation');
+                    Array.prototype.slice.call(forms).forEach(function (form) {
+                        form.addEventListener('submit', function (event) {
+                            if (!form.checkValidity()) {
+                                event.preventDefault();
+                                event.stopPropagation();
+                            }
+                            form.classList.add('was-validated');
+                        }, false);
+                    });
+                });
+            </script>
+        </div>
+    </div>
+</div>

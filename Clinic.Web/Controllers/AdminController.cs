@@ -11,16 +11,12 @@ namespace Clinic.Web.Controllers
     {
         private readonly Clinic.Application.Interfaces.Auth.IAuthService _authService;
         private readonly Clinic.Application.Interfaces.MasterData.ILocationService _locationService;
-        private readonly Clinic.Application.Interfaces.MasterData.IChairService _chairService;
-
         public AdminController(
             Clinic.Application.Interfaces.Auth.IAuthService authService,
-            Clinic.Application.Interfaces.MasterData.ILocationService locationService,
-            Clinic.Application.Interfaces.MasterData.IChairService chairService)
+            Clinic.Application.Interfaces.MasterData.ILocationService locationService)
         {
             _authService = authService;
             _locationService = locationService;
-            _chairService = chairService;
         }
 
         [HttpGet]
@@ -157,109 +153,7 @@ namespace Clinic.Web.Controllers
             return RedirectToAction("Roles");
         }
 
-        [HttpGet("Locations")]
-        [Authorize(Policy = "Admin.Locations")]
-        public async System.Threading.Tasks.Task<IActionResult> Locations()
-        {
-            var data = await _locationService.GetAllLocationsAsync();
-            return GetAdminView("Manage Locations", data);
-        }
 
-        [HttpGet("LocationForm/{id?}")]
-        [Authorize(Policy = "Admin.LocationForm")]
-        public async System.Threading.Tasks.Task<IActionResult> LocationForm(Guid? id = null)
-        {
-            Clinic.Application.DTOs.MasterData.LocationDto? location = null;
-            if (id.HasValue && id.Value != Guid.Empty)
-            {
-                location = await _locationService.GetLocationByIdAsync(id.Value);
-            }
-            
-            var metadata = new UIMetadata 
-            { 
-                Title = id.HasValue && id.Value != Guid.Empty ? "Edit Location" : "Add Location", 
-                ModuleName = "Admin", 
-                Mode = RenderingMode.Template,
-                Data = location
-            };
-            return View("Templates/Admin_LocationForm", metadata);
-        }
-
-        [HttpPost("SaveLocation")]
-        [Authorize(Policy = "Admin.SaveLocation")]
-        public async System.Threading.Tasks.Task<IActionResult> SaveLocation([FromForm] Clinic.Application.DTOs.MasterData.LocationDto locationDto)
-        {
-            Guid? currentUserId = null;
-            if (Guid.TryParse(User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value, out var uid))
-                currentUserId = uid;
-
-            await _locationService.SaveLocationAsync(locationDto, currentUserId);
-            return RedirectToAction("Locations");
-        }
-
-        [HttpPost("DeleteLocation/{id}")]
-        [Authorize(Policy = "Admin.DeleteLocation")]
-        public async System.Threading.Tasks.Task<IActionResult> DeleteLocation(Guid id)
-        {
-            Guid? currentUserId = null;
-            if (Guid.TryParse(User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value, out var uid))
-                currentUserId = uid;
-
-            await _locationService.DeleteLocationAsync(id, currentUserId);
-            return RedirectToAction("Locations");
-        }
-
-        [HttpGet("Chairs")]
-        [Authorize(Policy = "Admin.Chairs")]
-        public async System.Threading.Tasks.Task<IActionResult> Chairs()
-        {
-            var data = await _chairService.GetAllChairsAsync();
-            return GetAdminView("Manage Chairs", data);
-        }
-
-        [HttpGet("ChairForm/{id?}")]
-        [Authorize(Policy = "Admin.ChairForm")]
-        public async System.Threading.Tasks.Task<IActionResult> ChairForm(Guid? id = null)
-        {
-            Clinic.Application.DTOs.MasterData.ChairDto? chair = null;
-            if (id.HasValue && id.Value != Guid.Empty)
-            {
-                chair = await _chairService.GetChairByIdAsync(id.Value);
-            }
-            
-            var metadata = new UIMetadata 
-            { 
-                Title = id.HasValue && id.Value != Guid.Empty ? "Edit Chair" : "Add Chair", 
-                ModuleName = "Admin", 
-                Mode = RenderingMode.Template,
-                Data = new { Chair = chair, Locations = await _locationService.GetAllLocationsAsync() }
-            };
-            return View("Templates/Admin_ChairForm", metadata);
-        }
-
-        [HttpPost("SaveChair")]
-        [Authorize(Policy = "Admin.SaveChair")]
-        public async System.Threading.Tasks.Task<IActionResult> SaveChair([FromForm] Clinic.Application.DTOs.MasterData.ChairDto chairDto)
-        {
-            Guid? currentUserId = null;
-            if (Guid.TryParse(User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value, out var uid))
-                currentUserId = uid;
-
-            await _chairService.SaveChairAsync(chairDto, currentUserId);
-            return RedirectToAction("Chairs");
-        }
-
-        [HttpPost("DeleteChair/{id}")]
-        [Authorize(Policy = "Admin.DeleteChair")]
-        public async System.Threading.Tasks.Task<IActionResult> DeleteChair(Guid id)
-        {
-            Guid? currentUserId = null;
-            if (Guid.TryParse(User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value, out var uid))
-                currentUserId = uid;
-
-            await _chairService.DeleteChairAsync(id, currentUserId);
-            return RedirectToAction("Chairs");
-        }
 
         [HttpGet("Doctors")]
         public IActionResult Doctors()
