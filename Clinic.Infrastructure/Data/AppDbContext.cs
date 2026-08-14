@@ -35,6 +35,7 @@ namespace Clinic.Infrastructure.Data
         public DbSet<Clinic.Domain.Entities.MasterData.TreatmentSubCategory> TreatmentSubCategories { get; set; } = null!;
         public DbSet<Clinic.Domain.Entities.MasterData.TreatmentCatalog> TreatmentCatalogs { get; set; } = null!;
         public DbSet<Clinic.Domain.Entities.MasterData.Insurance> Insurances { get; set; } = null!;
+        public DbSet<Clinic.Domain.Entities.Operations.Appointment> Appointments { get; set; } = null!;
 
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -46,6 +47,7 @@ namespace Clinic.Infrastructure.Data
             modelBuilder.ApplyConfiguration(new Configurations.TreatmentSubCategoryConfiguration());
             modelBuilder.ApplyConfiguration(new Configurations.TreatmentCatalogConfiguration());
             modelBuilder.ApplyConfiguration(new Configurations.InsuranceConfiguration());
+            modelBuilder.ApplyConfiguration(new Configurations.AppointmentConfiguration());
 
 
             modelBuilder.Entity<Clinic.Domain.Entities.Configuration.AppConfiguration>(entity =>

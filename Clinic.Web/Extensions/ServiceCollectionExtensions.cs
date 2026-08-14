@@ -46,6 +46,7 @@ namespace Clinic.Web.Extensions
             services.AddScoped<ITreatmentSubCategoryService, Clinic.Application.Services.MasterData.TreatmentSubCategoryService>();
             services.AddScoped<ITreatmentCatalogService, Clinic.Application.Services.MasterData.TreatmentCatalogService>();
             services.AddScoped<IInsuranceService, Clinic.Application.Services.MasterData.InsuranceService>();
+            services.AddScoped<IAppointmentService, Clinic.Application.Services.Operations.AppointmentService>();
 
             return services;
         }
@@ -77,6 +78,7 @@ namespace Clinic.Web.Extensions
 
             // Operations Repositories
             services.AddScoped<IScheduleBoardRepository, ScheduleBoardRepository>();
+            services.AddScoped<IAppointmentRepository, Clinic.Infrastructure.Data.Repositories.Operations.AppointmentRepository>();
 
             // System/Config Repositories
             services.AddScoped<INumberSequenceRepository, NumberSequenceRepository>();
