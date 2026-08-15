@@ -143,7 +143,10 @@ namespace Clinic.Web.Controllers
                         specialty = s.Specialty,
                         locationName = s.LocationName,
                         chair = s.Chair,
-                        status = s.Status
+                        status = s.Status,
+                        isAppointment = s.IsAppointment,
+                        patientName = s.PatientName,
+                        appointmentStatus = s.AppointmentStatus
                     });
                 }
             }

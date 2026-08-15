@@ -30,5 +30,10 @@ namespace Clinic.Application.DTOs.Operations
         public bool IsActive { get; set; }
         public bool IsAvailable { get; set; } // From Schedule
         public string Status { get; set; } = "Available"; // Derived status (Available, Break, Leave, Inactive, InSession)
+        
+        // Appointment specific
+        public bool IsAppointment { get; set; }
+        public string? PatientName { get; set; }
+        public string? AppointmentStatus { get; set; }
     }
 }

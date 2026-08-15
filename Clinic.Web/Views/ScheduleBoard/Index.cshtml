@@ -81,7 +81,152 @@
             <div id="calendar"></div>
         </div>
     </div>
+    <!-- Appointment Detail Modal -->
+    <div class="modal fade" id="appointmentDetailModal" tabindex="-1" aria-labelledby="appointmentDetailModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow">
+                <div class="modal-header bg-primary text-white border-0">
+                    <h5 class="modal-title" id="appointmentDetailModalLabel"><i class="bi bi-calendar-check me-2"></i>Appointment Details</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <div class="mb-3">
+                        <small class="text-muted d-block text-uppercase fw-bold" style="font-size: 0.75rem;">Patient</small>
+                        <div class="fs-5 fw-semibold text-dark" id="modalApptPatient"></div>
+                    </div>
+                    <div class="row g-3 mb-3">
+                        <div class="col-6">
+                            <small class="text-muted d-block text-uppercase fw-bold" style="font-size: 0.75rem;">Date & Time</small>
+                            <div class="text-dark fw-medium" id="modalApptTime"></div>
+                        </div>
+                        <div class="col-6">
+                            <small class="text-muted d-block text-uppercase fw-bold" style="font-size: 0.75rem;">Doctor</small>
+                            <div class="text-dark fw-medium" id="modalApptDoctor"></div>
+                        </div>
+                    </div>
+                    <div class="row g-3">
+                        <div class="col-6">
+                            <small class="text-muted d-block text-uppercase fw-bold" style="font-size: 0.75rem;">Location</small>
+                            <div class="text-dark fw-medium" id="modalApptLocation"></div>
+                        </div>
+                        <div class="col-6">
+                            <small class="text-muted d-block text-uppercase fw-bold" style="font-size: 0.75rem;">Chair</small>
+                            <div class="text-dark fw-medium" id="modalApptChair"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer bg-light border-0">
+                    <button type="button" class="btn btn-secondary btn-sm px-4" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Schedule Detail Modal -->
+    <div class="modal fade" id="scheduleDetailModal" tabindex="-1" aria-labelledby="scheduleDetailModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow">
+                <div class="modal-header bg-light border-0">
+                    <h5 class="modal-title text-dark" id="scheduleDetailModalLabel"><i class="bi bi-clock-history me-2 text-muted"></i>Doctor Schedule Capacity</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <div class="mb-3">
+                        <small class="text-muted d-block text-uppercase fw-bold" style="font-size: 0.75rem;">Doctor</small>
+                        <div class="fs-5 fw-semibold text-dark" id="modalSchedDoctor"></div>
+                    </div>
+                    <div class="row g-3">
+                        <div class="col-6">
+                            <small class="text-muted d-block text-uppercase fw-bold" style="font-size: 0.75rem;">Capacity Time</small>
+                            <div class="text-dark fw-medium" id="modalSchedTime"></div>
+                        </div>
+                        <div class="col-6">
+                            <small class="text-muted d-block text-uppercase fw-bold" style="font-size: 0.75rem;">Location</small>
+                            <div class="text-dark fw-medium" id="modalSchedLocation"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer bg-light border-0">
+                    <button type="button" class="btn btn-secondary btn-sm px-4" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
+
+<style>
+    /* Prevent FC from adding borders to our custom transparent events */
+    .fc-event.custom-ui-event {
+        border: none !important;
+        background: transparent !important;
+        box-shadow: none !important;
+    }
+    
+    /* Hover effects for custom events */
+    .fc-event.custom-ui-event:hover {
+        opacity: 0.95;
+        z-index: 99 !important;
+    }
+    
+    /* Ensure month view cells allow proper overflow reading if needed */
+    .fc-daygrid-event {
+        white-space: normal !important;
+        align-items: center;
+    }
+    
+    /* Plain text weekday headers */
+    .fc-col-header-cell-cushion {
+        color: #495057 !important;
+        text-decoration: none !important;
+        text-transform: uppercase !important;
+        font-weight: 600 !important;
+        font-size: 0.85rem !important;
+        cursor: default !important;
+    }
+    .fc-col-header-cell-cushion:hover {
+        color: #495057 !important;
+        text-decoration: none !important;
+    }
+    
+    /* Plain text month dates (Requirement 08) */
+    .fc-daygrid-day-number {
+        color: #495057 !important;
+        text-decoration: none !important;
+        font-weight: 500 !important;
+        cursor: default !important;
+    }
+    .fc-daygrid-day-number:hover {
+        color: #495057 !important;
+        text-decoration: none !important;
+    }
+    
+    /* Icon-only view controls (Requirement 01) */
+    .fc-toolbar .fc-button.fc-dayGridMonth-button,
+    .fc-toolbar .fc-button.fc-timeGridWeek-button,
+    .fc-toolbar .fc-button.fc-timeGridDay-button {
+        font-size: 0 !important;
+        background-color: transparent !important;
+        border: none !important;
+        box-shadow: none !important;
+        color: #6c757d !important;
+        padding: 0.25rem 0.5rem !important;
+    }
+    .fc-toolbar .fc-button.fc-dayGridMonth-button i,
+    .fc-toolbar .fc-button.fc-timeGridWeek-button i,
+    .fc-toolbar .fc-button.fc-timeGridDay-button i {
+        font-size: 1.25rem !important;
+    }
+    .fc-toolbar .fc-button.fc-dayGridMonth-button.fc-button-active,
+    .fc-toolbar .fc-button.fc-timeGridWeek-button.fc-button-active,
+    .fc-toolbar .fc-button.fc-timeGridDay-button.fc-button-active {
+        color: #0d6efd !important;
+        background-color: transparent !important;
+    }
+    .fc-toolbar .fc-button:not(.fc-button-active):hover {
+        color: #495057 !important;
+        background-color: transparent !important;
+    }
+</style>
 
 @section Scripts {
     <!-- DataTables Export Libraries (Local) -->
@@ -126,10 +271,14 @@
                     data: "doctorName", name: "DoctorName",
                     render: function(data, type, row) {
                         var color = row.doctorColor ? row.doctorColor : "#0d6efd";
-                        return '<div class="d-flex align-items-center">' +
+                        var html = '<div class="d-flex align-items-center">' +
                                     '<div class="rounded-circle me-2" style="width:12px;height:12px;background-color:' + color + '"></div>' +
-                                    '<span class="fw-bold">' + data + '</span>' +
-                                '</div>';
+                                    '<div><span class="fw-bold d-block">' + data + '</span>';
+                        if (row.isAppointment && row.patientName) {
+                            html += '<span class="small text-muted"><i class="bi bi-person-fill"></i> Patient: ' + row.patientName + '</span>';
+                        }
+                        html += '</div></div>';
+                        return html;
                     }
                 },
                 { data: "specialty", name: "Specialty" },
@@ -163,7 +312,8 @@
                 },
                 { 
                     data: "status", name: "Status",
-                    render: function (data) {
+                    render: function (data, type, row) {
+                        if (row.isAppointment) return '<span class="badge bg-info-subtle text-info border border-info-subtle"><i class="bi bi-calendar-check-fill me-1"></i> Appointment</span>';
                         if (data === "Available") return '<span class="badge bg-success-subtle text-success border border-success-subtle"><i class="bi bi-check-circle-fill me-1"></i> Available</span>';
                         if (data === "Break") return '<span class="badge bg-warning-subtle text-warning border border-warning-subtle"><i class="bi bi-cup-hot-fill me-1"></i> Break</span>';
                         if (data === "Leave") return '<span class="badge bg-danger-subtle text-danger border border-danger-subtle"><i class="bi bi-dash-circle-fill me-1"></i> Leave</span>';
@@ -269,10 +419,29 @@
                     var calendarEl = document.getElementById('calendar');
                     calendar = new FullCalendar.Calendar(calendarEl, {
                         initialView: 'timeGridWeek',
+                        slotEventOverlap: false,
+                        allDaySlot: false, // Req 07
+                        slotLabelFormat: { hour: '2-digit', minute: '2-digit', hour12: false }, // Req 06
+                        eventTimeFormat: { hour: '2-digit', minute: '2-digit', hour12: false }, // Req 06
+                        buttonText: {
+                            today: 'Today'
+                        },
                         headerToolbar: {
                             left: 'prev,next today',
                             center: 'title',
                             right: 'dayGridMonth,timeGridWeek,timeGridDay'
+                        },
+                        datesSet: function() {
+                            // Inject icons for view buttons and initialize tooltips (Req 01)
+                            $('.fc-dayGridMonth-button').html('<i class="bi bi-calendar-month"></i>').attr('title', 'Month view').attr('data-bs-toggle', 'tooltip');
+                            $('.fc-timeGridWeek-button').html('<i class="bi bi-calendar-week"></i>').attr('title', 'Week view').attr('data-bs-toggle', 'tooltip');
+                            $('.fc-timeGridDay-button').html('<i class="bi bi-calendar-day"></i>').attr('title', 'Day view').attr('data-bs-toggle', 'tooltip');
+                            
+                            var tooltipTriggerList = [].slice.call(document.querySelectorAll('.fc-toolbar-chunk [data-bs-toggle="tooltip"]'));
+                            tooltipTriggerList.map(function (tooltipTriggerEl) {
+                                var existing = bootstrap.Tooltip.getInstance(tooltipTriggerEl);
+                                if (!existing) return new bootstrap.Tooltip(tooltipTriggerEl);
+                            });
                         },
                         events: function(fetchInfo, successCallback, failureCallback) {
                             $.ajax({
@@ -289,17 +458,26 @@
                                 success: function(data) {
                                     var events = [];
                                     data.forEach(function(item) {
+                                        var title = item.isAppointment 
+                                            ? item.patientName 
+                                            : item.doctorName;
+                                            
                                         events.push({
-                                            title: item.doctorName + ' (' + item.status + ')',
+                                            title: title,
                                             start: item.eventStart,
                                             end: item.eventEnd,
-                                            backgroundColor: item.color,
-                                            borderColor: item.color,
+                                            backgroundColor: 'transparent',
+                                            borderColor: 'transparent',
+                                            className: 'custom-ui-event',
                                             extendedProps: {
                                                 specialty: item.specialty,
                                                 location: item.locationName,
                                                 chair: item.chair,
-                                                status: item.status
+                                                status: item.status,
+                                                isAppointment: item.isAppointment,
+                                                patientName: item.patientName,
+                                                doctorName: item.doctorName,
+                                                baseColor: item.color
                                             }
                                         });
                                     });
@@ -311,24 +489,66 @@
                             });
                         },
                         eventContent: function(arg) {
-                            var timeText = arg.timeText;
-                            var title = arg.event.title;
-                            var loc = arg.event.extendedProps.location;
-                            var chair = arg.event.extendedProps.chair;
-                            var status = arg.event.extendedProps.status;
-                            var icon = "";
-                            if (status === "Available") icon = "bi-check-circle-fill";
-                            else if (status === "Break") icon = "bi-cup-hot-fill";
-                            else if (status === "Leave") icon = "bi-dash-circle-fill";
-                            else icon = "bi-hospital";
+                            var title = arg.event.title || '';
+                            var props = arg.event.extendedProps;
+                            var baseColor = props.baseColor || '#0d6efd';
                             
-                            var html = '<div class="fc-content p-1" style="font-size: 0.8em; line-height: 1.2;">' +
-                                    '<div class="fw-bold">' + timeText + '</div>' +
-                                    '<div><i class="bi ' + icon + '"></i> ' + title + '</div>' +
-                                    '<div><i class="bi bi-geo-alt"></i> ' + loc + '</div>' +
-                                    (chair !== "-" ? '<div><i class="bi bi-display"></i> ' + chair + '</div>' : "") +
-                                '</div>';
+                            // Req 06: 24h format
+                            var formatOpts = { hour: '2-digit', minute:'2-digit', hour12: false };
+                            var sTime = arg.event.start ? arg.event.start.toLocaleTimeString([], formatOpts) : '';
+                            var eTime = arg.event.end ? arg.event.end.toLocaleTimeString([], formatOpts) : '';
+                            
+                            var heightClass = arg.view.type === 'dayGridMonth' ? '' : ' h-100';
+                            var html = '';
+
+                            if (props.isAppointment) {
+                                // Req 04 & 05
+                                var intervalText = (sTime && eTime) ? '[' + sTime + '-' + eTime + ']' : '';
+                                var displayTitle = title ? title + ' ' : '';
+                                var finalContent = displayTitle + intervalText;
+                                
+                                html = '<div class="w-100' + heightClass + ' rounded px-1 py-1 text-white overflow-hidden" style="background-color: ' + baseColor + '; font-size: 0.75rem; line-height: 1.2; border: 1px solid rgba(0,0,0,0.1); cursor: pointer;" title="' + finalContent + '">' +
+                                       finalContent + '</div>';
+                            } else {
+                                // Req 02 & 03
+                                var intervalText = (sTime && eTime) ? '[' + sTime + ' - ' + eTime + ']' : '';
+                                var displayTitle = title ? title + ' ' : '';
+                                var finalContent = displayTitle + intervalText;
+                                
+                                html = '<div class="w-100' + heightClass + ' px-1 py-1 overflow-hidden" style="background-color: ' + baseColor + '26; border-left: 3px solid ' + baseColor + '; color: #495057; font-size: 0.75rem; font-weight: 600; cursor: pointer;" title="' + finalContent + '">' +
+                                       finalContent + '</div>';
+                            }
+                            
                             return { html: html };
+                        },
+                        eventClick: function(arg) {
+                            var props = arg.event.extendedProps;
+                            var isAppt = props.isAppointment;
+                            
+                            // Format dates nicely in 24-hour (Req 06)
+                            var dateOpts = { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' };
+                            var timeOpts = { hour: '2-digit', minute:'2-digit', hour12: false };
+                            var timeString = arg.event.start.toLocaleDateString(undefined, dateOpts) + ' ' + 
+                                             arg.event.start.toLocaleTimeString(undefined, timeOpts) + ' - ' + 
+                                             arg.event.end.toLocaleTimeString(undefined, timeOpts);
+                            
+                            if (isAppt) {
+                                $('#modalApptPatient').text(props.patientName);
+                                $('#modalApptDoctor').text(props.doctorName);
+                                $('#modalApptTime').text(timeString);
+                                $('#modalApptChair').text(props.chair !== "-" ? props.chair : "Not Assigned");
+                                $('#modalApptLocation').text(props.location);
+                                $('#appointmentDetailModal .modal-header').removeClass('bg-primary').css('background-color', props.baseColor).addClass('text-white');
+                                var modal = new bootstrap.Modal(document.getElementById('appointmentDetailModal'));
+                                modal.show();
+                            } else {
+                                $('#modalSchedDoctor').text(props.doctorName);
+                                $('#modalSchedTime').text(timeString);
+                                $('#modalSchedLocation').text(props.location);
+                                $('#scheduleDetailModal .modal-header').removeClass('bg-light').css('background-color', props.baseColor + '26').addClass('text-dark');
+                                var modal = new bootstrap.Modal(document.getElementById('scheduleDetailModal'));
+                                modal.show();
+                            }
                         }
                     });
                     calendar.render();

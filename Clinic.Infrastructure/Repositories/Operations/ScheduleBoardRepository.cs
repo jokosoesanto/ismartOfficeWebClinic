@@ -106,6 +106,54 @@ namespace Clinic.Infrastructure.Repositories.Operations
                 }
             }
 
+            // Also fetch Active Appointments to overlay on the Schedule Board
+            if (specificDate.HasValue)
+            {
+                var apptQuery = _context.Appointments
+                    .Include(a => a.Patient)
+                    .Include(a => a.Doctor).ThenInclude(d => d.Specialty)
+                    .Include(a => a.Location)
+                    .Include(a => a.Chair)
+                    .Where(a => !a.IsDeleted && a.Date == specificDate.Value);
+
+                if (locationId.HasValue && locationId.Value != Guid.Empty)
+                    apptQuery = apptQuery.Where(a => a.LocationId == locationId.Value);
+
+                if (doctorId.HasValue && doctorId.Value != Guid.Empty)
+                    apptQuery = apptQuery.Where(a => a.DoctorId == doctorId.Value);
+
+                if (specialtyId.HasValue && specialtyId.Value != Guid.Empty)
+                    apptQuery = apptQuery.Where(a => a.Doctor.SpecialtyId == specialtyId.Value);
+
+                var appointments = await apptQuery.ToListAsync();
+
+                foreach (var a in appointments)
+                {
+                    results.Add(new ScheduleBoardDto
+                    {
+                        ScheduleId = a.Id, 
+                        DoctorId = a.DoctorId,
+                        DoctorName = a.Doctor.Title != null ? (a.Doctor.Title + " " + a.Doctor.FullName) : a.Doctor.FullName,
+                        Specialty = a.Doctor.Specialty?.Name,
+                        DoctorColor = a.Doctor.Color,
+                        LocationId = a.LocationId,
+                        LocationName = a.Location.ClinicName,
+                        Chair = a.Chair?.Name ?? "-",
+                        DayOfWeek = (int)a.Date.DayOfWeek,
+                        DayName = a.Date.DayOfWeek.ToString(),
+                        SpecificDate = a.Date,
+                        StartTime = a.StartTime,
+                        EndTime = a.EndTime,
+                        IsActive = true,
+                        IsAvailable = false,
+                        Status = "Appointment", 
+                        IsAppointment = true,
+                        PatientName = a.Patient!.FullName,
+                        AppointmentStatus = a.Status.ToString()
+                    });
+                }
+            }
+
             return results;
         }
     }
