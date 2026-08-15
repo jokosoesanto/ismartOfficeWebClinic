@@ -84,6 +84,9 @@
                                     <a href="/Appointment/Details/@appt.Id" class="btn btn-sm btn-outline-secondary shadow-sm" title="View Details">
                                         <i class="bi bi-eye"></i> View
                                     </a>
+                                    <a href="/Appointment/Edit/@appt.Id" class="btn btn-sm btn-outline-primary shadow-sm ms-1" title="Edit Appointment">
+                                        <i class="bi bi-pencil"></i> Edit
+                                    </a>
                                     <button type="button" class="btn btn-sm btn-outline-danger shadow-sm ms-1" onclick="cancelAppointment('@appt.Id', '@appt.PatientName', '@appt.Date.ToString("dd MMM yyyy")')" title="Cancel Appointment">
                                         <i class="bi bi-x-circle"></i> Cancel
                                     </button>

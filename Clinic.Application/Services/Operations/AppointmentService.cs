@@ -87,6 +87,55 @@ namespace Clinic.Application.Services.Operations
             return dto;
         }
 
+        public async Task<AppointmentDto> UpdateAsync(AppointmentDto dto, Guid userId)
+        {
+            var appointment = await _appointmentRepository.GetByIdAsync(dto.Id);
+            if (appointment == null) throw new InvalidOperationException("Appointment not found");
+
+            // Validate references
+            var patient = await _patientRepository.GetByIdAsync(dto.PatientId);
+            if (patient == null) throw new InvalidOperationException("Invalid Patient");
+
+            var doctor = await _doctorRepository.GetByIdAsync(dto.DoctorId);
+            if (doctor == null) throw new InvalidOperationException("Invalid Doctor");
+
+            var location = await _locationRepository.GetByIdAsync(dto.LocationId);
+            if (location == null) throw new InvalidOperationException("Invalid Location");
+
+            // Validates chair exists AND belongs to the specified Location
+            var chair = await _chairRepository.GetByIdAsync(dto.ChairId);
+            if (chair == null) throw new InvalidOperationException("Invalid Chair");
+            if (chair.LocationId != dto.LocationId) throw new InvalidOperationException("Selected Chair does not belong to the selected Location");
+
+            bool hasOverlap = await _appointmentRepository.HasOverlappingAppointmentAsync(dto.DoctorId, dto.Date, dto.StartTime, dto.EndTime, dto.Id);
+            if (hasOverlap)
+            {
+                throw new InvalidOperationException("Doctor is already booked for the selected time. Please choose another time.");
+            }
+
+            bool hasChairConflict = await _appointmentRepository.HasChairConflictAsync(dto.ChairId, dto.Date, dto.StartTime, dto.EndTime, dto.Id);
+            if (hasChairConflict)
+            {
+                throw new InvalidOperationException("Chair is already booked for the selected time. Please choose another chair or time.");
+            }
+
+            appointment.PatientId = dto.PatientId;
+            appointment.DoctorId = dto.DoctorId;
+            appointment.LocationId = dto.LocationId;
+            appointment.ChairId = dto.ChairId;
+            appointment.Date = dto.Date;
+            appointment.StartTime = dto.StartTime;
+            appointment.EndTime = dto.EndTime;
+            appointment.Notes = dto.Notes;
+            appointment.UpdatedBy = userId;
+            appointment.UpdatedAt = DateTime.UtcNow;
+
+            _appointmentRepository.Update(appointment);
+            await _unitOfWork.SaveChangesAsync();
+
+            return dto;
+        }
+
         public async Task<IEnumerable<AppointmentDto>> GetAllAsync()
         {
             var appointments = await _appointmentRepository.GetAllAsync();

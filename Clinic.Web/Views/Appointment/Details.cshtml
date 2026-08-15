@@ -9,9 +9,14 @@
             <h2 class="mb-1 fw-bold text-dark">Appointment Details</h2>
             <p class="text-muted mb-0">View appointment information.</p>
         </div>
-        <a href="/Appointment" class="btn btn-outline-secondary shadow-sm">
-            <i class="bi bi-arrow-left me-2"></i>Back to List
-        </a>
+        <div>
+            <a href="/Appointment/Edit/@Model.Id" class="btn btn-primary shadow-sm me-2">
+                <i class="bi bi-pencil me-2"></i>Edit Appointment
+            </a>
+            <a href="/Appointment" class="btn btn-outline-secondary shadow-sm">
+                <i class="bi bi-arrow-left me-2"></i>Back to List
+            </a>
+        </div>
     </div>
 
     <div class="row">

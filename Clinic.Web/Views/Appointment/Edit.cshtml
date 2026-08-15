@@ -1,0 +1,148 @@
+@model Clinic.Application.DTOs.Operations.AppointmentDto
+@{
+    var meta = ViewBag.Meta as Clinic.Application.UI.UIMetadata;
+}
+
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="mb-0 fw-bold">@meta?.Title</h2>
+        <a href="/Appointment" class="btn btn-outline-secondary shadow-sm"><i class="bi bi-arrow-left me-2"></i>Back to Appointments</a>
+    </div>
+
+    <div class="card shadow-sm border-0" style="max-width: 900px; margin: 0 auto;">
+        <div class="card-header bg-white border-bottom-0 pt-4 pb-0">
+            <h5 class="fw-bold text-primary mb-0"><i class="bi bi-calendar-event me-2"></i>Appointment Details</h5>
+        </div>
+        <div class="card-body p-4">
+            <form method="post" action="/Appointment/Edit/@Model.Id" class="needs-validation" novalidate>
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="Id" value="@Model.Id" />
+                <input type="hidden" name="Status" value="@Model.Status" />
+                
+                <h6 class="fw-bold border-bottom pb-2 mb-3 text-secondary">Information</h6>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-bold">Patient <span class="text-danger">*</span></label>
+                        <select class="form-select" name="PatientId" required asp-items="@ViewBag.Patients" asp-for="PatientId">
+                            <option value="">Select Patient...</option>
+                        </select>
+                        <div class="invalid-feedback">Patient is required.</div>
+                    </div>
+                    
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-bold">Doctor <span class="text-danger">*</span></label>
+                        <select class="form-select" name="DoctorId" required asp-items="@ViewBag.Doctors" asp-for="DoctorId">
+                            <option value="">Select Doctor...</option>
+                        </select>
+                        <div class="invalid-feedback">Doctor is required.</div>
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-bold">Location <span class="text-danger">*</span></label>
+                        <select class="form-select" id="LocationId" name="LocationId" required asp-items="@ViewBag.Locations" asp-for="LocationId">
+                            <option value="">Select Location...</option>
+                        </select>
+                        <div class="invalid-feedback">Location is required.</div>
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-bold">Chair <span class="text-danger">*</span></label>
+                        <select class="form-select" id="ChairId" name="ChairId" required disabled>
+                            <option value="">Select Chair...</option>
+                        </select>
+                        <div class="invalid-feedback">Chair is required.</div>
+                    </div>
+
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label fw-bold">Date <span class="text-danger">*</span></label>
+                        <input type="date" class="form-control" name="Date" required value="@Model.Date.ToString("yyyy-MM-dd")">
+                        <div class="invalid-feedback">Date is required.</div>
+                    </div>
+
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label fw-bold">Start Time <span class="text-danger">*</span></label>
+                        <input type="time" class="form-control" name="StartTime" required value="@Model.StartTime.ToString(@"hh\:mm")">
+                        <div class="invalid-feedback">Start Time is required.</div>
+                    </div>
+
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label fw-bold">End Time <span class="text-danger">*</span></label>
+                        <input type="time" class="form-control" name="EndTime" required value="@Model.EndTime.ToString(@"hh\:mm")">
+                        <div class="invalid-feedback">End Time is required.</div>
+                    </div>
+                    
+                    <div class="col-md-12 mb-3">
+                        <label class="form-label fw-bold">Notes</label>
+                        <textarea class="form-control" name="Notes" rows="3">@Model.Notes</textarea>
+                    </div>
+                </div>
+
+                @if (!ViewData.ModelState.IsValid)
+                {
+                    <div class="alert alert-danger mt-3">
+                        @Html.ValidationSummary(false, "", new { @class = "text-danger" })
+                    </div>
+                }
+
+                <hr class="my-4">
+                <div class="d-flex justify-content-end gap-2">
+                    <a href="/Appointment" class="btn btn-secondary shadow-sm">Cancel</a>
+                    <button type="submit" class="btn btn-primary shadow-sm"><i class="bi bi-save me-2"></i>Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        var forms = document.querySelectorAll('.needs-validation')
+        Array.prototype.slice.call(forms).forEach(function (form) {
+            form.addEventListener('submit', function (event) {
+                if (!form.checkValidity()) {
+                    event.preventDefault()
+                    event.stopPropagation()
+                }
+                form.classList.add('was-validated')
+            }, false)
+        })
+
+        // Cascading Dropdown Logic
+        var locationSelect = document.getElementById('LocationId');
+        var chairSelect = document.getElementById('ChairId');
+        var selectedChairId = '@Model.ChairId';
+
+        function loadChairs(preselectId) {
+            var locationId = locationSelect.value;
+            chairSelect.innerHTML = '<option value="">Select Chair...</option>';
+            chairSelect.disabled = true;
+
+            if (locationId) {
+                fetch('/Appointment/GetChairsByLocation/' + locationId)
+                    .then(response => response.json())
+                    .then(data => {
+                        data.forEach(function (chair) {
+                            var option = document.createElement('option');
+                            option.value = chair.value;
+                            option.text = chair.text;
+                            if (preselectId && chair.value === preselectId) {
+                                option.selected = true;
+                            }
+                            chairSelect.appendChild(option);
+                        });
+                        chairSelect.disabled = false;
+                    })
+                    .catch(error => console.error('Error loading chairs:', error));
+            }
+        }
+
+        locationSelect.addEventListener('change', function() {
+            loadChairs(null); // On manual change, clear preselection
+        });
+        
+        // Initial load if a location is already selected
+        if (locationSelect.value) {
+            loadChairs(selectedChairId);
+        }
+    });
+</script>

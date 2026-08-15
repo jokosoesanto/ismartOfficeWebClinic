@@ -127,6 +127,62 @@ namespace Clinic.Web.Controllers
             return View(dto);
         }
 
+        [HttpGet("Edit/{id}")]
+        [Authorize(Policy = "Appointment.Edit")]
+        public async Task<IActionResult> Edit(Guid id)
+        {
+            var meta = new UIMetadata
+            {
+                Title = "Edit Appointment",
+                ModuleName = "Operations",
+                Mode = RenderingMode.Template
+            };
+            ViewBag.Meta = meta;
+
+            var dto = await _appointmentService.GetByIdAsync(id);
+            if (dto == null) return NotFound();
+
+            await PopulateDropdownsAsync();
+            return View(dto);
+        }
+
+        [HttpPost("Edit/{id}")]
+        [Authorize(Policy = "Appointment.Edit")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Edit(Guid id, AppointmentDto dto)
+        {
+            if (id != dto.Id) return BadRequest();
+
+            if (ModelState.IsValid)
+            {
+                try
+                {
+                    Guid? currentUserId = null;
+                    if (Guid.TryParse(User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value, out var uid))
+                        currentUserId = uid;
+
+                    await _appointmentService.UpdateAsync(dto, currentUserId ?? Guid.Empty);
+                    TempData["SuccessMessage"] = "Appointment updated successfully.";
+                    return RedirectToAction("Index");
+                }
+                catch (Exception ex)
+                {
+                    ModelState.AddModelError("", ex.Message);
+                }
+            }
+
+            var meta = new UIMetadata
+            {
+                Title = "Edit Appointment",
+                ModuleName = "Operations",
+                Mode = RenderingMode.Template
+            };
+            ViewBag.Meta = meta;
+            await PopulateDropdownsAsync();
+            
+            return View(dto);
+        }
+
         [HttpGet("GetChairsByLocation/{locationId}")]
         [Authorize]
         public async Task<IActionResult> GetChairsByLocation(Guid locationId)
