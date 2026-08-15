@@ -22,11 +22,11 @@
                 <h6 class="fw-bold border-bottom pb-2 mb-3 text-secondary">Information</h6>
                 <div class="row">
                     <div class="col-md-6 mb-3">
-                        <label class="form-label fw-bold">Patient <span class="text-danger">*</span></label>
-                        <select class="form-select" name="PatientId" required asp-items="@ViewBag.Patients" asp-for="PatientId">
-                            <option value="">Select Patient...</option>
-                        </select>
-                        <div class="invalid-feedback">Patient is required.</div>
+                        <label class="form-label fw-bold">Patient</label>
+                        <div class="form-control bg-light text-muted">
+                            <i class="bi bi-person-fill me-2"></i>@Model.PatientName
+                        </div>
+                        <input type="hidden" name="PatientId" value="@Model.PatientId" />
                     </div>
                     
                     <div class="col-md-6 mb-3">

@@ -93,8 +93,9 @@ namespace Clinic.Application.Services.Operations
             if (appointment == null) throw new InvalidOperationException("Appointment not found");
 
             // Validate references
-            var patient = await _patientRepository.GetByIdAsync(dto.PatientId);
-            if (patient == null) throw new InvalidOperationException("Invalid Patient");
+            // Patient validation is intentionally omitted here to enforce Patient Immutability.
+            // An existing appointment belongs to its original patient; changes are not permitted.
+
 
             var doctor = await _doctorRepository.GetByIdAsync(dto.DoctorId);
             if (doctor == null) throw new InvalidOperationException("Invalid Doctor");
@@ -119,7 +120,7 @@ namespace Clinic.Application.Services.Operations
                 throw new InvalidOperationException("Chair is already booked for the selected time. Please choose another chair or time.");
             }
 
-            appointment.PatientId = dto.PatientId;
+            // appointment.PatientId is intentionally NOT updated to enforce immutability.
             appointment.DoctorId = dto.DoctorId;
             appointment.LocationId = dto.LocationId;
             appointment.ChairId = dto.ChairId;

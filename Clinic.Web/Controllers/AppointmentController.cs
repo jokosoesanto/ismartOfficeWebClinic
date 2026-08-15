@@ -183,6 +183,32 @@ namespace Clinic.Web.Controllers
             return View(dto);
         }
 
+        [HttpPost("Reschedule")]
+        [Authorize(Policy = "Appointment.Edit")]
+        public async Task<IActionResult> Reschedule(Guid id, DateTime date, TimeSpan startTime, TimeSpan endTime)
+        {
+            try
+            {
+                var dto = await _appointmentService.GetByIdAsync(id);
+                if (dto == null) return Json(new { success = false, message = "Appointment not found." });
+
+                dto.Date = date;
+                dto.StartTime = startTime;
+                dto.EndTime = endTime;
+
+                Guid? currentUserId = null;
+                if (Guid.TryParse(User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value, out var uid))
+                    currentUserId = uid;
+
+                await _appointmentService.UpdateAsync(dto, currentUserId ?? Guid.Empty);
+                return Json(new { success = true });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = ex.Message });
+            }
+        }
+
         [HttpGet("GetChairsByLocation/{locationId}")]
         [Authorize]
         public async Task<IActionResult> GetChairsByLocation(Guid locationId)

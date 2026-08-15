@@ -431,6 +431,45 @@
                             center: 'title',
                             right: 'dayGridMonth,timeGridWeek,timeGridDay'
                         },
+                        eventDrop: function(info) {
+                            if (!info.event.extendedProps.isAppointment) {
+                                info.revert();
+                                return;
+                            }
+                            
+                            var d = info.event.start;
+                            var dateStr = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+                            var startStr = String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0') + ':00';
+                            
+                            var d2 = info.event.end;
+                            var endStr = String(d2.getHours()).padStart(2, '0') + ':' + String(d2.getMinutes()).padStart(2, '0') + ':00';
+                            
+                            $.ajax({
+                                url: '/Appointment/Reschedule',
+                                type: 'POST',
+                                data: {
+                                    id: info.event.id,
+                                    date: dateStr,
+                                    startTime: startStr,
+                                    endTime: endStr
+                                },
+                                success: function(res) {
+                                    if(res.success) {
+                                        toastr.success('Appointment rescheduled successfully.');
+                                        if (!$('#listViewContainer').hasClass('d-none')) {
+                                            $('#scheduleTable').DataTable().ajax.reload();
+                                        }
+                                    } else {
+                                        toastr.error('Failed to reschedule: ' + res.message);
+                                        info.revert();
+                                    }
+                                },
+                                error: function() {
+                                    toastr.error('Failed to contact server to reschedule appointment.');
+                                    info.revert();
+                                }
+                            });
+                        },
                         datesSet: function() {
                             // Inject icons for view buttons and initialize tooltips (Req 01)
                             $('.fc-dayGridMonth-button').html('<i class="bi bi-calendar-month"></i>').attr('title', 'Month view').attr('data-bs-toggle', 'tooltip');
@@ -463,9 +502,11 @@
                                             : item.doctorName;
                                             
                                         events.push({
+                                            id: item.id,
                                             title: title,
                                             start: item.eventStart,
                                             end: item.eventEnd,
+                                            editable: item.isAppointment,
                                             backgroundColor: 'transparent',
                                             borderColor: 'transparent',
                                             className: 'custom-ui-event',

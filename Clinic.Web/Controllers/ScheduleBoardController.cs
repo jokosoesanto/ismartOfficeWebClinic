@@ -136,6 +136,7 @@ namespace Clinic.Web.Controllers
 
                     events.Add(new
                     {
+                        id = s.ScheduleId,
                         doctorName = s.DoctorName,
                         eventStart = eventStart,
                         eventEnd = eventEnd,
