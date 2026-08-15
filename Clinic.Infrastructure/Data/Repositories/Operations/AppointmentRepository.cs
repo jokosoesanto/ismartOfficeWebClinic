@@ -42,6 +42,11 @@ namespace Clinic.Infrastructure.Data.Repositories.Operations
             _context.Appointments.Add(appointment);
         }
 
+        public void Update(Appointment appointment)
+        {
+            _context.Appointments.Update(appointment);
+        }
+
         public async Task<bool> HasOverlappingAppointmentAsync(Guid doctorId, DateTime date, TimeSpan startTime, TimeSpan endTime, Guid? excludeAppointmentId = null)
         {
             // Step 1: Filter by DoctorId + Date in database.

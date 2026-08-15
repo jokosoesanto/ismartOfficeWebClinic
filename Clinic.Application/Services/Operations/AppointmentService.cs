@@ -132,5 +132,19 @@ namespace Clinic.Application.Services.Operations
                 Notes = a.Notes
             };
         }
+
+        public async Task DeleteAsync(Guid id, Guid deletedBy)
+        {
+            var appointment = await _appointmentRepository.GetByIdAsync(id);
+            if (appointment != null)
+            {
+                appointment.IsDeleted = true;
+                appointment.DeletedAt = DateTime.UtcNow;
+                appointment.DeletedBy = deletedBy;
+                
+                _appointmentRepository.Update(appointment);
+                await _unitOfWork.SaveChangesAsync();
+            }
+        }
     }
 }

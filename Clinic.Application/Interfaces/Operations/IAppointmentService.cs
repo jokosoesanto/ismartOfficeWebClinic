@@ -10,5 +10,6 @@ namespace Clinic.Application.Interfaces.Operations
         Task<AppointmentDto> CreateAsync(AppointmentDto dto, Guid userId);
         Task<IEnumerable<AppointmentDto>> GetAllAsync();
         Task<AppointmentDto?> GetByIdAsync(Guid id);
+        Task DeleteAsync(Guid id, Guid deletedBy);
     }
 }

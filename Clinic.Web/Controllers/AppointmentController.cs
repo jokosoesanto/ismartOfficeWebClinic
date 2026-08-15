@@ -151,5 +151,19 @@ namespace Clinic.Web.Controllers
             // Chair will be dynamically loaded in UI, provide an empty list initially
             ViewBag.Chairs = new SelectList(Enumerable.Empty<SelectListItem>(), "Value", "Text");
         }
+
+        [HttpPost("Delete/{id}")]
+        [Authorize(Policy = "Appointment.Delete")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Delete(Guid id)
+        {
+            Guid? currentUserId = null;
+            if (Guid.TryParse(User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value, out var uid))
+                currentUserId = uid;
+
+            await _appointmentService.DeleteAsync(id, currentUserId ?? Guid.Empty);
+            TempData["SuccessMessage"] = "Appointment cancelled successfully.";
+            return RedirectToAction(nameof(Index));
+        }
     }
 }

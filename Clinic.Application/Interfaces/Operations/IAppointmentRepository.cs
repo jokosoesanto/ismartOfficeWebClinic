@@ -10,6 +10,7 @@ namespace Clinic.Application.Interfaces.Operations
         Task<Appointment?> GetByIdAsync(Guid id);
         Task<IEnumerable<Appointment>> GetAllAsync();
         void Add(Appointment appointment);
+        void Update(Appointment appointment);
         Task<bool> HasOverlappingAppointmentAsync(Guid doctorId, DateTime date, TimeSpan startTime, TimeSpan endTime, Guid? excludeAppointmentId = null);
         Task<bool> HasChairConflictAsync(Guid chairId, DateTime date, TimeSpan startTime, TimeSpan endTime, Guid? excludeAppointmentId = null);
     }

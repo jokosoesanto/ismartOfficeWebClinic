@@ -84,6 +84,9 @@
                                     <a href="/Appointment/Details/@appt.Id" class="btn btn-sm btn-outline-secondary shadow-sm" title="View Details">
                                         <i class="bi bi-eye"></i> View
                                     </a>
+                                    <button type="button" class="btn btn-sm btn-outline-danger shadow-sm ms-1" onclick="cancelAppointment('@appt.Id', '@appt.PatientName', '@appt.Date.ToString("dd MMM yyyy")')" title="Cancel Appointment">
+                                        <i class="bi bi-x-circle"></i> Cancel
+                                    </button>
                                 </td>
                             </tr>
                         }
@@ -93,3 +96,17 @@
         </div>
     </div>
 </div>
+
+<form id="cancelForm" method="post" style="display:none;">
+    @Html.AntiForgeryToken()
+</form>
+
+<script>
+    function cancelAppointment(id, patientName, date) {
+        if(confirm('Are you sure you want to cancel the appointment for ' + patientName + ' on ' + date + '?')) {
+            var form = document.getElementById('cancelForm');
+            form.action = '/Appointment/Delete/' + id;
+            form.submit();
+        }
+    }
+</script>
