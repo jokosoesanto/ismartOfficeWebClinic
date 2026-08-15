@@ -108,5 +108,29 @@ namespace Clinic.Application.Services.Operations
                 Notes = a.Notes
             });
         }
+
+        public async Task<AppointmentDto?> GetByIdAsync(Guid id)
+        {
+            var a = await _appointmentRepository.GetByIdAsync(id);
+            if (a == null) return null;
+
+            return new AppointmentDto
+            {
+                Id = a.Id,
+                PatientId = a.PatientId,
+                PatientName = a.Patient!.FullName,
+                DoctorId = a.DoctorId,
+                DoctorName = a.Doctor!.FullName,
+                LocationId = a.LocationId,
+                LocationName = a.Location!.ClinicName,
+                ChairId = a.ChairId,
+                ChairName = a.Chair!.Name,
+                Date = a.Date,
+                StartTime = a.StartTime,
+                EndTime = a.EndTime,
+                Status = a.Status,
+                Notes = a.Notes
+            };
+        }
     }
 }

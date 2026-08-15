@@ -36,9 +36,37 @@ namespace Clinic.Web.Controllers
         }
 
         [HttpGet]
-        public IActionResult Index()
+        [Authorize(Policy = "Appointment.Index")]
+        public async Task<IActionResult> Index()
         {
-            return RedirectToAction("Create");
+            var meta = new UIMetadata
+            {
+                Title = "Appointments",
+                ModuleName = "Operations",
+                Mode = RenderingMode.Template
+            };
+            ViewBag.Meta = meta;
+
+            var appointments = await _appointmentService.GetAllAsync();
+            return View(appointments);
+        }
+
+        [HttpGet("Details/{id}")]
+        [Authorize(Policy = "Appointment.Index")]
+        public async Task<IActionResult> Details(Guid id)
+        {
+            var meta = new UIMetadata
+            {
+                Title = "Appointment Details",
+                ModuleName = "Operations",
+                Mode = RenderingMode.Template
+            };
+            ViewBag.Meta = meta;
+
+            var dto = await _appointmentService.GetByIdAsync(id);
+            if (dto == null) return NotFound();
+
+            return View(dto);
         }
 
         [HttpGet("Create")]
@@ -79,7 +107,7 @@ namespace Clinic.Web.Controllers
 
                     await _appointmentService.CreateAsync(dto, currentUserId ?? Guid.Empty);
                     TempData["SuccessMessage"] = "Appointment created successfully.";
-                    return RedirectToAction("Index", "ScheduleBoard");
+                    return RedirectToAction("Index");
                 }
                 catch (Exception ex)
                 {
