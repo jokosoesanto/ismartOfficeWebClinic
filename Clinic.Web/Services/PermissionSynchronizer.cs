@@ -182,7 +182,11 @@ namespace Clinic.Web.Services
                 new { Code = "MasterData.Insurance.View", Name = "View Insurance", Module = "Insurance", Category = "Master Data" },
                 new { Code = "MasterData.Insurance.Create", Name = "Create Insurance", Module = "Insurance", Category = "Master Data" },
                 new { Code = "MasterData.Insurance.Edit", Name = "Edit Insurance", Module = "Insurance", Category = "Master Data" },
-                new { Code = "MasterData.Insurance.Delete", Name = "Delete Insurance", Module = "Insurance", Category = "Master Data" }
+                new { Code = "MasterData.Insurance.Delete", Name = "Delete Insurance", Module = "Insurance", Category = "Master Data" },
+                new { Code = "DoctorLeave.View", Name = "View Doctor Leave", Module = "DoctorLeave", Category = "Operations" },
+                new { Code = "DoctorLeave.Create", Name = "Create Doctor Leave", Module = "DoctorLeave", Category = "Operations" },
+                new { Code = "DoctorLeave.Edit", Name = "Edit Doctor Leave", Module = "DoctorLeave", Category = "Operations" },
+                new { Code = "DoctorLeave.Delete", Name = "Delete Doctor Leave", Module = "DoctorLeave", Category = "Operations" }
             };
 
             foreach(var cp in customPermissions)
@@ -258,6 +262,7 @@ namespace Clinic.Web.Services
                 "MedicalRecord" => "Transaction",
                 "Odontogram" => "Transaction",
                 "ScheduleBoard" => "Operations",
+                "DoctorLeave" => "Operations",
                 "MasterReference" => "System",
                 "NumberSequence" => "System",
                 "Specialty" => "Master Data",

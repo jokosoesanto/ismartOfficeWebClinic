@@ -17,6 +17,7 @@ namespace Clinic.Application.Services.Operations
         private readonly IDoctorRepository _doctorRepository;
         private readonly ILocationRepository _locationRepository;
         private readonly IChairRepository _chairRepository;
+        private readonly IDoctorLeaveRequestRepository _doctorLeaveRequestRepository;
         private readonly IUnitOfWork _unitOfWork;
 
         public AppointmentService(
@@ -25,6 +26,7 @@ namespace Clinic.Application.Services.Operations
             IDoctorRepository doctorRepository,
             ILocationRepository locationRepository,
             IChairRepository chairRepository,
+            IDoctorLeaveRequestRepository doctorLeaveRequestRepository,
             IUnitOfWork unitOfWork)
         {
             _appointmentRepository = appointmentRepository;
@@ -32,6 +34,7 @@ namespace Clinic.Application.Services.Operations
             _doctorRepository = doctorRepository;
             _locationRepository = locationRepository;
             _chairRepository = chairRepository;
+            _doctorLeaveRequestRepository = doctorLeaveRequestRepository;
             _unitOfWork = unitOfWork;
         }
 
@@ -56,6 +59,12 @@ namespace Clinic.Application.Services.Operations
             if (hasOverlap)
             {
                 throw new InvalidOperationException("Doctor is already booked for the selected time. Please choose another time.");
+            }
+
+            var conflictingLeaves = await _doctorLeaveRequestRepository.GetDuplicateDatesAsync(dto.DoctorId, new[] { dto.Date });
+            if (conflictingLeaves.Any())
+            {
+                throw new InvalidOperationException("Doctor is on leave on the selected date. Please choose another date or doctor.");
             }
 
             bool hasChairConflict = await _appointmentRepository.HasChairConflictAsync(dto.ChairId, dto.Date, dto.StartTime, dto.EndTime);
@@ -112,6 +121,12 @@ namespace Clinic.Application.Services.Operations
             if (hasOverlap)
             {
                 throw new InvalidOperationException("Doctor is already booked for the selected time. Please choose another time.");
+            }
+
+            var conflictingLeaves = await _doctorLeaveRequestRepository.GetDuplicateDatesAsync(dto.DoctorId, new[] { dto.Date });
+            if (conflictingLeaves.Any())
+            {
+                throw new InvalidOperationException("Doctor is on leave on the selected date. Please choose another date or doctor.");
             }
 
             bool hasChairConflict = await _appointmentRepository.HasChairConflictAsync(dto.ChairId, dto.Date, dto.StartTime, dto.EndTime, dto.Id);

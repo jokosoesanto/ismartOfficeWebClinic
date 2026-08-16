@@ -36,6 +36,8 @@ namespace Clinic.Infrastructure.Data
         public DbSet<Clinic.Domain.Entities.MasterData.TreatmentCatalog> TreatmentCatalogs { get; set; } = null!;
         public DbSet<Clinic.Domain.Entities.MasterData.Insurance> Insurances { get; set; } = null!;
         public DbSet<Clinic.Domain.Entities.Operations.Appointment> Appointments { get; set; } = null!;
+        public DbSet<Clinic.Domain.Entities.Operations.DoctorLeaveRequest> DoctorLeaveRequests { get; set; } = null!;
+        public DbSet<Clinic.Domain.Entities.Operations.DoctorLeaveDate> DoctorLeaveDates { get; set; } = null!;
 
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -48,6 +50,8 @@ namespace Clinic.Infrastructure.Data
             modelBuilder.ApplyConfiguration(new Configurations.TreatmentCatalogConfiguration());
             modelBuilder.ApplyConfiguration(new Configurations.InsuranceConfiguration());
             modelBuilder.ApplyConfiguration(new Configurations.AppointmentConfiguration());
+            modelBuilder.ApplyConfiguration(new Configurations.DoctorLeaveRequestConfiguration());
+            modelBuilder.ApplyConfiguration(new Configurations.DoctorLeaveDateConfiguration());
 
 
             modelBuilder.Entity<Clinic.Domain.Entities.Configuration.AppConfiguration>(entity =>

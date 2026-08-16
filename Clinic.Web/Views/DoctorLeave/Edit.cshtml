@@ -1,0 +1,214 @@
+@model Clinic.Application.DTOs.Operations.DoctorLeaveRequestDto
+@{
+    var meta = ViewBag.Meta as Clinic.Application.UI.UIMetadata;
+}
+
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="mb-1 fw-bold text-dark">Edit Doctor Leave</h2>
+            <p class="text-muted mb-0">Modify the leave request dates or reason.</p>
+        </div>
+        <div>
+            <a href="/DoctorLeave" class="btn btn-outline-secondary shadow-sm">
+                <i class="bi bi-arrow-left me-1"></i>Back to List
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card shadow-sm border-0">
+                <div class="card-body p-4">
+                    <form asp-action="Edit" asp-route-id="@Model.Id" method="post" id="leaveForm">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" asp-for="Id" />
+                        <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold text-muted">Doctor</label>
+                                <input type="text" class="form-control shadow-sm" value="@Model.DoctorName" readonly disabled />
+                                <input type="hidden" asp-for="DoctorId" />
+                            </div>
+                            <div class="col-md-6">
+                                <label asp-for="Reason" class="form-label fw-semibold text-muted">Reason</label>
+                                <input asp-for="Reason" class="form-control shadow-sm" placeholder="e.g. Annual Leave, Personal" />
+                                <span asp-validation-for="Reason" class="text-danger small"></span>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold text-muted">Leave Dates <span class="text-danger">*</span></label>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <input type="date" id="datePickerInput" class="form-control shadow-sm" min="@DateTime.UtcNow.ToString("yyyy-MM-dd")" />
+                                    <small class="text-muted">Select a date and click "Add" or press Enter.</small>
+                                </div>
+                                <div class="col-md-2">
+                                    <button type="button" id="addDateBtn" class="btn btn-outline-primary shadow-sm w-100">
+                                        <i class="bi bi-plus-lg me-1"></i>Add
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <div id="selectedDatesContainer">
+                                <div id="noDatesMessage" class="text-muted fst-italic py-2" style="display:none;">
+                                    <i class="bi bi-info-circle me-1"></i>No dates selected. Use the date picker above to add leave dates.
+                                </div>
+                                <div id="dateTagsContainer" class="d-flex flex-wrap gap-2"></div>
+                            </div>
+                            <div id="hiddenDatesContainer"></div>
+                        </div>
+
+                        <div class="d-flex justify-content-end">
+                            <a href="/DoctorLeave" class="btn btn-light shadow-sm me-2">Cancel</a>
+                            <button type="submit" class="btn btn-primary shadow-sm px-4" id="submitBtn">Save Changes</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4 d-none d-lg-block">
+            <div class="card shadow-sm border-0 bg-primary-subtle text-primary">
+                <div class="card-body p-4">
+                    <h5 class="fw-bold mb-3"><i class="bi bi-info-square me-2"></i>Edit Guide</h5>
+                    <p class="mb-2"><strong>Add dates:</strong> Use the date picker to add new leave dates.</p>
+                    <p class="mb-2"><strong>Remove dates:</strong> Click the ✕ on any date badge to remove it.</p>
+                    <p class="mb-0"><strong>Doctor:</strong> The doctor cannot be changed. Create a new request for a different doctor.</p>
+                </div>
+            </div>
+
+            <div class="card shadow-sm border-0 mt-3" id="dateSummaryCard">
+                <div class="card-body p-4">
+                    <h6 class="fw-bold text-dark mb-3"><i class="bi bi-calendar-check me-2"></i>Date Summary</h6>
+                    <div id="dateSummaryList"></div>
+                    <hr />
+                    <div class="d-flex justify-content-between">
+                        <span class="fw-semibold text-muted">Total Days:</span>
+                        <span class="fw-bold text-primary" id="totalDaysCount">0</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    <script>
+        (function() {
+            var selectedDates = [];
+            var dateInput = document.getElementById('datePickerInput');
+            var addBtn = document.getElementById('addDateBtn');
+            var tagsContainer = document.getElementById('dateTagsContainer');
+            var hiddenContainer = document.getElementById('hiddenDatesContainer');
+            var noDatesMsg = document.getElementById('noDatesMessage');
+            var summaryCard = document.getElementById('dateSummaryCard');
+            var summaryList = document.getElementById('dateSummaryList');
+            var totalDays = document.getElementById('totalDaysCount');
+
+            function formatDate(dateStr) {
+                var d = new Date(dateStr + 'T00:00:00');
+                var options = { weekday: 'short', day: '2-digit', month: 'short', year: 'numeric' };
+                return d.toLocaleDateString('en-GB', options);
+            }
+
+            function addDate() {
+                var val = dateInput.value;
+                if (!val) return;
+
+                if (selectedDates.indexOf(val) !== -1) {
+                    alert('This date is already selected.');
+                    return;
+                }
+
+                selectedDates.push(val);
+                selectedDates.sort();
+                renderDates();
+                dateInput.value = '';
+                dateInput.focus();
+            }
+
+            function removeDate(dateStr) {
+                selectedDates = selectedDates.filter(function(d) { return d !== dateStr; });
+                renderDates();
+            }
+
+            function renderDates() {
+                tagsContainer.innerHTML = '';
+                hiddenContainer.innerHTML = '';
+                summaryList.innerHTML = '';
+
+                if (selectedDates.length === 0) {
+                    noDatesMsg.style.display = '';
+                    summaryCard.style.display = 'none';
+                } else {
+                    noDatesMsg.style.display = 'none';
+                    summaryCard.style.display = '';
+                }
+
+                for (var i = 0; i < selectedDates.length; i++) {
+                    var d = selectedDates[i];
+
+                    // Tag badge
+                    var tag = document.createElement('span');
+                    tag.className = 'badge bg-warning text-dark d-inline-flex align-items-center px-3 py-2 shadow-sm';
+                    tag.style.fontSize = '0.85rem';
+                    tag.innerHTML = '<i class="bi bi-calendar-date me-1"></i>' + formatDate(d) +
+                        ' <button type="button" class="btn-close btn-close-sm ms-2" style="font-size:0.6rem;" data-date="' + d + '"></button>';
+
+                    tag.querySelector('.btn-close').addEventListener('click', (function(dateVal) {
+                        return function() { removeDate(dateVal); };
+                    })(d));
+
+                    tagsContainer.appendChild(tag);
+
+                    // Hidden input
+                    var input = document.createElement('input');
+                    input.type = 'hidden';
+                    input.name = 'LeaveDates';
+                    input.value = d;
+                    hiddenContainer.appendChild(input);
+
+                    // Summary
+                    var row = document.createElement('div');
+                    row.className = 'd-flex justify-content-between mb-1';
+                    row.innerHTML = '<small class="text-muted">' + (i + 1) + '.</small><small class="fw-semibold">' + formatDate(d) + '</small>';
+                    summaryList.appendChild(row);
+                }
+
+                totalDays.textContent = selectedDates.length;
+            }
+
+            addBtn.addEventListener('click', addDate);
+
+            dateInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    addDate();
+                }
+            });
+
+            document.getElementById('leaveForm').addEventListener('submit', function(e) {
+                if (selectedDates.length === 0) {
+                    e.preventDefault();
+                    alert('Please select at least one leave date.');
+                }
+            });
+
+            // Initialize with existing dates from model
+            @if (Model.LeaveDates != null && Model.LeaveDates.Any())
+            {
+                @foreach (var date in Model.LeaveDates)
+                {
+                    <text>selectedDates.push('@date.ToString("yyyy-MM-dd")');</text>
+                }
+            }
+            renderDates();
+        })();
+    </script>
+}

@@ -22,9 +22,11 @@ namespace Clinic.Infrastructure.MockProviders
                 new NavigationItem { Id = "operations", Title = "Operations", Icon = "bi-activity", Route = "/Operations", BreadcrumbTitle = "Operations", Description = "Operational Modules", RequiredPermission = "ScheduleBoard.View",
                     Children = new List<NavigationItem>
                     {
-                        new NavigationItem { Id = "schedule-board", Title = "Doctor Schedule Board", Icon = "bi-calendar2-week", Route = "/ScheduleBoard", BreadcrumbTitle = "Schedule Board", RequiredPermission = "ScheduleBoard.View" }
+                        new NavigationItem { Id = "schedule-board", Title = "Doctor Schedule Board", Icon = "bi-calendar2-week", Route = "/ScheduleBoard", BreadcrumbTitle = "Schedule Board", RequiredPermission = "ScheduleBoard.View" },
+                        new NavigationItem { Id = "doctor-leave", Title = "Doctor Leave", Icon = "bi-calendar-x", Route = "/DoctorLeave", BreadcrumbTitle = "Doctor Leave", RequiredPermission = "DoctorLeave.Index" }
                     }
                 },
+
                 new NavigationItem { Id = "system", Title = "System", Icon = "bi-hdd-network", Route = "/System", BreadcrumbTitle = "System", Description = "System Configuration", RequiredPermission = "Configuration.Currency",
                     Children = new List<NavigationItem>
                     {
