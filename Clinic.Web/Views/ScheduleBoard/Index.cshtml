@@ -152,6 +152,39 @@
             </div>
         </div>
     </div>
+
+    <!-- Doctor Leave Detail Modal -->
+    <div class="modal fade" id="leaveDetailModal" tabindex="-1" aria-labelledby="leaveDetailModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow">
+                <div class="modal-header border-0 text-white" id="leaveDetailModalHeader">
+                    <h5 class="modal-title" id="leaveDetailModalLabel"><i class="bi bi-airplane-fill me-2"></i>Doctor Leave</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <div class="mb-3">
+                        <small class="text-muted d-block text-uppercase fw-bold" style="font-size: 0.75rem;">Doctor</small>
+                        <div class="fs-5 fw-semibold text-dark" id="modalLeaveDoctor"></div>
+                    </div>
+                    <div class="row g-3 mb-3">
+                        <div class="col-12">
+                            <small class="text-muted d-block text-uppercase fw-bold" style="font-size: 0.75rem;">Date</small>
+                            <div class="text-dark fw-medium" id="modalLeaveDate"></div>
+                        </div>
+                    </div>
+                    <div class="row g-3">
+                        <div class="col-12">
+                            <small class="text-muted d-block text-uppercase fw-bold" style="font-size: 0.75rem;">Reason</small>
+                            <div class="text-dark fw-medium" id="modalLeaveReason"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer bg-light border-0">
+                    <button type="button" class="btn btn-secondary btn-sm px-4" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 
 <style>
@@ -550,8 +583,16 @@
                                 
                                 html = '<div class="w-100' + heightClass + ' rounded px-1 py-1 text-white overflow-hidden" style="background-color: ' + baseColor + '; font-size: 0.75rem; line-height: 1.2; border: 1px solid rgba(0,0,0,0.1); cursor: pointer;" title="' + finalContent + '">' +
                                        finalContent + '</div>';
+                            } else if (props.status === 'DoctorLeave') {
+                                // Doctor Leave visualization
+                                var displayTitle = title ? title + ' - Leave ' : '';
+                                var reason = props.patientName ? '(' + props.patientName + ')' : '';
+                                var finalContent = displayTitle + reason;
+                                
+                                html = '<div class="w-100' + heightClass + ' rounded px-1 py-1 overflow-hidden" style="background-color: #f8d7da; border: 1px solid #f5c2c7; color: #842029; font-size: 0.75rem; font-weight: 600; cursor: pointer; opacity: 0.9;" title="' + finalContent + '">' +
+                                       '<i class="bi bi-airplane-fill me-1"></i> ' + finalContent + '</div>';
                             } else {
-                                // Req 02 & 03
+                                // Req 02 & 03 (Doctor Schedule)
                                 var intervalText = (sTime && eTime) ? '[' + sTime + ' - ' + eTime + ']' : '';
                                 var displayTitle = title ? title + ' ' : '';
                                 var finalContent = displayTitle + intervalText;
@@ -569,7 +610,8 @@
                             // Format dates nicely in 24-hour (Req 06)
                             var dateOpts = { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' };
                             var timeOpts = { hour: '2-digit', minute:'2-digit', hour12: false };
-                            var timeString = arg.event.start.toLocaleDateString(undefined, dateOpts) + ' ' + 
+                            var dateOnlyString = arg.event.start.toLocaleDateString(undefined, dateOpts);
+                            var timeString = dateOnlyString + ' ' + 
                                              arg.event.start.toLocaleTimeString(undefined, timeOpts) + ' - ' + 
                                              arg.event.end.toLocaleTimeString(undefined, timeOpts);
                             
@@ -581,6 +623,13 @@
                                 $('#modalApptLocation').text(props.location);
                                 $('#appointmentDetailModal .modal-header').removeClass('bg-primary').css('background-color', props.baseColor).addClass('text-white');
                                 var modal = new bootstrap.Modal(document.getElementById('appointmentDetailModal'));
+                                modal.show();
+                            } else if (props.status === 'DoctorLeave') {
+                                $('#modalLeaveDoctor').text(props.doctorName);
+                                $('#modalLeaveDate').text(dateOnlyString); // Leave is full day conceptually
+                                $('#modalLeaveReason').text(props.patientName || "No reason provided"); // Reason is passed in PatientName field
+                                $('#leaveDetailModal .modal-header').removeClass('bg-light').css('background-color', '#dc3545'); // Red theme for leave
+                                var modal = new bootstrap.Modal(document.getElementById('leaveDetailModal'));
                                 modal.show();
                             } else {
                                 $('#modalSchedDoctor').text(props.doctorName);

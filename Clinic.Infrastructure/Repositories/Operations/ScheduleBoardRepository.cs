@@ -152,6 +152,51 @@ namespace Clinic.Infrastructure.Repositories.Operations
                         AppointmentStatus = a.Status.ToString()
                     });
                 }
+
+                // Also fetch Doctor Leaves to overlay on the Schedule Board
+                var leaveQuery = _context.DoctorLeaveDates
+                    .Include(dld => dld.DoctorLeaveRequest)
+                    .ThenInclude(dlr => dlr.Doctor)
+                    .ThenInclude(d => d.Specialty)
+                    .Where(dld => !dld.DoctorLeaveRequest.IsDeleted && dld.Date == specificDate.Value);
+
+                if (doctorId.HasValue && doctorId.Value != Guid.Empty)
+                    leaveQuery = leaveQuery.Where(dld => dld.DoctorLeaveRequest.DoctorId == doctorId.Value);
+
+                if (specialtyId.HasValue && specialtyId.Value != Guid.Empty)
+                    leaveQuery = leaveQuery.Where(dld => dld.DoctorLeaveRequest.Doctor.SpecialtyId == specialtyId.Value);
+
+                var leaves = await leaveQuery.ToListAsync();
+
+                foreach (var l in leaves)
+                {
+                    // Match the Leave block time with the Doctor's normal schedule if it exists, otherwise default 08:00 - 17:00
+                    var sched = results.FirstOrDefault(r => r.DoctorId == l.DoctorLeaveRequest.DoctorId && r.Status != "Appointment");
+                    var start = sched?.StartTime ?? new TimeSpan(8, 0, 0);
+                    var end = sched?.EndTime ?? new TimeSpan(17, 0, 0);
+
+                    results.Add(new ScheduleBoardDto
+                    {
+                        ScheduleId = l.DoctorLeaveRequestId,
+                        DoctorId = l.DoctorLeaveRequest.DoctorId,
+                        DoctorName = l.DoctorLeaveRequest.Doctor.Title != null ? (l.DoctorLeaveRequest.Doctor.Title + " " + l.DoctorLeaveRequest.Doctor.FullName) : l.DoctorLeaveRequest.Doctor.FullName,
+                        Specialty = l.DoctorLeaveRequest.Doctor.Specialty?.Name,
+                        DoctorColor = l.DoctorLeaveRequest.Doctor.Color,
+                        LocationId = l.DoctorLeaveRequest.Doctor.PrimaryLocationId ?? Guid.Empty,
+                        LocationName = "Doctor Leave", // Display string for location fallback
+                        Chair = "-",
+                        DayOfWeek = (int)l.Date.DayOfWeek,
+                        DayName = l.Date.DayOfWeek.ToString(),
+                        SpecificDate = l.Date,
+                        StartTime = start,
+                        EndTime = end,
+                        IsActive = true,
+                        IsAvailable = false,
+                        Status = "DoctorLeave", 
+                        IsAppointment = false,
+                        PatientName = l.DoctorLeaveRequest.Reason // Reuse PatientName mapping to pass the Reason text to UI
+                    });
+                }
             }
 
             return results;
