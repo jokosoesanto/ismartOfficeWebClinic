@@ -90,5 +90,30 @@ namespace Clinic.Infrastructure.Data.Repositories.Operations
 
             return candidates.Any(a => a.StartTime < endTime && a.EndTime > startTime);
         }
+
+        public async Task<IEnumerable<Appointment>> GetAppointmentsByDoctorAndDatesAsync(Guid doctorId, IEnumerable<DateTime> dates)
+        {
+            if (dates == null || !dates.Any()) return new List<Appointment>();
+
+            var requestedDates = dates.Select(d => d.Date).ToHashSet();
+            var minDate = requestedDates.Min();
+            var maxDate = requestedDates.Max();
+
+            // Step 1: Database-side narrow candidate query using Range.
+            // Avoids EF Core's SQLite json_each translation mismatch on Date fields.
+            var candidates = await _context.Appointments
+                .Include(a => a.Patient)
+                .Include(a => a.Doctor)
+                .Include(a => a.Chair)
+                .Where(a => a.DoctorId == doctorId && a.Date >= minDate && a.Date < maxDate.AddDays(1))
+                .ToListAsync();
+
+            // Step 2: Application-memory precise filtering
+            return candidates
+                .Where(a => requestedDates.Contains(a.Date.Date))
+                .OrderBy(a => a.Date)
+                .ThenBy(a => a.StartTime)
+                .ToList();
+        }
     }
 }

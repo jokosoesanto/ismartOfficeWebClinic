@@ -12,5 +12,6 @@ namespace Clinic.Application.Interfaces.Operations
         Task<AppointmentDto?> GetByIdAsync(Guid id);
         Task<AppointmentDto> UpdateAsync(AppointmentDto dto, Guid userId);
         Task DeleteAsync(Guid id, Guid deletedBy);
+        Task<IEnumerable<AppointmentDto>> GetAppointmentsByDoctorAndDatesAsync(Guid doctorId, IEnumerable<DateTime> dates);
     }
 }

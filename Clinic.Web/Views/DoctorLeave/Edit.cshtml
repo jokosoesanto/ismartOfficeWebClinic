@@ -93,6 +93,14 @@
                     </div>
                 </div>
             </div>
+
+            <div class="card shadow-sm border-0 mt-3 border-start border-warning border-4" id="affectedAppointmentsCard" style="display:none;">
+                <div class="card-body p-4">
+                    <h6 class="fw-bold text-warning-emphasis mb-2"><i class="bi bi-exclamation-triangle-fill me-2 text-warning"></i>Affected Appointments</h6>
+                    <p class="text-muted small mb-3">Existing appointments are affected by this leave.</p>
+                    <div id="affectedAppointmentsList" class="small" style="max-height: 250px; overflow-y: auto;"></div>
+                </div>
+            </div>
         </div>
     </div>
 </div>
@@ -110,6 +118,48 @@
             var summaryCard = document.getElementById('dateSummaryCard');
             var summaryList = document.getElementById('dateSummaryList');
             var totalDays = document.getElementById('totalDaysCount');
+            var affectedCard = document.getElementById('affectedAppointmentsCard');
+            var affectedList = document.getElementById('affectedAppointmentsList');
+            var doctorId = document.querySelector('input[name="DoctorId"]').value;
+
+            function fetchAffectedAppointments() {
+                if (!doctorId || selectedDates.length === 0) {
+                    affectedCard.style.display = 'none';
+                    return;
+                }
+
+                var token = document.querySelector('input[name="__RequestVerificationToken"]').value;
+
+                fetch('/DoctorLeave/GetAffectedAppointments?doctorId=' + doctorId, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'RequestVerificationToken': token
+                    },
+                    body: JSON.stringify(selectedDates)
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data && data.length > 0) {
+                        affectedCard.style.display = '';
+                        var html = '<ul class="list-group list-group-flush">';
+                        data.forEach(function(appt) {
+                            html += '<li class="list-group-item px-0 py-2 border-0 border-bottom bg-transparent">';
+                            html += '<div class="fw-bold text-dark">' + appt.date + ' &bull; ' + appt.time + '</div>';
+                            html += '<div class="text-muted">' + appt.patient + ' <span class="ms-1 text-secondary">(Chair: ' + appt.chair + ')</span></div>';
+                            html += '</li>';
+                        });
+                        html += '</ul>';
+                        affectedList.innerHTML = html;
+                    } else {
+                        affectedCard.style.display = 'none';
+                        affectedList.innerHTML = '';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching affected appointments:', error);
+                });
+            }
 
             function formatDate(dateStr) {
                 var d = new Date(dateStr + 'T00:00:00');
@@ -182,6 +232,7 @@
                 }
 
                 totalDays.textContent = selectedDates.length;
+                fetchAffectedAppointments();
             }
 
             addBtn.addEventListener('click', addDate);

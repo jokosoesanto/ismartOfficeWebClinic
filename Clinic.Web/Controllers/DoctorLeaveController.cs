@@ -18,13 +18,16 @@ namespace Clinic.Web.Controllers
     {
         private readonly IDoctorLeaveRequestService _service;
         private readonly IDoctorRepository _doctorRepository;
+        private readonly IAppointmentService _appointmentService;
 
         public DoctorLeaveController(
             IDoctorLeaveRequestService service,
-            IDoctorRepository doctorRepository)
+            IDoctorRepository doctorRepository,
+            IAppointmentService appointmentService)
         {
             _service = service;
             _doctorRepository = doctorRepository;
+            _appointmentService = appointmentService;
         }
 
         private Guid GetCurrentUserId()
@@ -165,6 +168,27 @@ namespace Clinic.Web.Controllers
             var doctors = await _doctorRepository.GetAllActiveAsync();
             var doctorList = doctors.OrderBy(d => d.FullName).ToList();
             ViewBag.Doctors = new SelectList(doctorList, "Id", "FullName", selectedDoctorId);
+        }
+
+        [HttpPost("GetAffectedAppointments")]
+        [Authorize]
+        public async Task<IActionResult> GetAffectedAppointments(Guid doctorId, [FromBody] System.Collections.Generic.List<DateTime> dates)
+        {
+            if (doctorId == Guid.Empty || dates == null || !dates.Any())
+                return Json(new System.Collections.Generic.List<object>());
+
+            var appointments = await _appointmentService.GetAppointmentsByDoctorAndDatesAsync(doctorId, dates);
+            
+            var result = appointments.Select(a => new
+            {
+                date = a.Date.ToString("dd MMM yyyy"),
+                time = $"{a.StartTime:hh\\:mm} - {a.EndTime:hh\\:mm}",
+                patient = a.PatientName,
+                doctor = a.DoctorName,
+                chair = a.ChairName ?? "-"
+            });
+
+            return Json(result);
         }
     }
 }
