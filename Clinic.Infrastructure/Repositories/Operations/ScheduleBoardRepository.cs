@@ -46,7 +46,7 @@ namespace Clinic.Infrastructure.Repositories.Operations
                     IsActive = s.Doctor.IsActive,
                     IsAvailable = s.IsAvailable,
                     Status = s.Doctor.IsActive 
-                        ? (s.IsAvailable ? "Available" : "Leave")
+                        ? (s.IsAvailable ? "Available" : "Unavailable")
                         : "Inactive"
                 });
         }
@@ -167,6 +167,80 @@ namespace Clinic.Infrastructure.Repositories.Operations
                     leaveQuery = leaveQuery.Where(dld => dld.DoctorLeaveRequest.Doctor.SpecialtyId == specialtyId.Value);
 
                 var leaves = await leaveQuery.ToListAsync();
+
+                // 1. Update base schedules status based on leaves (Leave overrides Available/Unavailable)
+                foreach(var s in results.ToList())
+                {
+                    if (s.Status == "Appointment" || s.Status == "DoctorLeave") continue;
+                    
+                    if (!s.IsActive) {
+                        s.Status = "Inactive";
+                    }
+                    else if (leaves.Any(l => l.DoctorLeaveRequest.DoctorId == s.DoctorId)) {
+                        s.Status = "Leave";
+                    }
+                    else if (s.IsAvailable) {
+                        s.Status = "Available";
+                    }
+                    else {
+                        s.Status = "Unavailable";
+                    }
+                }
+
+                // 2. Fetch doctors who do not have a schedule today
+                var scheduledDoctorIds = results.Where(r => r.Status != "Appointment" && r.Status != "DoctorLeave").Select(r => r.DoctorId).Distinct().ToList();
+                
+                var unscheduledQuery = _context.Doctors
+                    .Include(d => d.Specialty)
+                    .Include(d => d.PrimaryLocation)
+                    .Where(d => !d.IsDeleted);
+
+                if (locationId.HasValue && locationId.Value != Guid.Empty)
+                    unscheduledQuery = unscheduledQuery.Where(d => d.PrimaryLocationId == locationId.Value);
+                if (doctorId.HasValue && doctorId.Value != Guid.Empty)
+                    unscheduledQuery = unscheduledQuery.Where(d => d.Id == doctorId.Value);
+                if (specialtyId.HasValue && specialtyId.Value != Guid.Empty)
+                    unscheduledQuery = unscheduledQuery.Where(d => d.SpecialtyId == specialtyId.Value);
+                if (!string.IsNullOrWhiteSpace(searchKeyword))
+                {
+                    var lowerSearch = searchKeyword.ToLower();
+                    unscheduledQuery = unscheduledQuery.Where(d => 
+                        (d.Title != null ? (d.Title + " " + d.FullName) : d.FullName).ToLower().Contains(lowerSearch) ||
+                        (d.Specialty != null && d.Specialty.Name.ToLower().Contains(lowerSearch)) ||
+                        (d.PrimaryLocation != null && d.PrimaryLocation.ClinicName.ToLower().Contains(lowerSearch)));
+                }
+
+                var unscheduledDoctors = await unscheduledQuery.ToListAsync();
+                unscheduledDoctors = unscheduledDoctors.Where(d => !scheduledDoctorIds.Contains(d.Id)).ToList();
+
+                foreach(var d in unscheduledDoctors)
+                {
+                    bool isOnLeave = leaves.Any(l => l.DoctorLeaveRequest.DoctorId == d.Id);
+                    string status = "Not Scheduled";
+                    if (!d.IsActive) status = "Inactive";
+                    else if (isOnLeave) status = "Leave";
+
+                    results.Add(new ScheduleBoardDto
+                    {
+                        ScheduleId = Guid.NewGuid(), // Placeholder
+                        DoctorId = d.Id,
+                        DoctorName = d.Title != null ? (d.Title + " " + d.FullName) : d.FullName,
+                        Specialty = d.Specialty?.Name,
+                        DoctorColor = d.Color,
+                        LocationId = d.PrimaryLocationId ?? Guid.Empty,
+                        LocationName = d.PrimaryLocation?.ClinicName ?? "-",
+                        Chair = "-",
+                        DayOfWeek = (int)specificDate.Value.DayOfWeek,
+                        DayName = specificDate.Value.DayOfWeek.ToString(),
+                        SpecificDate = specificDate,
+                        StartTime = null,
+                        EndTime = null,
+                        IsActive = d.IsActive,
+                        IsAvailable = false,
+                        Status = status,
+                        IsAppointment = false
+                    });
+                }
 
                 foreach (var l in leaves)
                 {

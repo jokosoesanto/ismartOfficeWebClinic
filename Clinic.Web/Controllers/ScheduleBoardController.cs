@@ -64,10 +64,13 @@ namespace Clinic.Web.Controllers
 
                 Guid? locationId = string.IsNullOrEmpty(locationIdStr) ? null : Guid.Parse(locationIdStr);
                 Guid? specialtyId = string.IsNullOrEmpty(specialtyIdStr) ? null : Guid.Parse(specialtyIdStr);
-                DateTime? date = string.IsNullOrEmpty(dateStr) ? null : DateTime.Parse(dateStr);
+                DateTime? date = string.IsNullOrEmpty(dateStr) ? DateTime.Today : DateTime.Parse(dateStr);
                 
                 var data = await _scheduleBoardRepository.GetSchedulesAsync(
                     locationId, null, specialtyId, null, date, searchValue);
+
+                // Exclude the Calendar-specific 'DoctorLeave' overlay blocks from the List View
+                data = data.Where(x => x.Status != "DoctorLeave").ToList();
 
                 // Filter Availability client-side to keep repo clean of presentation logic
                 if (!string.IsNullOrEmpty(availabilityStr))

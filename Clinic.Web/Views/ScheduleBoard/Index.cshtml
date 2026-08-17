@@ -19,7 +19,7 @@
             <div class="row g-3">
                 <div class="col-md-3">
                     <label class="form-label fw-bold small text-muted">Date</label>
-                    <input type="date" id="filterDate" class="form-control" />
+                    <input type="date" id="filterDate" class="form-control" value="@DateTime.Today.ToString("yyyy-MM-dd")" />
                 </div>
                 <div class="col-md-3">
                     <label class="form-label fw-bold small text-muted">Clinic / Location</label>
@@ -39,7 +39,9 @@
                         <option value="">All Statuses</option>
                         <option value="Available">Available</option>
                         <option value="Leave">Leave</option>
+                        <option value="Unavailable">Unavailable</option>
                         <option value="Inactive">Inactive</option>
+                        <option value="Not Scheduled">Not Scheduled</option>
                     </select>
                 </div>
             </div>
@@ -350,6 +352,8 @@
                         if (data === "Available") return '<span class="badge bg-success-subtle text-success border border-success-subtle"><i class="bi bi-check-circle-fill me-1"></i> Available</span>';
                         if (data === "Break") return '<span class="badge bg-warning-subtle text-warning border border-warning-subtle"><i class="bi bi-cup-hot-fill me-1"></i> Break</span>';
                         if (data === "Leave") return '<span class="badge bg-danger-subtle text-danger border border-danger-subtle"><i class="bi bi-dash-circle-fill me-1"></i> Leave</span>';
+                        if (data === "Unavailable") return '<span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle"><i class="bi bi-slash-circle me-1"></i> Unavailable</span>';
+                        if (data === "Not Scheduled") return '<span class="badge bg-light text-dark border"><i class="bi bi-calendar-x me-1"></i> Not Scheduled</span>';
                         if (data === "InSession") return '<span class="badge bg-primary-subtle text-primary border border-primary-subtle"><i class="bi bi-hospital me-1"></i> In Session</span>';
                         return '<span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle"><i class="bi bi-x-circle-fill me-1"></i> Inactive</span>';
                     }
