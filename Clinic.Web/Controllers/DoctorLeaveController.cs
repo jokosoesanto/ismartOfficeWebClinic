@@ -178,24 +178,63 @@ namespace Clinic.Web.Controllers
 
         [HttpPost("GetAffectedAppointments")]
         [Authorize]
-        public async Task<IActionResult> GetAffectedAppointments(Guid doctorId, [FromBody] System.Collections.Generic.List<DateTime> dates)
+        public async Task<IActionResult> GetAffectedAppointments(Guid doctorId, [FromBody] AffectedAppointmentsRequest req)
         {
-            if (doctorId == Guid.Empty || dates == null || !dates.Any())
+            var dates = req?.Dates ?? new System.Collections.Generic.List<DateTime>();
+            var knownIds = req?.KnownAppointmentIds ?? new System.Collections.Generic.List<Guid>();
+
+            if (doctorId == Guid.Empty || !dates.Any())
                 return Json(new System.Collections.Generic.List<object>());
 
-            var appointments = await _appointmentService.GetAppointmentsByDoctorAndDatesAsync(doctorId, dates);
-            
-            var result = appointments.Select(a => new
+            var activeAppointments = (await _appointmentService.GetAppointmentsByDoctorAndDatesAsync(doctorId, dates)).ToList();
+            var activeIds = activeAppointments.Select(a => a.Id).ToHashSet();
+
+            var result = new System.Collections.Generic.List<object>();
+
+            // 1. Add all active/unresolved appointments
+            foreach (var a in activeAppointments)
             {
-                id = a.Id,
-                date = a.Date.ToString("dd MMM yyyy"),
-                time = $"{a.StartTime:hh\\:mm} - {a.EndTime:hh\\:mm}",
-                patient = a.PatientName,
-                doctor = a.DoctorName,
-                chair = a.ChairName ?? "-"
-            });
+                result.Add(new
+                {
+                    id = a.Id,
+                    isoDate = a.Date.ToString("yyyy-MM-dd"),
+                    date = a.Date.ToString("dd MMM yyyy"),
+                    time = $"{a.StartTime:hh\\:mm} - {a.EndTime:hh\\:mm}",
+                    patient = a.PatientName,
+                    doctor = a.DoctorName,
+                    chair = a.ChairName ?? "-",
+                    status = "UNRESOLVED"
+                });
+            }
+
+            // 2. Add resolved appointments (previously known but no longer active conflicts)
+            var resolvedIds = knownIds.Where(id => !activeIds.Contains(id)).ToList();
+            foreach (var id in resolvedIds)
+            {
+                var appt = await _appointmentService.GetByIdAsync(id);
+                if (appt != null)
+                {
+                    result.Add(new
+                    {
+                        id = appt.Id,
+                        isoDate = appt.Date.ToString("yyyy-MM-dd"),
+                        date = appt.Date.ToString("dd MMM yyyy"),
+                        time = $"{appt.StartTime:hh\\:mm} - {appt.EndTime:hh\\:mm}",
+                        patient = appt.PatientName,
+                        doctor = appt.DoctorName,
+                        chair = appt.ChairName ?? "-",
+                        status = "RESOLVED"
+                    });
+                }
+            }
 
             return Json(result);
         }
+    }
+
+    public class AffectedAppointmentsRequest
+    {
+        public System.Collections.Generic.List<DateTime> Dates { get; set; } = new System.Collections.Generic.List<DateTime>();
+        public System.Collections.Generic.List<Guid> KnownAppointmentIds { get; set; } = new System.Collections.Generic.List<Guid>();
     }
 }

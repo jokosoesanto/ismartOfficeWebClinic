@@ -165,6 +165,22 @@
             var doctorId = document.querySelector('input[name="DoctorId"]').value;
             var calendar;
 
+            var pageContext = 'knownAppts_Edit_' + window.location.pathname.split('/').pop();
+
+            function getKnownAppointments() {
+                var stored = sessionStorage.getItem(pageContext);
+                return stored ? JSON.parse(stored) : {};
+            }
+            function saveKnownAppointments(dict) {
+                sessionStorage.setItem(pageContext, JSON.stringify(dict));
+            }
+
+            window.addEventListener('focus', function() {
+                if (selectedDates.length > 0 && doctorId) {
+                    fetchAffectedAppointments();
+                }
+            });
+
             function fetchAffectedAppointments() {
                 if (!doctorId || selectedDates.length === 0) {
                     affectedCard.style.display = 'none';
@@ -172,6 +188,14 @@
                 }
 
                 var token = document.querySelector('input[name="__RequestVerificationToken"]').value;
+                var knownAppointments = getKnownAppointments();
+                
+                var validKnownIds = [];
+                for (var id in knownAppointments) {
+                    if (selectedDates.includes(knownAppointments[id])) {
+                        validKnownIds.push(id);
+                    }
+                }
 
                 fetch('/DoctorLeave/GetAffectedAppointments?doctorId=' + doctorId, {
                     method: 'POST',
@@ -179,29 +203,54 @@
                         'Content-Type': 'application/json',
                         'RequestVerificationToken': token
                     },
-                    body: JSON.stringify(selectedDates)
+                    body: JSON.stringify({ dates: selectedDates, knownAppointmentIds: validKnownIds })
                 })
                 .then(response => response.json())
                 .then(data => {
                     if (data && data.length > 0) {
                         affectedCard.style.display = '';
                         var html = '<ul class="list-group list-group-flush">';
+                        
+                        var updatedKnown = {};
+                        
                         data.forEach(function(appt) {
-                            html += '<li class="list-group-item px-0 py-2 border-0 border-bottom bg-transparent">';
+                            if (appt.status === "UNRESOLVED") {
+                                knownAppointments[appt.id] = appt.isoDate;
+                            }
+                            
+                            var isResolved = appt.status === "RESOLVED";
+                            var statusBadge = isResolved 
+                                ? '<span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 px-2 py-1 rounded-pill ms-2"><i class="bi bi-check-circle me-1"></i>RESOLVED</span>'
+                                : '<span class="badge bg-warning bg-opacity-10 text-warning border border-warning border-opacity-25 px-2 py-1 rounded-pill ms-2"><i class="bi bi-exclamation-triangle me-1"></i>UNRESOLVED</span>';
+                                
+                            var opacityClass = isResolved ? "opacity-75" : "";
+                            
+                            html += '<li class="list-group-item px-0 py-2 border-0 border-bottom bg-transparent ' + opacityClass + '">';
                             html += '<div class="d-flex justify-content-between align-items-center">';
                             html += '<div>';
-                            html += '<div class="fw-bold text-dark">' + appt.date + ' &bull; ' + appt.time + '</div>';
+                            html += '<div class="fw-bold text-dark d-flex align-items-center">' + appt.date + ' &bull; ' + appt.time + statusBadge + '</div>';
                             html += '<div class="text-muted">' + appt.patient + ' <span class="ms-1 text-secondary">(Chair: ' + appt.chair + ')</span></div>';
                             html += '</div>';
-                            html += '<div>';
-                            html += '<a href="/Appointment/Edit/' + appt.id + '" target="_blank" class="btn btn-sm btn-outline-primary shadow-sm" title="Edit Appointment"><i class="bi bi-pencil"></i></a>';
-                            html += '<a href="/Appointment/Reassign/' + appt.id + '" target="_blank" class="btn btn-sm btn-outline-info shadow-sm ms-1" title="Reassign Doctor"><i class="bi bi-arrow-left-right"></i></a>';
-                            html += '</div>';
+                            
+                            if (!isResolved) {
+                                html += '<div>';
+                                html += '<a href="/Appointment/Edit/' + appt.id + '" target="_blank" class="btn btn-sm btn-outline-primary shadow-sm" title="Edit Appointment"><i class="bi bi-pencil"></i></a>';
+                                html += '<a href="/Appointment/Reassign/' + appt.id + '" target="_blank" class="btn btn-sm btn-outline-info shadow-sm ms-1" title="Reassign Doctor"><i class="bi bi-arrow-left-right"></i></a>';
+                                html += '</div>';
+                            } else {
+                                html += '<div class="text-success small fw-semibold"><i class="bi bi-check2-all me-1"></i>Cleared</div>';
+                            }
+                            
                             html += '</div>';
                             html += '</li>';
+                            
+                            if (knownAppointments[appt.id]) {
+                                updatedKnown[appt.id] = knownAppointments[appt.id];
+                            }
                         });
                         html += '</ul>';
                         affectedList.innerHTML = html;
+                        saveKnownAppointments(updatedKnown);
                     } else {
                         affectedCard.style.display = 'none';
                         affectedList.innerHTML = '';
