@@ -187,6 +187,7 @@ namespace Clinic.Web.Controllers
             
             var result = appointments.Select(a => new
             {
+                id = a.Id,
                 date = a.Date.ToString("dd MMM yyyy"),
                 time = $"{a.StartTime:hh\\:mm} - {a.EndTime:hh\\:mm}",
                 patient = a.PatientName,
