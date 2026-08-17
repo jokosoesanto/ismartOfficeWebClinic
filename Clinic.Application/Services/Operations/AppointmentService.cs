@@ -235,5 +235,32 @@ namespace Clinic.Application.Services.Operations
                 Notes = a.Notes
             });
         }
+
+        public async Task<IEnumerable<Guid>> GetEligibleDoctorIdsForReassignmentAsync(Guid appointmentId)
+        {
+            var appointment = await _appointmentRepository.GetByIdAsync(appointmentId);
+            if (appointment == null) throw new InvalidOperationException("Appointment not found");
+
+            var allDoctors = await _doctorRepository.GetAllAsync();
+            var activeDoctorIds = allDoctors
+                .Where(d => !d.IsDeleted && d.IsActive && d.Id != appointment.DoctorId)
+                .Select(d => d.Id)
+                .ToList();
+
+            var eligibleIds = new List<Guid>();
+
+            foreach (var docId in activeDoctorIds)
+            {
+                var leaves = await _doctorLeaveRequestRepository.GetDuplicateDatesAsync(docId, new[] { appointment.Date });
+                if (leaves.Any()) continue;
+
+                bool hasOverlap = await _appointmentRepository.HasOverlappingAppointmentAsync(docId, appointment.Date, appointment.StartTime, appointment.EndTime, appointmentId);
+                if (hasOverlap) continue;
+
+                eligibleIds.Add(docId);
+            }
+
+            return eligibleIds;
+        }
     }
 }

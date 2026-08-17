@@ -105,6 +105,12 @@ namespace Clinic.Web.Controllers
             var dto = await _service.GetByIdAsync(id);
             if (dto == null) return NotFound();
 
+            if (dto.LeaveDates.Any() && dto.LeaveDates.Min(d => d.Date.Date) <= DateTime.UtcNow.Date)
+            {
+                TempData["ErrorMessage"] = "Doctor Leave Request cannot be edited because the leave has already started or contains a past leave date.";
+                return RedirectToAction(nameof(Index));
+            }
+
             var meta = new UIMetadata
             {
                 Title = "Edit Doctor Leave",

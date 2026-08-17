@@ -67,10 +67,25 @@
                 <div class="row">
                     <div class="col-md-12 mb-3">
                         <label class="form-label fw-bold">Reassign to Doctor <span class="text-danger">*</span></label>
-                        <select class="form-select form-select-lg" name="DoctorId" required asp-items="@ViewBag.Doctors">
-                            <option value="">Select Target Doctor...</option>
-                        </select>
-                        <div class="invalid-feedback">Target Doctor is required.</div>
+                        @if (((SelectList)ViewBag.Doctors).Any())
+                        {
+                            <select class="form-select" name="DoctorId" required asp-items="@ViewBag.Doctors">
+                                <option value="">Select Target Doctor...</option>
+                            </select>
+                            <div class="invalid-feedback">Target Doctor is required.</div>
+                        }
+                        else
+                        {
+                            <div class="alert alert-warning mb-0 py-2 shadow-sm border-warning">
+                                <i class="bi bi-exclamation-triangle-fill me-2"></i>No eligible doctors available for reassignment on this date and time.
+                            </div>
+                            <input type="hidden" name="DoctorId" value="" />
+                            <script>
+                                document.addEventListener("DOMContentLoaded", function () {
+                                    document.querySelector('button[type="submit"]').disabled = true;
+                                });
+                            </script>
+                        }
                     </div>
 
                     <div class="col-md-12 mb-3">

@@ -197,8 +197,9 @@ namespace Clinic.Web.Controllers
             var dto = await _appointmentService.GetByIdAsync(id);
             if (dto == null) return NotFound();
 
+            var eligibleIds = await _appointmentService.GetEligibleDoctorIdsForReassignmentAsync(id);
             var allDoctors = await _doctorService.GetAllAsync();
-            var validDoctors = allDoctors.Where(d => d.IsActive && d.Id != dto.DoctorId).ToList();
+            var validDoctors = allDoctors.Where(d => eligibleIds.Contains(d.Id)).ToList();
             ViewBag.Doctors = new SelectList(validDoctors, "Id", "FullName");
 
             return View(dto);
@@ -248,8 +249,9 @@ namespace Clinic.Web.Controllers
             };
             ViewBag.Meta = meta;
             
+            var eligibleIds = await _appointmentService.GetEligibleDoctorIdsForReassignmentAsync(id);
             var allDoctors = await _doctorService.GetAllAsync();
-            var validDoctors = allDoctors.Where(d => d.IsActive && d.Id != originalDoctorId).ToList();
+            var validDoctors = allDoctors.Where(d => eligibleIds.Contains(d.Id)).ToList();
             ViewBag.Doctors = new SelectList(validDoctors, "Id", "FullName");
             
             return View(originalDto);

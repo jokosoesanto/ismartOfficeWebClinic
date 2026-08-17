@@ -13,5 +13,6 @@ namespace Clinic.Application.Interfaces.Operations
         Task<AppointmentDto> UpdateAsync(AppointmentDto dto, Guid userId);
         Task DeleteAsync(Guid id, Guid deletedBy);
         Task<IEnumerable<AppointmentDto>> GetAppointmentsByDoctorAndDatesAsync(Guid doctorId, IEnumerable<DateTime> dates);
+        Task<IEnumerable<Guid>> GetEligibleDoctorIdsForReassignmentAsync(Guid appointmentId);
     }
 }

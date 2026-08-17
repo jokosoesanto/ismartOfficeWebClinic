@@ -86,6 +86,9 @@ namespace Clinic.Application.Services.Operations
             var request = await _repository.GetByIdAsync(dto.Id);
             if (request == null) throw new InvalidOperationException("Leave request not found.");
 
+            if (request.LeaveDates.Any() && request.LeaveDates.Min(d => d.Date.Date) <= DateTime.UtcNow.Date)
+                throw new InvalidOperationException("Doctor Leave Request cannot be edited because the leave has already started or contains a past leave date.");
+
             if (dto.LeaveDates == null || !dto.LeaveDates.Any())
                 throw new InvalidOperationException("At least one leave date is required.");
 
@@ -132,13 +135,11 @@ namespace Clinic.Application.Services.Operations
             {
                 request.LeaveDates.Add(new DoctorLeaveDate
                 {
-                    Id = Guid.NewGuid(),
+                    Id = Guid.Empty, // Explicitly set to empty to ensure EF Core tracks it as EntityState.Added
                     DoctorLeaveRequestId = request.Id,
                     Date = date
                 });
             }
-
-            _repository.Update(request);
             await _unitOfWork.SaveChangesAsync();
 
             return dto;

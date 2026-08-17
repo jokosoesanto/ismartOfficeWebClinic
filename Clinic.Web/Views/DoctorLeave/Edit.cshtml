@@ -40,15 +40,10 @@
 
                         <div class="mb-3">
                             <label class="form-label fw-semibold text-muted">Leave Dates <span class="text-danger">*</span></label>
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <input type="date" id="datePickerInput" class="form-control shadow-sm" min="@DateTime.UtcNow.ToString("yyyy-MM-dd")" />
-                                    <small class="text-muted">Select a date and click "Add" or press Enter.</small>
-                                </div>
-                                <div class="col-md-2">
-                                    <button type="button" id="addDateBtn" class="btn btn-outline-primary shadow-sm w-100">
-                                        <i class="bi bi-plus-lg me-1"></i>Add
-                                    </button>
+                            <small class="d-block text-muted mb-2">Click on any date to toggle it. You can select multiple dates.</small>
+                            <div class="card shadow-sm border-0 border-top border-primary border-3">
+                                <div class="card-body p-2">
+                                    <div id="leaveCalendar"></div>
                                 </div>
                             </div>
                         </div>
@@ -56,7 +51,7 @@
                         <div class="mb-4">
                             <div id="selectedDatesContainer">
                                 <div id="noDatesMessage" class="text-muted fst-italic py-2" style="display:none;">
-                                    <i class="bi bi-info-circle me-1"></i>No dates selected. Use the date picker above to add leave dates.
+                                    <i class="bi bi-info-circle me-1"></i>No dates selected yet. Click on dates in the calendar above to select them.
                                 </div>
                                 <div id="dateTagsContainer" class="d-flex flex-wrap gap-2"></div>
                             </div>
@@ -76,8 +71,8 @@
             <div class="card shadow-sm border-0 bg-primary-subtle text-primary">
                 <div class="card-body p-4">
                     <h5 class="fw-bold mb-3"><i class="bi bi-info-square me-2"></i>Edit Guide</h5>
-                    <p class="mb-2"><strong>Add dates:</strong> Use the date picker to add new leave dates.</p>
-                    <p class="mb-2"><strong>Remove dates:</strong> Click the ✕ on any date badge to remove it.</p>
+                    <p class="mb-2"><strong>Multi-date:</strong> Click dates on the calendar to toggle them on or off.</p>
+                    <p class="mb-2"><strong>Duplicates:</strong> A doctor cannot have overlapping leave dates across requests.</p>
                     <p class="mb-0"><strong>Doctor:</strong> The doctor cannot be changed. Create a new request for a different doctor.</p>
                 </div>
             </div>
@@ -105,22 +100,70 @@
     </div>
 </div>
 
+@section Styles {
+    <style>
+        /* Custom styles to make calendar background events look nice */
+        .selected-date-bg {
+            opacity: 0.3 !important; /* Adjust opacity for better visibility */
+            cursor: pointer;
+        }
+        /* Make all days look clickable */
+        .fc-daygrid-day {
+            cursor: pointer;
+        }
+        .fc-daygrid-day:hover {
+            background-color: rgba(0,0,0,0.03);
+        }
+        /* Calendar text should not look like hyperlinks */
+        .fc-daygrid-day-number,
+        .fc-col-header-cell-cushion {
+            text-decoration: none !important;
+            color: var(--bs-body-color) !important;
+        }
+        /* Current date circular highlight */
+        .fc-day-today {
+            background-color: transparent !important; /* Remove full cell highlight */
+        }
+        .fc-day-today .fc-daygrid-day-number {
+            background-color: var(--bs-primary) !important;
+            color: white !important;
+            border-radius: 50%;
+            min-width: 28px;
+            height: 28px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            margin: 2px;
+        }
+        /* Disabled past dates */
+        .fc-day-disabled {
+            opacity: 0.5;
+            background-color: rgba(0,0,0,0.02) !important;
+        }
+        .fc-day-disabled,
+        .fc-day-disabled .fc-daygrid-day-number {
+            cursor: not-allowed !important;
+        }
+    </style>
+}
+
 @section Scripts {
     @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    <script src="~/lib/fullcalendar/index.global.min.js"></script>
     <script>
         (function() {
             var selectedDates = [];
-            var dateInput = document.getElementById('datePickerInput');
-            var addBtn = document.getElementById('addDateBtn');
             var tagsContainer = document.getElementById('dateTagsContainer');
             var hiddenContainer = document.getElementById('hiddenDatesContainer');
             var noDatesMsg = document.getElementById('noDatesMessage');
             var summaryCard = document.getElementById('dateSummaryCard');
             var summaryList = document.getElementById('dateSummaryList');
             var totalDays = document.getElementById('totalDaysCount');
+            var calendarEl = document.getElementById('leaveCalendar');
             var affectedCard = document.getElementById('affectedAppointmentsCard');
             var affectedList = document.getElementById('affectedAppointmentsList');
             var doctorId = document.querySelector('input[name="DoctorId"]').value;
+            var calendar;
 
             function fetchAffectedAppointments() {
                 if (!doctorId || selectedDates.length === 0) {
@@ -167,25 +210,26 @@
                 return d.toLocaleDateString('en-GB', options);
             }
 
-            function addDate() {
-                var val = dateInput.value;
-                if (!val) return;
-
-                if (selectedDates.indexOf(val) !== -1) {
-                    alert('This date is already selected.');
-                    return;
+            function toggleDate(dateStr) {
+                var idx = selectedDates.indexOf(dateStr);
+                if (idx !== -1) {
+                    selectedDates.splice(idx, 1);
+                } else {
+                    selectedDates.push(dateStr);
                 }
-
-                selectedDates.push(val);
                 selectedDates.sort();
                 renderDates();
-                dateInput.value = '';
-                dateInput.focus();
+                if (calendar) {
+                    calendar.refetchEvents();
+                }
             }
 
             function removeDate(dateStr) {
                 selectedDates = selectedDates.filter(function(d) { return d !== dateStr; });
                 renderDates();
+                if (calendar) {
+                    calendar.refetchEvents();
+                }
             }
 
             function renderDates() {
@@ -217,14 +261,14 @@
 
                     tagsContainer.appendChild(tag);
 
-                    // Hidden input
+                    // Hidden input for form submission
                     var input = document.createElement('input');
                     input.type = 'hidden';
                     input.name = 'LeaveDates';
                     input.value = d;
                     hiddenContainer.appendChild(input);
 
-                    // Summary
+                    // Summary list
                     var row = document.createElement('div');
                     row.className = 'd-flex justify-content-between mb-1';
                     row.innerHTML = '<small class="text-muted">' + (i + 1) + '.</small><small class="fw-semibold">' + formatDate(d) + '</small>';
@@ -235,15 +279,20 @@
                 fetchAffectedAppointments();
             }
 
-            addBtn.addEventListener('click', addDate);
+            function getCalendarEvents(fetchInfo, successCallback, failureCallback) {
+                var events = selectedDates.map(function(d) {
+                    return {
+                        start: d,
+                        allDay: true,
+                        display: 'background',
+                        backgroundColor: 'var(--bs-primary)',
+                        classNames: ['selected-date-bg']
+                    };
+                });
+                successCallback(events);
+            }
 
-            dateInput.addEventListener('keypress', function(e) {
-                if (e.key === 'Enter') {
-                    e.preventDefault();
-                    addDate();
-                }
-            });
-
+            // Handle form validation
             document.getElementById('leaveForm').addEventListener('submit', function(e) {
                 if (selectedDates.length === 0) {
                     e.preventDefault();
@@ -251,15 +300,50 @@
                 }
             });
 
-            // Initialize with existing dates from model
+            // Initialize with any existing dates (for server-side re-render after validation failure)
             @if (Model.LeaveDates != null && Model.LeaveDates.Any())
             {
                 @foreach (var date in Model.LeaveDates)
                 {
                     <text>selectedDates.push('@date.ToString("yyyy-MM-dd")');</text>
                 }
+                <text>renderDates();</text>
             }
-            renderDates();
+
+            // Initialize calendar
+            document.addEventListener('DOMContentLoaded', function() {
+                calendar = new FullCalendar.Calendar(calendarEl, {
+                    initialView: 'dayGridMonth',
+                    headerToolbar: {
+                        left: 'prev,next today',
+                        center: 'title',
+                        right: ''
+                    },
+                    buttonText: {
+                        today: 'Today'
+                    },
+                    height: 'auto',
+                    selectable: false,
+                    dayCellClassNames: function(arg) {
+                        var today = new Date();
+                        today.setHours(0, 0, 0, 0);
+                        if (arg.date < today) {
+                            return ['fc-day-disabled'];
+                        }
+                        return [];
+                    },
+                    dateClick: function(info) {
+                        var today = new Date();
+                        today.setHours(0, 0, 0, 0);
+                        if (info.date < today) {
+                            return; // Do nothing for past dates
+                        }
+                        toggleDate(info.dateStr);
+                    },
+                    events: getCalendarEvents
+                });
+                calendar.render();
+            });
         })();
     </script>
 }
