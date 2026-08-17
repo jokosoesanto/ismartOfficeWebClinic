@@ -119,7 +119,14 @@ namespace Clinic.Web.Controllers
                 
                 if (!string.IsNullOrEmpty(availability))
                 {
-                    schedules = schedules.Where(x => x.Status.Equals(availability, StringComparison.OrdinalIgnoreCase));
+                    if (availability.Equals("Leave", StringComparison.OrdinalIgnoreCase))
+                    {
+                        schedules = schedules.Where(x => x.Status.Equals("DoctorLeave", StringComparison.OrdinalIgnoreCase));
+                    }
+                    else
+                    {
+                        schedules = schedules.Where(x => x.Status.Equals(availability, StringComparison.OrdinalIgnoreCase));
+                    }
                 }
 
                 foreach (var s in schedules)
