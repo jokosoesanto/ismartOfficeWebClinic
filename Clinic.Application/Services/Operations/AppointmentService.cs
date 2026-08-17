@@ -46,6 +46,7 @@ namespace Clinic.Application.Services.Operations
 
             var doctor = await _doctorRepository.GetByIdAsync(dto.DoctorId);
             if (doctor == null) throw new InvalidOperationException("Invalid Doctor");
+            if (!doctor.IsActive) throw new InvalidOperationException("Selected Doctor is inactive and cannot be assigned new appointments.");
 
             var location = await _locationRepository.GetByIdAsync(dto.LocationId);
             if (location == null) throw new InvalidOperationException("Invalid Location");
@@ -108,6 +109,7 @@ namespace Clinic.Application.Services.Operations
 
             var doctor = await _doctorRepository.GetByIdAsync(dto.DoctorId);
             if (doctor == null) throw new InvalidOperationException("Invalid Doctor");
+            if (!doctor.IsActive) throw new InvalidOperationException("Selected Doctor is inactive and cannot be assigned appointments.");
 
             var location = await _locationRepository.GetByIdAsync(dto.LocationId);
             if (location == null) throw new InvalidOperationException("Invalid Location");

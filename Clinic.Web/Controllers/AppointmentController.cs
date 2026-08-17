@@ -182,6 +182,79 @@ namespace Clinic.Web.Controllers
             
             return View(dto);
         }
+        [HttpGet("Reassign/{id}")]
+        [Authorize(Policy = "Appointment.Edit")]
+        public async Task<IActionResult> Reassign(Guid id)
+        {
+            var meta = new UIMetadata
+            {
+                Title = "Reassign Doctor",
+                ModuleName = "Operations",
+                Mode = RenderingMode.Template
+            };
+            ViewBag.Meta = meta;
+
+            var dto = await _appointmentService.GetByIdAsync(id);
+            if (dto == null) return NotFound();
+
+            var allDoctors = await _doctorService.GetAllAsync();
+            var validDoctors = allDoctors.Where(d => d.IsActive && d.Id != dto.DoctorId).ToList();
+            ViewBag.Doctors = new SelectList(validDoctors, "Id", "FullName");
+
+            return View(dto);
+        }
+
+        [HttpPost("Reassign/{id}")]
+        [Authorize(Policy = "Appointment.Edit")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Reassign(Guid id, AppointmentDto dto)
+        {
+            if (id != dto.Id) return BadRequest();
+
+            // Retrieve original appointment to ensure read-only fields haven't been tampered with
+            var originalDto = await _appointmentService.GetByIdAsync(id);
+            if (originalDto == null) return NotFound();
+
+            var originalDoctorId = originalDto.DoctorId;
+
+            // Reconstruct DTO with only the intended changes
+            originalDto.DoctorId = dto.DoctorId;
+            originalDto.Notes = dto.Notes;
+
+            ModelState.Clear(); 
+            if (TryValidateModel(originalDto))
+            {
+                try
+                {
+                    Guid? currentUserId = null;
+                    if (Guid.TryParse(User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value, out var uid))
+                        currentUserId = uid;
+
+                    await _appointmentService.UpdateAsync(originalDto, currentUserId ?? Guid.Empty);
+                    TempData["SuccessMessage"] = "Doctor reassigned successfully.";
+                    return RedirectToAction("Index");
+                }
+                catch (Exception ex)
+                {
+                    ModelState.AddModelError("", ex.Message);
+                }
+            }
+
+            var meta = new UIMetadata
+            {
+                Title = "Reassign Doctor",
+                ModuleName = "Operations",
+                Mode = RenderingMode.Template
+            };
+            ViewBag.Meta = meta;
+            
+            var allDoctors = await _doctorService.GetAllAsync();
+            var validDoctors = allDoctors.Where(d => d.IsActive && d.Id != originalDoctorId).ToList();
+            ViewBag.Doctors = new SelectList(validDoctors, "Id", "FullName");
+            
+            return View(originalDto);
+        }
+
 
         [HttpPost("Reschedule")]
         [Authorize(Policy = "Appointment.Edit")]

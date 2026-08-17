@@ -1,0 +1,112 @@
+@model Clinic.Application.DTOs.Operations.AppointmentDto
+@{
+    var meta = ViewBag.Meta as Clinic.Application.UI.UIMetadata;
+}
+
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="mb-0 fw-bold">@meta?.Title</h2>
+        <a href="/Appointment" class="btn btn-outline-secondary shadow-sm"><i class="bi bi-arrow-left me-2"></i>Back to Appointments</a>
+    </div>
+
+    <div class="card shadow-sm border-0" style="max-width: 900px; margin: 0 auto;">
+        <div class="card-header bg-white border-bottom-0 pt-4 pb-0">
+            <h5 class="fw-bold text-primary mb-0"><i class="bi bi-person-fill-gear me-2"></i>Reassign Doctor</h5>
+        </div>
+        <div class="card-body p-4">
+            <form method="post" action="/Appointment/Reassign/@Model.Id" class="needs-validation" novalidate>
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="Id" value="@Model.Id" />
+                
+                <h6 class="fw-bold border-bottom pb-2 mb-3 text-secondary">Appointment Context</h6>
+                <div class="row bg-light rounded p-3 mb-4 mx-0 border">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-bold text-muted small mb-1">Patient</label>
+                        <div class="fw-semibold">
+                            <i class="bi bi-person me-1"></i>@Model.PatientName
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-bold text-muted small mb-1">Current Doctor</label>
+                        <div class="fw-semibold text-primary">
+                            <i class="bi bi-stethoscope me-1"></i>@Model.DoctorName
+                        </div>
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-bold text-muted small mb-1">Location</label>
+                        <div class="fw-semibold">
+                            <i class="bi bi-building me-1"></i>@Model.LocationName
+                        </div>
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-bold text-muted small mb-1">Chair</label>
+                        <div class="fw-semibold">
+                            <i class="bi bi-door-open me-1"></i>@Model.ChairName
+                        </div>
+                    </div>
+
+                    <div class="col-md-4 mb-3 mb-md-0">
+                        <label class="form-label fw-bold text-muted small mb-1">Date</label>
+                        <div class="fw-semibold">
+                            <i class="bi bi-calendar3 me-1"></i>@Model.Date.ToString("dd MMM yyyy")
+                        </div>
+                    </div>
+
+                    <div class="col-md-4 mb-3 mb-md-0">
+                        <label class="form-label fw-bold text-muted small mb-1">Time</label>
+                        <div class="fw-semibold">
+                            <i class="bi bi-clock me-1"></i>@Model.StartTime.ToString(@"hh\:mm") - @Model.EndTime.ToString(@"hh\:mm")
+                        </div>
+                    </div>
+                </div>
+
+                <h6 class="fw-bold border-bottom pb-2 mb-3 text-secondary">Reassignment</h6>
+                <div class="row">
+                    <div class="col-md-12 mb-3">
+                        <label class="form-label fw-bold">Reassign to Doctor <span class="text-danger">*</span></label>
+                        <select class="form-select form-select-lg" name="DoctorId" required asp-items="@ViewBag.Doctors">
+                            <option value="">Select Target Doctor...</option>
+                        </select>
+                        <div class="invalid-feedback">Target Doctor is required.</div>
+                    </div>
+
+                    <div class="col-md-12 mb-3">
+                        <label class="form-label fw-bold">Notes</label>
+                        <textarea class="form-control" name="Notes" rows="2" placeholder="Reason for reassignment...">@Model.Notes</textarea>
+                    </div>
+                </div>
+
+                @if (!ViewData.ModelState.IsValid)
+                {
+                    <div class="alert alert-danger mt-3">
+                        @Html.ValidationSummary(false, "", new { @class = "text-danger" })
+                    </div>
+                }
+
+                <hr class="my-4">
+                <div class="d-flex justify-content-end gap-2">
+                    <a href="/Appointment" class="btn btn-secondary shadow-sm">Cancel</a>
+                    <button type="submit" class="btn btn-primary shadow-sm"><i class="bi bi-arrow-left-right me-2"></i>Confirm Reassignment</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        var forms = document.querySelectorAll('.needs-validation')
+        Array.prototype.slice.call(forms).forEach(function (form) {
+            form.addEventListener('submit', function (event) {
+                if (!form.checkValidity()) {
+                    event.preventDefault()
+                    event.stopPropagation()
+                }
+                form.classList.add('was-validated')
+            }, false)
+        })
+    });
+</script>

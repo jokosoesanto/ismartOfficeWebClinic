@@ -275,6 +275,9 @@
     <!-- FullCalendar (Local) -->
     <script src="~/lib/fullcalendar/index.global.min.js"></script>
 
+    <!-- SweetAlert2 (for AJAX callback notifications) -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
     <script>
         // Helper function (shared by register config and calendar)
         function formatTime(timeSpan) {
@@ -492,17 +495,17 @@
                                 },
                                 success: function(res) {
                                     if(res.success) {
-                                        toastr.success('Appointment rescheduled successfully.');
+                                        Swal.fire({ icon: 'success', title: 'Success', text: 'Appointment rescheduled successfully.', timer: 3000, showConfirmButton: false, toast: true, position: 'top-end' });
                                         if (!$('#listViewContainer').hasClass('d-none')) {
                                             $('#scheduleTable').DataTable().ajax.reload();
                                         }
                                     } else {
-                                        toastr.error('Failed to reschedule: ' + res.message);
+                                        Swal.fire({ icon: 'error', title: 'Error', text: 'Failed to reschedule: ' + res.message, confirmButtonColor: '#dc3545' });
                                         info.revert();
                                     }
                                 },
                                 error: function() {
-                                    toastr.error('Failed to contact server to reschedule appointment.');
+                                    Swal.fire({ icon: 'error', title: 'Error', text: 'Failed to contact server to reschedule appointment.', confirmButtonColor: '#dc3545' });
                                     info.revert();
                                 }
                             });
