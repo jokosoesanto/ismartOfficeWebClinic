@@ -158,7 +158,7 @@ namespace Clinic.Infrastructure.Repositories.Operations
                     .Include(dld => dld.DoctorLeaveRequest)
                     .ThenInclude(dlr => dlr.Doctor)
                     .ThenInclude(d => d.Specialty)
-                    .Where(dld => !dld.DoctorLeaveRequest.IsDeleted && dld.Date == specificDate.Value);
+                    .Where(dld => !dld.DoctorLeaveRequest.IsDeleted && !dld.IsCancelled && dld.Date == specificDate.Value);
 
                 if (doctorId.HasValue && doctorId.Value != Guid.Empty)
                     leaveQuery = leaveQuery.Where(dld => dld.DoctorLeaveRequest.DoctorId == doctorId.Value);

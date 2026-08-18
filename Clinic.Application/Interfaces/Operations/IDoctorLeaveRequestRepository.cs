@@ -11,6 +11,7 @@ namespace Clinic.Application.Interfaces.Operations
         Task<IEnumerable<DoctorLeaveRequest>> GetAllAsync();
         void Add(DoctorLeaveRequest request);
         void Update(DoctorLeaveRequest request);
+        Task<DoctorLeaveRequest?> GetByLeaveDateIdAsync(Guid leaveDateId);
 
         /// <summary>
         /// Returns true if the given doctor already has an active (non-deleted) leave date

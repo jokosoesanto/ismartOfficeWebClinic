@@ -25,6 +25,14 @@ namespace Clinic.Infrastructure.Data.Repositories.Operations
                 .FirstOrDefaultAsync(r => r.Id == id);
         }
 
+        public async Task<DoctorLeaveRequest?> GetByLeaveDateIdAsync(Guid leaveDateId)
+        {
+            return await _context.DoctorLeaveRequests
+                .Include(r => r.Doctor)
+                .Include(r => r.LeaveDates)
+                .FirstOrDefaultAsync(r => r.LeaveDates.Any(d => d.Id == leaveDateId));
+        }
+
         public async Task<IEnumerable<DoctorLeaveRequest>> GetAllAsync()
         {
             return await _context.DoctorLeaveRequests
@@ -51,7 +59,8 @@ namespace Clinic.Infrastructure.Data.Repositories.Operations
             var query = _context.DoctorLeaveDates
                 .Where(d => d.DoctorLeaveRequest != null
                     && d.DoctorLeaveRequest.DoctorId == doctorId
-                    && !d.DoctorLeaveRequest.IsDeleted);
+                    && !d.DoctorLeaveRequest.IsDeleted
+                    && !d.IsCancelled);
 
             if (excludeRequestId.HasValue)
             {

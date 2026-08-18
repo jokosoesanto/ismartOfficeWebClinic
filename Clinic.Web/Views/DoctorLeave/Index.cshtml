@@ -96,21 +96,22 @@
                                         <small class="text-muted">@item.CreatedAt.ToLocalTime().ToString("dd MMM yyyy")</small>
                                     </td>
                                     <td class="text-end">
+                                        <a href="/DoctorLeave/Edit/@item.Id" class="btn btn-sm btn-outline-primary shadow-sm" title="Open/Edit Request">
+                                            <i class="bi @(isImmutable ? "bi-eye" : "bi-pencil")"></i> @(isImmutable ? "Open" : "Edit")
+                                        </a>
+
                                         @if (isImmutable)
                                         {
-                                            <button class="btn btn-sm btn-outline-secondary shadow-sm" disabled title="Cannot edit because leave has started">
-                                                <i class="bi bi-pencil"></i> Edit
+                                            <button type="button" class="btn btn-sm btn-outline-secondary shadow-sm ms-1" disabled title="Cannot delete request because leave has started">
+                                                <i class="bi bi-trash"></i>
                                             </button>
                                         }
                                         else
                                         {
-                                            <a href="/DoctorLeave/Edit/@item.Id" class="btn btn-sm btn-outline-primary shadow-sm" title="Edit">
-                                                <i class="bi bi-pencil"></i> Edit
-                                            </a>
+                                            <button type="button" class="btn btn-sm btn-outline-danger shadow-sm ms-1" onclick="deleteLeave('@item.Id', '@(item.DoctorName?.Replace("'", "\\'"))')" title="Delete">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
                                         }
-                                        <button type="button" class="btn btn-sm btn-outline-danger shadow-sm ms-1" onclick="deleteLeave('@item.Id', '@(item.DoctorName?.Replace("'", "\\'"))')" title="Delete">
-                                            <i class="bi bi-trash"></i>
-                                        </button>
                                     </td>
                                 </tr>
                             }

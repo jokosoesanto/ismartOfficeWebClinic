@@ -21,5 +21,10 @@ namespace Clinic.Application.DTOs.Operations
         // Read-only display properties
         public string? DoctorName { get; set; }
         public DateTime CreatedAt { get; set; }
+
+        /// <summary>
+        /// Detailed information about the individual dates, including cancellation status.
+        /// </summary>
+        public List<DoctorLeaveDateDto> LeaveDateDetails { get; set; } = new List<DoctorLeaveDateDto>();
     }
 }

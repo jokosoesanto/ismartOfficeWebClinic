@@ -39,6 +39,8 @@ namespace Clinic.Infrastructure.Data.Configurations
 
             // Unique constraint: prevent duplicate date per request
             builder.HasIndex(e => new { e.DoctorLeaveRequestId, e.Date }).IsUnique();
+
+            builder.Property(e => e.CancellationReason).HasMaxLength(500);
         }
     }
 }

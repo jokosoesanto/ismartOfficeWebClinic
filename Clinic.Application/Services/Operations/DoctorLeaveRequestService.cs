@@ -122,8 +122,8 @@ namespace Clinic.Application.Services.Operations
             var existingDateValues = existingDates.Select(d => d.Date.Date).ToHashSet();
             var requestedDateValues = normalizedDates.ToHashSet();
 
-            // Remove dates no longer in the request
-            var toRemove = existingDates.Where(d => !requestedDateValues.Contains(d.Date.Date)).ToList();
+            // Remove dates no longer in the request (preserve cancelled dates)
+            var toRemove = existingDates.Where(d => !d.IsCancelled && !requestedDateValues.Contains(d.Date.Date)).ToList();
             foreach (var item in toRemove)
             {
                 request.LeaveDates.Remove(item);
@@ -154,7 +154,16 @@ namespace Clinic.Application.Services.Operations
                 DoctorId = r.DoctorId,
                 DoctorName = r.Doctor?.FullName,
                 Reason = r.Reason,
-                LeaveDates = r.LeaveDates.OrderBy(d => d.Date).Select(d => d.Date).ToList(),
+                LeaveDates = r.LeaveDates.Where(d => !d.IsCancelled).OrderBy(d => d.Date).Select(d => d.Date).ToList(),
+                LeaveDateDetails = r.LeaveDates.Select(d => new DoctorLeaveDateDto
+                {
+                    Id = d.Id,
+                    Date = d.Date,
+                    IsCancelled = d.IsCancelled,
+                    CancelledAt = d.CancelledAt,
+                    CancelledBy = d.CancelledBy,
+                    CancellationReason = d.CancellationReason
+                }).OrderBy(d => d.Date).ToList(),
                 CreatedAt = r.CreatedAt
             });
         }
@@ -170,7 +179,16 @@ namespace Clinic.Application.Services.Operations
                 DoctorId = r.DoctorId,
                 DoctorName = r.Doctor?.FullName,
                 Reason = r.Reason,
-                LeaveDates = r.LeaveDates.OrderBy(d => d.Date).Select(d => d.Date).ToList(),
+                LeaveDates = r.LeaveDates.Where(d => !d.IsCancelled).OrderBy(d => d.Date).Select(d => d.Date).ToList(),
+                LeaveDateDetails = r.LeaveDates.Select(d => new DoctorLeaveDateDto
+                {
+                    Id = d.Id,
+                    Date = d.Date,
+                    IsCancelled = d.IsCancelled,
+                    CancelledAt = d.CancelledAt,
+                    CancelledBy = d.CancelledBy,
+                    CancellationReason = d.CancellationReason
+                }).OrderBy(d => d.Date).ToList(),
                 CreatedAt = r.CreatedAt
             };
         }
@@ -180,6 +198,11 @@ namespace Clinic.Application.Services.Operations
             var request = await _repository.GetByIdAsync(id);
             if (request != null)
             {
+                if (request.LeaveDates.Any(d => !d.IsCancelled && d.Date.Date <= DateTime.UtcNow.Date))
+                {
+                    throw new InvalidOperationException("Cannot delete a leave request that has already started or contains historical dates.");
+                }
+
                 request.IsDeleted = true;
                 request.DeletedAt = DateTime.UtcNow;
                 request.DeletedBy = deletedBy;
@@ -187,6 +210,32 @@ namespace Clinic.Application.Services.Operations
                 _repository.Update(request);
                 await _unitOfWork.SaveChangesAsync();
             }
+        }
+
+        public async Task CancelLeaveDateAsync(Guid leaveDateId, string? reason, Guid cancelledBy)
+        {
+            var request = await _repository.GetByLeaveDateIdAsync(leaveDateId);
+            if (request == null) throw new InvalidOperationException("Leave date not found.");
+
+            if (request.IsDeleted) throw new InvalidOperationException("Cannot cancel a date on a deleted leave request.");
+
+            var leaveDate = request.LeaveDates.FirstOrDefault(d => d.Id == leaveDateId);
+            if (leaveDate == null) throw new InvalidOperationException("Leave date not found in request.");
+
+            if (leaveDate.IsCancelled) throw new InvalidOperationException("Leave date is already cancelled.");
+
+            if (leaveDate.Date.Date <= DateTime.UtcNow.Date)
+                throw new InvalidOperationException("Cannot cancel a historical or current leave date. Only future dates can be cancelled.");
+
+            leaveDate.IsCancelled = true;
+            leaveDate.CancelledAt = DateTime.UtcNow;
+            leaveDate.CancelledBy = cancelledBy;
+            leaveDate.CancellationReason = reason;
+
+            // Notice we DO NOT use _repository.Update(request) as it would re-update the aggregate
+            // and we had a previous concurrency fix. We just let EF track the changes on leaveDate 
+            // since GetByLeaveDateIdAsync includes LeaveDates and it's tracked by DbContext.
+            await _unitOfWork.SaveChangesAsync();
         }
     }
 }

@@ -105,10 +105,11 @@ namespace Clinic.Web.Controllers
             var dto = await _service.GetByIdAsync(id);
             if (dto == null) return NotFound();
 
-            if (dto.LeaveDates.Any() && dto.LeaveDates.Min(d => d.Date.Date) <= DateTime.UtcNow.Date)
+            bool isImmutable = dto.LeaveDateDetails.Any(d => d.Date.Date <= DateTime.UtcNow.Date);
+            ViewBag.IsImmutable = isImmutable;
+            if (isImmutable)
             {
-                TempData["ErrorMessage"] = "Doctor Leave Request cannot be edited because the leave has already started or contains a past leave date.";
-                return RedirectToAction(nameof(Index));
+                ViewBag.ImmutableMessage = "This leave request has already started. Normal edit is disabled, but you can cancel individual future dates below.";
             }
 
             var meta = new UIMetadata
@@ -161,6 +162,21 @@ namespace Clinic.Web.Controllers
             try
             {
                 await _service.DeleteAsync(id, GetCurrentUserId());
+            }
+            catch (Exception ex)
+            {
+                TempData["ErrorMessage"] = ex.Message;
+            }
+            return RedirectToAction(nameof(Index));
+        }
+
+        [HttpPost("CancelDate/{leaveDateId}")]
+        [Authorize(Policy = "DoctorLeave.Edit")]
+        public async Task<IActionResult> CancelDate(Guid leaveDateId, [FromForm] string? reason)
+        {
+            try
+            {
+                await _service.CancelLeaveDateAsync(leaveDateId, reason, GetCurrentUserId());
                 return Json(new { success = true });
             }
             catch (Exception ex)

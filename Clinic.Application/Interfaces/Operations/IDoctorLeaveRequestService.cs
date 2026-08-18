@@ -12,5 +12,6 @@ namespace Clinic.Application.Interfaces.Operations
         Task<IEnumerable<DoctorLeaveRequestDto>> GetAllAsync();
         Task<DoctorLeaveRequestDto?> GetByIdAsync(Guid id);
         Task DeleteAsync(Guid id, Guid deletedBy);
+        Task CancelLeaveDateAsync(Guid leaveDateId, string? reason, Guid cancelledBy);
     }
 }

@@ -25,6 +25,13 @@
                         <input type="hidden" asp-for="Id" />
                         <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
 
+                        @if (ViewBag.IsImmutable == true)
+                        {
+                            <div class="alert alert-warning shadow-sm border-warning-subtle mb-4">
+                                <i class="bi bi-lock-fill me-2"></i> @ViewBag.ImmutableMessage
+                            </div>
+                        }
+
                         <div class="row mb-3">
                             <div class="col-md-6">
                                 <label class="form-label fw-semibold text-muted">Doctor</label>
@@ -33,7 +40,14 @@
                             </div>
                             <div class="col-md-6">
                                 <label asp-for="Reason" class="form-label fw-semibold text-muted">Reason</label>
-                                <input asp-for="Reason" class="form-control shadow-sm" placeholder="e.g. Annual Leave, Personal" />
+                                @if (ViewBag.IsImmutable == true)
+                                {
+                                    <input asp-for="Reason" class="form-control shadow-sm" disabled />
+                                }
+                                else
+                                {
+                                    <input asp-for="Reason" class="form-control shadow-sm" placeholder="e.g. Annual Leave, Personal" />
+                                }
                                 <span asp-validation-for="Reason" class="text-danger small"></span>
                             </div>
                         </div>
@@ -60,7 +74,10 @@
 
                         <div class="d-flex justify-content-end">
                             <a href="/DoctorLeave" class="btn btn-light shadow-sm me-2">Cancel</a>
-                            <button type="submit" class="btn btn-primary shadow-sm px-4" id="submitBtn">Save Changes</button>
+                            @if (ViewBag.IsImmutable != true)
+                            {
+                                <button type="submit" class="btn btn-primary shadow-sm px-4" id="submitBtn">Save Changes</button>
+                            }
                         </div>
                     </form>
                 </div>
@@ -164,6 +181,14 @@
             var affectedList = document.getElementById('affectedAppointmentsList');
             var doctorId = document.querySelector('input[name="DoctorId"]').value;
             var calendar;
+            
+            var isImmutable = @(ViewBag.IsImmutable == true ? "true" : "false");
+            var leaveDateDetails = @Html.Raw(Json.Serialize(Model.LeaveDateDetails != null ? Model.LeaveDateDetails.Select(d => new {
+                id = d.Id,
+                dateStr = d.Date.ToString("yyyy-MM-dd"),
+                isCancelled = d.IsCancelled,
+                isPastOrToday = d.Date.Date <= DateTime.UtcNow.Date
+            }) : new object[0]));
 
             var pageContext = 'knownAppts_Edit_' + window.location.pathname.split('/').pop();
 
@@ -268,6 +293,8 @@
             }
 
             function toggleDate(dateStr) {
+                if (isImmutable) return; // Prevent toggling if immutable
+                
                 var idx = selectedDates.indexOf(dateStr);
                 if (idx !== -1) {
                     selectedDates.splice(idx, 1);
@@ -282,6 +309,8 @@
             }
 
             function removeDate(dateStr) {
+                if (isImmutable) return;
+                
                 selectedDates = selectedDates.filter(function(d) { return d !== dateStr; });
                 renderDates();
                 if (calendar) {
@@ -294,7 +323,32 @@
                 hiddenContainer.innerHTML = '';
                 summaryList.innerHTML = '';
 
-                if (selectedDates.length === 0) {
+                var allDatesToRender = [];
+                // Add all dates from selectedDates (which represents active future dates / current edit state)
+                for (var i = 0; i < selectedDates.length; i++) {
+                    var detail = leaveDateDetails.find(d => d.dateStr === selectedDates[i]);
+                    if (detail) {
+                        allDatesToRender.push(detail);
+                    } else {
+                        // newly added date
+                        allDatesToRender.push({
+                            id: null,
+                            dateStr: selectedDates[i],
+                            isCancelled: false,
+                            isPastOrToday: false
+                        });
+                    }
+                }
+                // Add cancelled dates that aren't in selectedDates (so they still show up)
+                leaveDateDetails.filter(d => d.isCancelled).forEach(d => {
+                    if (!selectedDates.includes(d.dateStr)) {
+                        allDatesToRender.push(d);
+                    }
+                });
+                
+                allDatesToRender.sort((a, b) => a.dateStr.localeCompare(b.dateStr));
+
+                if (allDatesToRender.length === 0) {
                     noDatesMsg.style.display = '';
                     summaryCard.style.display = 'none';
                 } else {
@@ -302,50 +356,117 @@
                     summaryCard.style.display = '';
                 }
 
-                for (var i = 0; i < selectedDates.length; i++) {
-                    var d = selectedDates[i];
+                for (var i = 0; i < allDatesToRender.length; i++) {
+                    var d = allDatesToRender[i];
 
-                    // Tag badge
-                    var tag = document.createElement('span');
-                    tag.className = 'badge bg-warning text-dark d-inline-flex align-items-center px-3 py-2 shadow-sm';
-                    tag.style.fontSize = '0.85rem';
-                    tag.innerHTML = '<i class="bi bi-calendar-date me-1"></i>' + formatDate(d) +
-                        ' <button type="button" class="btn-close btn-close-sm ms-2" style="font-size:0.6rem;" data-date="' + d + '"></button>';
+                    // Tag badge (only for non-cancelled)
+                    if (!d.isCancelled) {
+                        var tag = document.createElement('span');
+                        tag.className = 'badge bg-warning text-dark d-inline-flex align-items-center px-3 py-2 shadow-sm';
+                        tag.style.fontSize = '0.85rem';
+                        
+                        var closeBtn = '';
+                        if (!isImmutable) {
+                            closeBtn = ' <button type="button" class="btn-close btn-close-sm ms-2" style="font-size:0.6rem;" data-date="' + d.dateStr + '"></button>';
+                        }
+                        
+                        tag.innerHTML = '<i class="bi bi-calendar-date me-1"></i>' + formatDate(d.dateStr) + closeBtn;
 
-                    tag.querySelector('.btn-close').addEventListener('click', (function(dateVal) {
-                        return function() { removeDate(dateVal); };
-                    })(d));
+                        if (!isImmutable) {
+                            tag.querySelector('.btn-close').addEventListener('click', (function(dateVal) {
+                                return function() { removeDate(dateVal); };
+                            })(d.dateStr));
+                        }
+                        tagsContainer.appendChild(tag);
 
-                    tagsContainer.appendChild(tag);
-
-                    // Hidden input for form submission
-                    var input = document.createElement('input');
-                    input.type = 'hidden';
-                    input.name = 'LeaveDates';
-                    input.value = d;
-                    hiddenContainer.appendChild(input);
+                        // Hidden input for form submission
+                        var input = document.createElement('input');
+                        input.type = 'hidden';
+                        input.name = 'LeaveDates';
+                        input.value = d.dateStr;
+                        hiddenContainer.appendChild(input);
+                    }
 
                     // Summary list
                     var row = document.createElement('div');
-                    row.className = 'd-flex justify-content-between mb-1';
-                    row.innerHTML = '<small class="text-muted">' + (i + 1) + '.</small><small class="fw-semibold">' + formatDate(d) + '</small>';
+                    row.className = 'd-flex justify-content-between align-items-center mb-2 pb-2 border-bottom';
+                    
+                    var leftHtml = '<div class="d-flex align-items-center"><small class="text-muted me-2">' + (i + 1) + '.</small><span class="fw-semibold">' + formatDate(d.dateStr) + '</span></div>';
+                    
+                    var rightHtml = '<div>';
+                    if (d.isCancelled) {
+                        rightHtml += '<span class="badge bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25"><i class="bi bi-x-circle me-1"></i>Cancelled</span>';
+                    } else if (d.isPastOrToday) {
+                        rightHtml += '<span class="badge bg-secondary bg-opacity-10 text-secondary border border-secondary border-opacity-25">Historical/Active</span>';
+                    } else if (d.id != null) {
+                        // Future active date, has ID, so it can be cancelled individually
+                        rightHtml += '<button type="button" class="btn btn-sm btn-outline-danger py-0 px-2 shadow-sm" onclick="cancelLeaveDate(\'' + d.id + '\', \'' + d.dateStr + '\')">Cancel Date</button>';
+                    } else {
+                        rightHtml += '<span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25">New</span>';
+                    }
+                    rightHtml += '</div>';
+
+                    row.innerHTML = leftHtml + rightHtml;
                     summaryList.appendChild(row);
                 }
 
-                totalDays.textContent = selectedDates.length;
+                totalDays.textContent = allDatesToRender.filter(d => !d.isCancelled).length;
                 fetchAffectedAppointments();
             }
 
+            window.cancelLeaveDate = function(leaveDateId, dateStr) {
+                var reason = prompt("Are you sure you want to cancel the leave date on " + formatDate(dateStr) + "?\n\nExisting appointments will NOT be affected.\n\nOptional Reason:");
+                if (reason === null) return; // User clicked Cancel in prompt
+
+                var token = document.querySelector('input[name="__RequestVerificationToken"]').value;
+                var formData = new FormData();
+                if (reason) formData.append('reason', reason);
+
+                fetch('/DoctorLeave/CancelDate/' + leaveDateId, {
+                    method: 'POST',
+                    headers: {
+                        'RequestVerificationToken': token
+                    },
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        window.location.reload();
+                    } else {
+                        alert('Failed to cancel date: ' + data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('An error occurred while cancelling the date.');
+                });
+            };
+
             function getCalendarEvents(fetchInfo, successCallback, failureCallback) {
-                var events = selectedDates.map(function(d) {
-                    return {
+                var events = [];
+                // Active selected dates
+                selectedDates.forEach(function(d) {
+                    events.push({
                         start: d,
                         allDay: true,
                         display: 'background',
                         backgroundColor: 'var(--bs-primary)',
                         classNames: ['selected-date-bg']
-                    };
+                    });
                 });
+                
+                // Cancelled dates
+                leaveDateDetails.filter(d => d.isCancelled).forEach(function(d) {
+                    events.push({
+                        start: d.dateStr,
+                        allDay: true,
+                        display: 'background',
+                        backgroundColor: 'var(--bs-danger)',
+                        classNames: ['selected-date-bg', 'opacity-50']
+                    });
+                });
+                
                 successCallback(events);
             }
 
