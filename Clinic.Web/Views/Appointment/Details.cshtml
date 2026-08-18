@@ -10,9 +10,12 @@
             <p class="text-muted mb-0">View appointment information.</p>
         </div>
         <div>
-            <a href="/Appointment/Edit/@Model.Id" class="btn btn-primary shadow-sm me-2">
-                <i class="bi bi-pencil me-2"></i>Edit Appointment
-            </a>
+            @if (!Model.IsDeleted)
+            {
+                <a href="/Appointment/Edit/@Model.Id" class="btn btn-primary shadow-sm me-2">
+                    <i class="bi bi-pencil me-2"></i>Edit Appointment
+                </a>
+            }
             <a href="/Appointment" class="btn btn-outline-secondary shadow-sm">
                 <i class="bi bi-arrow-left me-2"></i>Back to List
             </a>
@@ -30,7 +33,11 @@
                         <div class="col-md-6">
                             <label class="form-label text-muted small mb-1">Status</label>
                             <div>
-                                @if(Model.Status == Clinic.Domain.Enums.AppointmentStatus.Schedule)
+                                @if(Model.IsDeleted)
+                                {
+                                    <span class="badge bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25 px-3 py-2 rounded-pill">Cancelled</span>
+                                }
+                                else if(Model.Status == Clinic.Domain.Enums.AppointmentStatus.Schedule)
                                 {
                                     <span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 px-3 py-2 rounded-pill">@Model.Status</span>
                                 }

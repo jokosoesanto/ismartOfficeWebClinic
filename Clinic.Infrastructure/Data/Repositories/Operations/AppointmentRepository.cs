@@ -17,24 +17,38 @@ namespace Clinic.Infrastructure.Data.Repositories.Operations
             _context = context;
         }
 
-        public async Task<Appointment?> GetByIdAsync(Guid id)
+        public async Task<Appointment?> GetByIdAsync(Guid id, bool includeDeleted = false)
         {
-            return await _context.Appointments
+            var query = _context.Appointments
                 .Include(a => a.Patient)
                 .Include(a => a.Doctor)
                 .Include(a => a.Location)
                 .Include(a => a.Chair)
-                .FirstOrDefaultAsync(a => a.Id == id);
+                .AsQueryable();
+
+            if (includeDeleted)
+            {
+                query = query.IgnoreQueryFilters();
+            }
+
+            return await query.FirstOrDefaultAsync(a => a.Id == id);
         }
 
-        public async Task<IEnumerable<Appointment>> GetAllAsync()
+        public async Task<IEnumerable<Appointment>> GetAllAsync(bool showCancelled = false)
         {
-            return await _context.Appointments
+            var query = _context.Appointments
                 .Include(a => a.Patient)
                 .Include(a => a.Doctor)
                 .Include(a => a.Location)
                 .Include(a => a.Chair)
-                .ToListAsync();
+                .AsQueryable();
+
+            if (showCancelled)
+            {
+                query = query.IgnoreQueryFilters();
+            }
+
+            return await query.ToListAsync();
         }
 
         public void Add(Appointment appointment)

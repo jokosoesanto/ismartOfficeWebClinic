@@ -38,5 +38,7 @@ namespace Clinic.Application.DTOs.Operations
         public string? DoctorName { get; set; }
         public string? LocationName { get; set; }
         public string? ChairName { get; set; }
+
+        public bool IsDeleted { get; set; }
     }
 }

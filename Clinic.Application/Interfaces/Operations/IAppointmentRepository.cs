@@ -7,8 +7,8 @@ namespace Clinic.Application.Interfaces.Operations
 {
     public interface IAppointmentRepository
     {
-        Task<Appointment?> GetByIdAsync(Guid id);
-        Task<IEnumerable<Appointment>> GetAllAsync();
+        Task<Appointment?> GetByIdAsync(Guid id, bool includeDeleted = false);
+        Task<IEnumerable<Appointment>> GetAllAsync(bool showCancelled = false);
         void Add(Appointment appointment);
         void Update(Appointment appointment);
         Task<bool> HasOverlappingAppointmentAsync(Guid doctorId, DateTime date, TimeSpan startTime, TimeSpan endTime, Guid? excludeAppointmentId = null);

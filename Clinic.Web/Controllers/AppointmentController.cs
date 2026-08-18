@@ -37,7 +37,7 @@ namespace Clinic.Web.Controllers
 
         [HttpGet]
         [Authorize(Policy = "Appointment.Index")]
-        public async Task<IActionResult> Index()
+        public async Task<IActionResult> Index([FromQuery] bool showCancelled = false)
         {
             var meta = new UIMetadata
             {
@@ -46,8 +46,9 @@ namespace Clinic.Web.Controllers
                 Mode = RenderingMode.Template
             };
             ViewBag.Meta = meta;
+            ViewBag.ShowCancelled = showCancelled;
 
-            var appointments = await _appointmentService.GetAllAsync();
+            var appointments = await _appointmentService.GetAllAsync(showCancelled);
             return View(appointments);
         }
 
@@ -63,7 +64,7 @@ namespace Clinic.Web.Controllers
             };
             ViewBag.Meta = meta;
 
-            var dto = await _appointmentService.GetByIdAsync(id);
+            var dto = await _appointmentService.GetByIdAsync(id, includeDeleted: true);
             if (dto == null) return NotFound();
 
             return View(dto);

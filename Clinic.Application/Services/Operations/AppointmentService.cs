@@ -154,9 +154,9 @@ namespace Clinic.Application.Services.Operations
             return dto;
         }
 
-        public async Task<IEnumerable<AppointmentDto>> GetAllAsync()
+        public async Task<IEnumerable<AppointmentDto>> GetAllAsync(bool showCancelled = false)
         {
-            var appointments = await _appointmentRepository.GetAllAsync();
+            var appointments = await _appointmentRepository.GetAllAsync(showCancelled);
             return appointments.Select(a => new AppointmentDto
             {
                 Id = a.Id,
@@ -172,13 +172,14 @@ namespace Clinic.Application.Services.Operations
                 StartTime = a.StartTime,
                 EndTime = a.EndTime,
                 Status = a.Status,
-                Notes = a.Notes
+                Notes = a.Notes,
+                IsDeleted = a.IsDeleted
             });
         }
 
-        public async Task<AppointmentDto?> GetByIdAsync(Guid id)
+        public async Task<AppointmentDto?> GetByIdAsync(Guid id, bool includeDeleted = false)
         {
-            var a = await _appointmentRepository.GetByIdAsync(id);
+            var a = await _appointmentRepository.GetByIdAsync(id, includeDeleted);
             if (a == null) return null;
 
             return new AppointmentDto
@@ -196,7 +197,8 @@ namespace Clinic.Application.Services.Operations
                 StartTime = a.StartTime,
                 EndTime = a.EndTime,
                 Status = a.Status,
-                Notes = a.Notes
+                Notes = a.Notes,
+                IsDeleted = a.IsDeleted
             };
         }
 

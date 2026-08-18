@@ -8,8 +8,8 @@ namespace Clinic.Application.Interfaces.Operations
     public interface IAppointmentService
     {
         Task<AppointmentDto> CreateAsync(AppointmentDto dto, Guid userId);
-        Task<IEnumerable<AppointmentDto>> GetAllAsync();
-        Task<AppointmentDto?> GetByIdAsync(Guid id);
+        Task<IEnumerable<AppointmentDto>> GetAllAsync(bool showCancelled = false);
+        Task<AppointmentDto?> GetByIdAsync(Guid id, bool includeDeleted = false);
         Task<AppointmentDto> UpdateAsync(AppointmentDto dto, Guid userId);
         Task DeleteAsync(Guid id, Guid deletedBy);
         Task<IEnumerable<AppointmentDto>> GetAppointmentsByDoctorAndDatesAsync(Guid doctorId, IEnumerable<DateTime> dates);
