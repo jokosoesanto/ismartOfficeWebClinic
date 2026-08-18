@@ -1,9 +1,10 @@
 using System;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 
 namespace Clinic.Application.DTOs.MasterData
 {
-    public class PatientDto
+    public class PatientDto : IValidatableObject
     {
         public Guid? Id { get; set; }
         
@@ -16,7 +17,10 @@ namespace Clinic.Application.DTOs.MasterData
         public string? PassportNumber { get; set; }
         
         // General Tab
+        [Required(ErrorMessage = "Gender is required.")]
         public string? Gender { get; set; }
+        
+        [Required(ErrorMessage = "BirthDate is required.")]
         public DateTime? BirthDate { get; set; }
         public string? BloodType { get; set; }
         public string? Religion { get; set; }
@@ -31,6 +35,7 @@ namespace Clinic.Application.DTOs.MasterData
         public Guid? PhotoFileMetadataId { get; set; }
 
         // Contact Tab
+        [Required(ErrorMessage = "Address is required.")]
         public string? Address { get; set; }
         public string? Province { get; set; }
         public string? City { get; set; }
@@ -53,5 +58,21 @@ namespace Clinic.Application.DTOs.MasterData
         public Guid? HomeClinicId { get; set; }
         public DateTime? RegistrationDate { get; set; }
         public string? Notes { get; set; }
+
+        public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
+        {
+            if (BirthDate.HasValue && BirthDate.Value.Date >= DateTime.Now.Date)
+            {
+                yield return new ValidationResult("BirthDate must be earlier than today.", new[] { nameof(BirthDate) });
+            }
+
+            if (!string.IsNullOrWhiteSpace(Email))
+            {
+                if (!Email.Contains("@") || !Email.Contains("."))
+                {
+                    yield return new ValidationResult("Email is invalid.", new[] { nameof(Email) });
+                }
+            }
+        }
     }
 }

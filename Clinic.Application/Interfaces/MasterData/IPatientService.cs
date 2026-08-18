@@ -19,8 +19,8 @@ namespace Clinic.Application.Interfaces.MasterData
             DateTime? birthDate);
         Task<Patient> CreateAsync(Patient patient, Guid userId);
         Task<Patient> UpdateAsync(Patient patient, Guid userId);
-        Task DeleteAsync(Guid id, Guid deletedBy);
-        
+        Task InactivateAsync(Guid id, Guid updatedBy);
+        Task ReactivateAsync(Guid id, Guid updatedBy);
         // Expose logic to check duplicates before saving
         Task<bool> IsDuplicateCandidateAsync(string? nationalId, string? mobile, string name, DateTime? birthDate);
     }

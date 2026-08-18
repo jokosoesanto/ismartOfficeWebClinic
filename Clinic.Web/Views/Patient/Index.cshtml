@@ -86,9 +86,18 @@
                                     <a href="/Patient/Edit/@p.Id" class="btn btn-sm btn-outline-primary shadow-sm" title="Edit">
                                         <i class="bi bi-pencil"></i>
                                     </a>
-                                    <button type="button" class="btn btn-sm btn-outline-danger shadow-sm ms-1" onclick="deletePatient('@p.Id', '@p.FullName')" title="Delete">
-                                        <i class="bi bi-trash"></i>
-                                    </button>
+                                    @if(p.Status == "Inactive")
+                                    {
+                                        <button type="button" class="btn btn-sm btn-outline-success shadow-sm ms-1" onclick="reactivatePatient('@p.Id', '@p.FullName')" title="Reactivate">
+                                            <i class="bi bi-toggle-off"></i>
+                                        </button>
+                                    }
+                                    else
+                                    {
+                                        <button type="button" class="btn btn-sm btn-outline-secondary shadow-sm ms-1" onclick="inactivatePatient('@p.Id', '@p.FullName')" title="Inactivate">
+                                            <i class="bi bi-toggle-on"></i>
+                                        </button>
+                                    }
                                 </td>
                             </tr>
                         }
@@ -99,16 +108,24 @@
     </div>
 </div>
 
-<form id="deleteForm" method="post" style="display:none;">
+<form id="statusForm" method="post" style="display:none;">
     @Html.AntiForgeryToken()
 </form>
 
 @section Scripts {
 <script>
-    function deletePatient(id, name) {
-        if(confirm('Are you sure you want to delete patient: ' + name + '?')) {
-            var form = document.getElementById('deleteForm');
-            form.action = '/Patient/Delete/' + id;
+    function inactivatePatient(id, name) {
+        if(confirm('Are you sure you want to inactivate patient: ' + name + '?')) {
+            var form = document.getElementById('statusForm');
+            form.action = '/Patient/Inactivate/' + id;
+            form.submit();
+        }
+    }
+
+    function reactivatePatient(id, name) {
+        if(confirm('Are you sure you want to reactivate patient: ' + name + '?')) {
+            var form = document.getElementById('statusForm');
+            form.action = '/Patient/Reactivate/' + id;
             form.submit();
         }
     }

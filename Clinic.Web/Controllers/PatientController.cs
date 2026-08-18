@@ -221,13 +221,23 @@ namespace Clinic.Web.Controllers
             return View(model);
         }
 
-        [HttpPost("Delete/{id}")]
+        [HttpPost("Inactivate/{id}")]
         [Authorize(Policy = "Patient.Delete")]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Delete(Guid id)
+        public async Task<IActionResult> Inactivate(Guid id)
         {
-            await _patientService.DeleteAsync(id, _currentUserService.UserId ?? Guid.Empty);
-            TempData["SuccessMessage"] = "Patient deleted successfully.";
+            await _patientService.InactivateAsync(id, _currentUserService.UserId ?? Guid.Empty);
+            TempData["SuccessMessage"] = "Patient inactivated successfully.";
+            return RedirectToAction(nameof(Index));
+        }
+
+        [HttpPost("Reactivate/{id}")]
+        [Authorize(Policy = "Patient.Edit")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Reactivate(Guid id)
+        {
+            await _patientService.ReactivateAsync(id, _currentUserService.UserId ?? Guid.Empty);
+            TempData["SuccessMessage"] = "Patient reactivated successfully.";
             return RedirectToAction(nameof(Index));
         }
 

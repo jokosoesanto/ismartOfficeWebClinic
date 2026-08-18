@@ -54,6 +54,7 @@ namespace Clinic.Application.UseCases.MasterData
             patient.CreatedAt = DateTime.UtcNow;
             patient.CreatedBy = userId;
             patient.IsDeleted = false;
+            patient.Status = "Active";
 
             await _repository.AddAsync(patient);
             await _unitOfWork.SaveChangesAsync();
@@ -75,14 +76,28 @@ namespace Clinic.Application.UseCases.MasterData
             return patient;
         }
 
-        public async Task DeleteAsync(Guid id, Guid deletedBy)
+        public async Task InactivateAsync(Guid id, Guid updatedBy)
         {
             var patient = await _repository.GetByIdAsync(id);
             if (patient != null)
             {
-                patient.IsDeleted = true;
-                patient.DeletedAt = DateTime.UtcNow;
-                patient.DeletedBy = deletedBy;
+                patient.Status = "Inactive";
+                patient.UpdatedAt = DateTime.UtcNow;
+                patient.UpdatedBy = updatedBy;
+                
+                _repository.Update(patient);
+                await _unitOfWork.SaveChangesAsync();
+            }
+        }
+
+        public async Task ReactivateAsync(Guid id, Guid updatedBy)
+        {
+            var patient = await _repository.GetByIdAsync(id);
+            if (patient != null)
+            {
+                patient.Status = "Active";
+                patient.UpdatedAt = DateTime.UtcNow;
+                patient.UpdatedBy = updatedBy;
                 
                 _repository.Update(patient);
                 await _unitOfWork.SaveChangesAsync();
