@@ -25,6 +25,8 @@ namespace Clinic.Application.DTOs.MasterData
         [StringLength(500, ErrorMessage = "Description cannot exceed 500 characters.")]
         public string? Description { get; set; }
 
+        public string? Color { get; set; }
+
         [Required(ErrorMessage = "Default Price is required.")]
         [Range(0, double.MaxValue, ErrorMessage = "Default Price must be a positive value or zero.")]
         public decimal DefaultPrice { get; set; }

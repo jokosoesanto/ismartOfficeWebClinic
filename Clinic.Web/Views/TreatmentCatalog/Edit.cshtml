@@ -74,6 +74,15 @@
                                 <textarea asp-for="Description" class="form-control shadow-sm bg-light" rows="2"></textarea>
                                 <span asp-validation-for="Description" class="text-danger small"></span>
                             </div>
+
+                            <div class="col-md-6">
+                                <label asp-for="Color" class="form-label fw-semibold">Chart Legend Color</label>
+                                <div class="d-flex align-items-center gap-2">
+                                    <input asp-for="Color" type="color" class="form-control form-control-color shadow-sm bg-light p-1" style="width: 50px;" title="Choose color" />
+                                    <input type="text" class="form-control shadow-sm bg-light" id="colorText" placeholder="#000000 or leave empty for auto" onchange="document.getElementById('Color').value = this.value || '#000000';" />
+                                </div>
+                                <span asp-validation-for="Color" class="text-danger small"></span>
+                            </div>
                         </div>
 
                         <h6 class="fw-bold text-primary mb-3 border-bottom pb-2">Clinical Rules</h6>
@@ -165,6 +174,18 @@
                     $('#RequiresSurface').prop('checked', false);
                 }
             });
+            
+            $('#Color').change(function () {
+                $('#colorText').val($(this).val());
+            });
+            
+            // Initialize color text if Color is set
+            if ($('#Color').val()) {
+                $('#colorText').val($('#Color').val());
+            } else {
+                $('#Color').val('#6c757d');
+                $('#colorText').val(''); // Show placeholder indicating it will be auto
+            }
         });
     </script>
 }

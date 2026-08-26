@@ -35,9 +35,11 @@ namespace Clinic.Infrastructure.Data
         public DbSet<Clinic.Domain.Entities.MasterData.TreatmentSubCategory> TreatmentSubCategories { get; set; } = null!;
         public DbSet<Clinic.Domain.Entities.MasterData.TreatmentCatalog> TreatmentCatalogs { get; set; } = null!;
         public DbSet<Clinic.Domain.Entities.MasterData.Insurance> Insurances { get; set; } = null!;
+        public DbSet<Clinic.Domain.Entities.MasterData.ConditionMaster> ConditionMasters { get; set; } = null!;
         public DbSet<Clinic.Domain.Entities.Operations.Appointment> Appointments { get; set; } = null!;
         public DbSet<Clinic.Domain.Entities.Operations.DoctorLeaveRequest> DoctorLeaveRequests { get; set; } = null!;
         public DbSet<Clinic.Domain.Entities.Operations.DoctorLeaveDate> DoctorLeaveDates { get; set; } = null!;
+        public DbSet<Clinic.Domain.Entities.Operations.AppointmentTreatment> AppointmentTreatments { get; set; } = null!;
 
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -52,6 +54,8 @@ namespace Clinic.Infrastructure.Data
             modelBuilder.ApplyConfiguration(new Configurations.AppointmentConfiguration());
             modelBuilder.ApplyConfiguration(new Configurations.DoctorLeaveRequestConfiguration());
             modelBuilder.ApplyConfiguration(new Configurations.DoctorLeaveDateConfiguration());
+            modelBuilder.ApplyConfiguration(new Configurations.AppointmentTreatmentConfiguration());
+            modelBuilder.ApplyConfiguration(new Configurations.ConditionMasterConfiguration());
 
 
             modelBuilder.Entity<Clinic.Domain.Entities.Configuration.AppConfiguration>(entity =>
@@ -91,7 +95,7 @@ namespace Clinic.Infrastructure.Data
             modelBuilder.Entity<Clinic.Domain.Entities.MasterData.TreatmentSubCategory>().HasQueryFilter(e => !e.IsDeleted);
             modelBuilder.Entity<Clinic.Domain.Entities.MasterData.TreatmentCatalog>().HasQueryFilter(e => !e.IsDeleted);
             modelBuilder.Entity<Clinic.Domain.Entities.MasterData.Insurance>().HasQueryFilter(e => !e.IsDeleted);
-
+            modelBuilder.Entity<Clinic.Domain.Entities.MasterData.ConditionMaster>().HasQueryFilter(e => !e.IsDeleted);
 
             // Explicitly set max length for string to avoid NTEXT/TEXT
             modelBuilder.Entity<SystemSetting>(entity =>

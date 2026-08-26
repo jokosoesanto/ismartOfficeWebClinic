@@ -1,6 +1,6 @@
-@model Clinic.Application.UI.UIMetadata
+@model IEnumerable<Clinic.Domain.Entities.MasterData.Patient>
 @{
-    
+    var metadata = ViewBag.Metadata as Clinic.Application.UI.UIMetadata;
 }
 
 <!-- Medical Record Dashboard Template -->
@@ -23,63 +23,72 @@
             </div>
         </div>
         <div class="card-body">
-            <div class="table-responsive">
-                <table class="table table-hover align-middle">
-                    <thead class="table-light">
-                        <tr>
-                            <th>MRN</th>
-                            <th>Patient Name</th>
-                            <th>DOB / Age</th>
-                            <th>Last Visit</th>
-                            <th>Last Doctor</th>
-                            <th class="text-center">Status</th>
-                            <th class="text-end">Action</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td class="fw-bold text-primary">MR-2601001</td>
-                            <td>
-                                <div class="d-flex align-items-center">
-                                    <div class="bg-primary text-white rounded-circle d-flex justify-content-center align-items-center me-2" style="width: 32px; height: 32px; font-size: 0.8rem;">JS</div>
-                                    <span class="fw-bold">John Smith</span>
-                                </div>
-                            </td>
-                            <td>12 May 1990 (36y)</td>
-                            <td>31 Jul 2026</td>
-                            <td>Dr. Emily Chen</td>
-                            <td class="text-center"><span class="badge bg-success">Active</span></td>
-                            <td class="text-end">
-                                <a href="/MedicalRecord/Chart/1" class="btn btn-sm btn-primary"><i class="bi bi-folder2-open me-1"></i> View Chart</a>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td class="fw-bold text-primary">MR-2601015</td>
-                            <td>
-                                <div class="d-flex align-items-center">
-                                    <div class="bg-info text-white rounded-circle d-flex justify-content-center align-items-center me-2" style="width: 32px; height: 32px; font-size: 0.8rem;">JS</div>
-                                    <span class="fw-bold">Jane Smith</span>
-                                </div>
-                            </td>
-                            <td>22 Aug 1992 (33y)</td>
-                            <td>25 Jul 2026</td>
-                            <td>Dr. Alan</td>
-                            <td class="text-center"><span class="badge bg-secondary">Archived</span></td>
-                            <td class="text-end">
-                                <a href="/MedicalRecord/Chart/2" class="btn btn-sm btn-primary"><i class="bi bi-folder2-open me-1"></i> View Chart</a>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-            
-            <!-- Empty State Placeholder (hidden) -->
-            <div id="emptyState" class="d-none text-center p-5 text-muted">
-                <i class="bi bi-search display-1 mb-3 d-block text-secondary"></i>
-                <h4 class="fw-bold">No Records Found</h4>
-                <p>Try adjusting your search criteria or filter.</p>
-            </div>
-            
+            @if (Model != null && Model.Any())
+            {
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th>MRN</th>
+                                <th>Patient Name</th>
+                                <th>DOB / Age</th>
+                                <th>Last Visit</th>
+                                <th>Last Doctor</th>
+                                <th class="text-center">Status</th>
+                                <th class="text-end">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var patient in Model)
+                            {
+                                var initials = "";
+                                if (!string.IsNullOrWhiteSpace(patient.FullName))
+                                {
+                                    var parts = patient.FullName.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+                                    initials = string.Join("", parts.Take(2).Select(s => s[0])).ToUpper();
+                                }
+                                
+                                var ageStr = "-";
+                                if (patient.BirthDate.HasValue)
+                                {
+                                    var today = DateTime.Today;
+                                    var age = today.Year - patient.BirthDate.Value.Year;
+                                    if (patient.BirthDate.Value.Date > today.AddYears(-age)) age--;
+                                    ageStr = $"{patient.BirthDate.Value:dd MMM yyyy} ({age}y)";
+                                }
+
+                                var badgeClass = patient.IsDeleted ? "bg-secondary" : "bg-success";
+                                var statusText = patient.IsDeleted ? "Archived" : (patient.Status ?? "Active");
+
+                                <tr>
+                                    <td class="fw-bold text-primary">@patient.MRN</td>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <div class="bg-primary text-white rounded-circle d-flex justify-content-center align-items-center me-2" style="width: 32px; height: 32px; font-size: 0.8rem;">@initials</div>
+                                            <span class="fw-bold">@patient.FullName</span>
+                                        </div>
+                                    </td>
+                                    <td>@ageStr</td>
+                                    <td>-</td>
+                                    <td>-</td>
+                                    <td class="text-center"><span class="badge @badgeClass">@statusText</span></td>
+                                    <td class="text-end">
+                                        <a href="/MedicalRecord/Chart/@patient.Id" class="btn btn-sm btn-primary"><i class="bi bi-folder2-open me-1"></i> View Chart</a>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+            else
+            {
+                <div id="emptyState" class="text-center p-5 text-muted">
+                    <i class="bi bi-search display-1 mb-3 d-block text-secondary"></i>
+                    <h4 class="fw-bold">No Records Found</h4>
+                    <p>Try adjusting your search criteria or filter.</p>
+                </div>
+            }
         </div>
     </div>
 </div>

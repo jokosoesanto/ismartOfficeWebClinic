@@ -24,6 +24,7 @@ namespace Clinic.Application.DTOs.MasterData
         public bool RequiresSurface { get; set; }
         
         public string? Description { get; set; }
+        public string? Color { get; set; }
         public bool IsActive { get; set; }
     }
 }

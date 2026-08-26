@@ -12,6 +12,9 @@
         <div>
             @if (!Model.IsDeleted)
             {
+                <a href="/MedicalRecord/Create/@Model.Id" class="btn btn-success shadow-sm me-2">
+                    <i class="bi bi-journal-medical me-2"></i>Medical Record
+                </a>
                 <a href="/Appointment/Edit/@Model.Id" class="btn btn-primary shadow-sm me-2">
                     <i class="bi bi-pencil me-2"></i>Edit Appointment
                 </a>

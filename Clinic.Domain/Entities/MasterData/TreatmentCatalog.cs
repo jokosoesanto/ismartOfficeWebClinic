@@ -26,6 +26,8 @@ namespace Clinic.Domain.Entities.MasterData
         
         public string? Description { get; set; }
         
+        public string? Color { get; set; }
+        
         public bool IsActive { get; set; } = true;
         public bool IsDeleted { get; set; } = false;
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;

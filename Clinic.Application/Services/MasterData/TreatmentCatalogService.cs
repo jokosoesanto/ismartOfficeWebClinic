@@ -69,6 +69,10 @@ namespace Clinic.Application.Services.MasterData
 
             var codeResult = await _numberSequenceService.GenerateSequenceAsync("TRT");
 
+            string color = string.IsNullOrWhiteSpace(dto.Color) 
+                ? GenerateDeterministicColor(dto.TreatmentName) 
+                : dto.Color;
+
             var entity = new TreatmentCatalog
             {
                 Id = Guid.NewGuid(),
@@ -78,6 +82,7 @@ namespace Clinic.Application.Services.MasterData
                 ServiceTypeId = dto.ServiceTypeId,
                 TreatmentName = dto.TreatmentName,
                 Description = dto.Description,
+                Color = color,
                 DefaultPrice = dto.DefaultPrice,
                 DurationInMinutes = dto.DurationInMinutes,
                 RequiresTooth = dto.RequiresTooth,
@@ -115,6 +120,9 @@ namespace Clinic.Application.Services.MasterData
             existing.ServiceTypeId = dto.ServiceTypeId;
             existing.TreatmentName = dto.TreatmentName;
             existing.Description = dto.Description;
+            existing.Color = string.IsNullOrWhiteSpace(dto.Color) 
+                ? GenerateDeterministicColor(dto.TreatmentName) 
+                : dto.Color;
             existing.DefaultPrice = dto.DefaultPrice;
             existing.DurationInMinutes = dto.DurationInMinutes;
             existing.RequiresTooth = dto.RequiresTooth;
@@ -163,6 +171,23 @@ namespace Clinic.Application.Services.MasterData
                 throw new InvalidOperationException("Service Type is invalid or inactive.");
         }
 
+        private static string GenerateDeterministicColor(string input)
+        {
+            if (string.IsNullOrEmpty(input)) return "#6c757d"; // default gray
+            int hash = 0;
+            foreach (char c in input)
+            {
+                hash = c + ((hash << 5) - hash);
+            }
+            string color = "#";
+            for (int i = 0; i < 3; i++)
+            {
+                int value = (hash >> (i * 8)) & 0xFF;
+                color += ("00" + value.ToString("X2")).Substring(("00" + value.ToString("X2")).Length - 2);
+            }
+            return color;
+        }
+
         private static TreatmentCatalogDto MapToDto(TreatmentCatalog entity)
         {
             return new TreatmentCatalogDto
@@ -181,6 +206,7 @@ namespace Clinic.Application.Services.MasterData
                 RequiresTooth = entity.RequiresTooth,
                 RequiresSurface = entity.RequiresSurface,
                 Description = entity.Description,
+                Color = string.IsNullOrWhiteSpace(entity.Color) ? GenerateDeterministicColor(entity.TreatmentName) : entity.Color,
                 IsActive = entity.IsActive
             };
         }

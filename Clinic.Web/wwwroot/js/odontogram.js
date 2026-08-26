@@ -9,15 +9,17 @@ class Odontogram {
         this.onSelectSurface = null; // callback
 
         this.colors = {
-            'Caries': '#dc3545',
-            'Filling': '#0dcaf0',
-            'Crown': '#ffc107',
-            'Missing': '#6c757d',
-            'RCT': '#198754',
             'Default': '#ffffff',
             'Hover': '#e9ecef',
             'Selected': '#0d6efd'
         };
+
+        if (window.ConditionColors) {
+            Object.assign(this.colors, window.ConditionColors);
+        }
+        if (window.TreatmentColors) {
+            Object.assign(this.colors, window.TreatmentColors);
+        }
 
         this.init();
     }
@@ -31,11 +33,69 @@ class Odontogram {
         this.render();
     }
 
-    createToothSVG(id, title) {
-        const size = 60;
-        const o = 15; // offset for inner square
-        const innerSize = size - 2 * o;
+    getToothType(id) {
+        const molars = [1,2,3,14,15,16,17,18,19,30,31,32, 'A','B','I','J','K','L','S','T'];
+        const premolars = [4,5,12,13,20,21,28,29];
+        const canines = [6,11,22,27, 'C','H','M','R'];
+        if (molars.includes(id)) return 'Molar';
+        if (premolars.includes(id)) return 'Premolar';
+        if (canines.includes(id)) return 'Canine';
+        return 'Incisor';
+    }
+
+    getClinicalSurface(toothId, svgSurface) {
+        const ur = [1,2,3,4,5,6,7,8, 'A','B','C','D','E'];
+        const ul = [9,10,11,12,13,14,15,16, 'F','G','H','I','J'];
+        const lr = [32,31,30,29,28,27,26,25, 'T','S','R','Q','P'];
         
+        let isUpper = ur.includes(toothId) || ul.includes(toothId);
+        let isRight = ur.includes(toothId) || lr.includes(toothId);
+
+        if (svgSurface === 'C') return 'O'; // Occlusal/Incisal
+        if (svgSurface === 'T') return isUpper ? 'B' : 'P'; // Top is Buccal for Upper, Palatal for Lower
+        if (svgSurface === 'B') return isUpper ? 'P' : 'B'; // Bottom is Palatal for Upper, Buccal for Lower
+        if (svgSurface === 'L') return isRight ? 'D' : 'M'; // Left is Distal for Right jaw, Mesial for Left jaw
+        if (svgSurface === 'R') return isRight ? 'M' : 'D'; // Right is Mesial for Right jaw, Distal for Left jaw
+        return svgSurface;
+    }
+
+    createToothSVG(id, title) {
+        const type = this.getToothType(id);
+        const size = 60;
+        
+        let W, H;
+        if (type === 'Molar') { W = 42; H = 42; }
+        else if (type === 'Premolar') { W = 32; H = 38; }
+        else if (type === 'Canine') { W = 28; H = 38; }
+        else { W = 24; H = 36; }
+
+        const cx = 30, cy = 30;
+        const dx = W/2, dy = H/2;
+        const idx = dx * 0.45, idy = dy * 0.45;
+
+        const tl = `${cx - dx},${cy - dy}`;
+        const tr = `${cx + dx},${cy - dy}`;
+        const bl = `${cx - dx},${cy + dy}`;
+        const br = `${cx + dx},${cy + dy}`;
+
+        const itl = `${cx - idx},${cy - idy}`;
+        const itr = `${cx + idx},${cy - idy}`;
+        const ibl = `${cx - idx},${cy + idy}`;
+        const ibr = `${cx + idx},${cy + idy}`;
+
+        const topQ = `${cx},${cy - dy - 6}`;
+        const botQ = `${cx},${cy + dy + 6}`;
+        const leftQ = `${cx - dx - 6},${cy}`;
+        const rightQ = `${cx + dx + 6},${cy}`;
+
+        const surfaces = {
+            'T': `M ${tl} Q ${topQ} ${tr} L ${itr} L ${itl} Z`,
+            'B': `M ${bl} Q ${botQ} ${br} L ${ibr} L ${ibl} Z`,
+            'L': `M ${tl} Q ${leftQ} ${bl} L ${ibl} L ${itl} Z`,
+            'R': `M ${tr} Q ${rightQ} ${br} L ${ibr} L ${itr} Z`,
+            'C': `M ${itl} L ${itr} L ${ibr} L ${ibl} Z`
+        };
+
         const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
         svg.setAttribute("width", size);
         svg.setAttribute("height", size);
@@ -44,45 +104,24 @@ class Odontogram {
         svg.style.margin = "4px";
         svg.setAttribute("data-tooth", id);
 
-        // Define surfaces: T (Top), B (Bottom), L (Left), R (Right), C (Center)
-        const surfaces = {
-            'T': `0,0 ${size},0 ${size-o},${o} ${o},${o}`,
-            'B': `0,${size} ${size},${size} ${size-o},${size-o} ${o},${size-o}`,
-            'L': `0,0 ${o},${o} ${o},${size-o} 0,${size}`,
-            'R': `${size},0 ${size-o},${o} ${size-o},${size-o} ${size},${size}`
-        };
-
         const g = document.createElementNS("http://www.w3.org/2000/svg", "g");
         
-        for (const [key, points] of Object.entries(surfaces)) {
-            const polygon = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
-            polygon.setAttribute("points", points);
-            polygon.setAttribute("fill", this.getSurfaceColor(id, key));
-            polygon.setAttribute("stroke", "#6c757d");
-            polygon.setAttribute("stroke-width", "1");
-            polygon.setAttribute("data-surface", key);
+        for (const [key, pathData] of Object.entries(surfaces)) {
+            const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+            path.setAttribute("d", pathData);
+            path.setAttribute("fill", this.getSurfaceColor(id, key));
+            path.setAttribute("stroke", "#adb5bd");
+            path.setAttribute("stroke-width", "1.5");
+            path.setAttribute("stroke-linejoin", "round");
+            path.setAttribute("data-surface", key);
             
-            polygon.addEventListener("mouseover", (e) => this.handleHover(e, true));
-            polygon.addEventListener("mouseout", (e) => this.handleHover(e, false));
-            polygon.addEventListener("click", (e) => this.handleClick(id, key));
-            g.appendChild(polygon);
+            path.addEventListener("mouseover", (e) => this.handleHover(e, true));
+            path.addEventListener("mouseout", (e) => this.handleHover(e, false));
+            path.addEventListener("click", (e) => this.handleClick(id, key));
+            g.appendChild(path);
         }
 
-        // Center square
-        const rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
-        rect.setAttribute("x", o);
-        rect.setAttribute("y", o);
-        rect.setAttribute("width", innerSize);
-        rect.setAttribute("height", innerSize);
-        rect.setAttribute("fill", this.getSurfaceColor(id, 'C'));
-        rect.setAttribute("stroke", "#6c757d");
-        rect.setAttribute("stroke-width", "1");
-        rect.setAttribute("data-surface", 'C');
 
-        rect.addEventListener("mouseover", (e) => this.handleHover(e, true));
-        rect.addEventListener("mouseout", (e) => this.handleHover(e, false));
-        rect.addEventListener("click", (e) => this.handleClick(id, 'C'));
-        g.appendChild(rect);
 
         // Add text label below or above based on jaw
         svg.appendChild(g);
@@ -127,7 +166,8 @@ class Odontogram {
         this.selectedSurface = surfaceId;
         this.render(); // Re-render to show selection
         if (this.onSelectSurface) {
-            this.onSelectSurface(toothId, surfaceId);
+            const clinicalSurface = this.getClinicalSurface(toothId, surfaceId);
+            this.onSelectSurface(toothId, clinicalSurface);
         }
     }
 
@@ -161,6 +201,61 @@ class Odontogram {
     clearSelection() {
         this.selectedTooth = null;
         this.selectedSurface = null;
+        this.render();
+    }
+
+    getSvgSurface(toothId, clinicalSurface) {
+        if (!clinicalSurface) return 'C';
+        const ur = [1,2,3,4,5,6,7,8, 'A','B','C','D','E'];
+        const ul = [9,10,11,12,13,14,15,16, 'F','G','H','I','J'];
+        const lr = [32,31,30,29,28,27,26,25, 'T','S','R','Q','P'];
+        
+        // Use loose equality to support both string and int toothIds
+        let isUpper = ur.some(id => id == toothId) || ul.some(id => id == toothId);
+        let isRight = ur.some(id => id == toothId) || lr.some(id => id == toothId);
+
+        if (clinicalSurface === 'O' || clinicalSurface === 'I') return 'C';
+        if (clinicalSurface === 'B') return isUpper ? 'T' : 'B';
+        if (clinicalSurface === 'P' || clinicalSurface === 'L') return isUpper ? 'B' : 'T';
+        if (clinicalSurface === 'D') return isRight ? 'L' : 'R';
+        if (clinicalSurface === 'M') return isRight ? 'R' : 'L';
+        return 'C';
+    }
+
+    loadState(treatments) {
+        if (!treatments || !Array.isArray(treatments)) return;
+        
+        treatments.forEach(t => {
+            if (t.siteNumber && t.siteDetail) {
+                // Determine if tooth is int or string
+                const toothId = isNaN(t.siteNumber) ? t.siteNumber : parseInt(t.siteNumber);
+                const svgSurface = this.getSvgSurface(toothId, t.siteDetail);
+                const key = `${toothId}_${svgSurface}`;
+                
+                let resolvedColor = this.colors['Missing']; // default
+                if (t.treatmentItemName) {
+                    // Look up from historical metadata dictionary FIRST
+                    if (window.TreatmentColors && window.TreatmentColors[t.treatmentItemName]) {
+                        resolvedColor = window.TreatmentColors[t.treatmentItemName];
+                    } else {
+                        // Fallback to legacy colors if not found in dictionary
+                        for (const c in this.colors) {
+                            if (t.treatmentItemName.toLowerCase().includes(c.toLowerCase())) {
+                                resolvedColor = this.colors[c];
+                                break;
+                            }
+                        }
+                    }
+                }
+                
+                this.state[key] = {
+                    type: 'entry',
+                    code: t.treatmentItemName || 'Treatment',
+                    color: resolvedColor
+                };
+            }
+        });
+        
         this.render();
     }
 

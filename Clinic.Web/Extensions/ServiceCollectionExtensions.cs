@@ -45,9 +45,11 @@ namespace Clinic.Web.Extensions
             services.AddScoped<ITreatmentCategoryService, TreatmentCategoryService>();
             services.AddScoped<ITreatmentSubCategoryService, Clinic.Application.Services.MasterData.TreatmentSubCategoryService>();
             services.AddScoped<ITreatmentCatalogService, Clinic.Application.Services.MasterData.TreatmentCatalogService>();
+            services.AddScoped<IConditionMasterService, Clinic.Application.Services.ConditionMasterService>();
             services.AddScoped<IInsuranceService, Clinic.Application.Services.MasterData.InsuranceService>();
             services.AddScoped<IAppointmentService, Clinic.Application.Services.Operations.AppointmentService>();
             services.AddScoped<IDoctorLeaveRequestService, Clinic.Application.Services.Operations.DoctorLeaveRequestService>();
+            services.AddScoped<Clinic.Application.Interfaces.Operations.IAppointmentTreatmentService, Clinic.Application.UseCases.Operations.AppointmentTreatmentService>();
 
             return services;
         }
@@ -76,12 +78,13 @@ namespace Clinic.Web.Extensions
             services.AddScoped<ITreatmentSubCategoryRepository, TreatmentSubCategoryRepository>();
             services.AddScoped<ITreatmentCatalogRepository, TreatmentCatalogRepository>();
             services.AddScoped<IInsuranceRepository, Clinic.Infrastructure.Repositories.MasterData.InsuranceRepository>();
+            services.AddScoped<Clinic.Application.Interfaces.MasterData.IConditionMasterRepository, Clinic.Infrastructure.Repositories.MasterData.ConditionMasterRepository>();
 
             // Operations Repositories
             services.AddScoped<IScheduleBoardRepository, ScheduleBoardRepository>();
             services.AddScoped<IAppointmentRepository, Clinic.Infrastructure.Data.Repositories.Operations.AppointmentRepository>();
             services.AddScoped<IDoctorLeaveRequestRepository, Clinic.Infrastructure.Data.Repositories.Operations.DoctorLeaveRequestRepository>();
-
+            services.AddScoped<Clinic.Application.Interfaces.Repositories.Operations.IAppointmentTreatmentRepository, Clinic.Infrastructure.Repositories.Operations.AppointmentTreatmentRepository>();
             // System/Config Repositories
             services.AddScoped<INumberSequenceRepository, NumberSequenceRepository>();
             services.AddScoped<IAppConfigurationRepository, AppConfigurationRepository>();

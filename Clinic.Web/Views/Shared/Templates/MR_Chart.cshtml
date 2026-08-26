@@ -1,6 +1,11 @@
-@model Clinic.Application.UI.UIMetadata
+@model Clinic.Domain.Entities.MasterData.Patient
 @{
-    
+    var metadata = ViewBag.Metadata as Clinic.Application.UI.UIMetadata;
+    var initials = string.IsNullOrWhiteSpace(Model.FullName) ? "" : string.Join("", Model.FullName.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries).Take(2).Select(s => s[0])).ToUpper();
+    var age = Model.BirthDate.HasValue ? (int)((DateTime.Now - Model.BirthDate.Value).TotalDays / 365.2425) : 0;
+    var ageText = Model.BirthDate.HasValue ? $"{age} Years Old" : "Age Unknown";
+    var genderText = string.IsNullOrWhiteSpace(Model.Gender) ? "Unknown" : Model.Gender;
+    var bloodTypeText = string.IsNullOrWhiteSpace(Model.BloodType) ? "Unknown" : Model.BloodType;
 }
 
 <!-- Comprehensive Medical Record Template -->
@@ -17,15 +22,15 @@
     <div class="card shadow-sm border-0 border-start border-primary border-5 mb-4">
         <div class="card-body d-flex align-items-center justify-content-between">
             <div class="d-flex align-items-center">
-                <div class="bg-primary text-white rounded-circle d-flex justify-content-center align-items-center me-3" style="width: 60px; height: 60px; font-size: 1.2rem;">JS</div>
+                <div class="bg-primary text-white rounded-circle d-flex justify-content-center align-items-center me-3" style="width: 60px; height: 60px; font-size: 1.2rem;">@initials</div>
                 <div>
-                    <h4 class="mb-1 fw-bold">John Smith <span class="badge bg-secondary ms-2 fs-6">PT-2601001</span></h4>
-                    <span class="text-muted"><i class="bi bi-person-fill"></i> 36 Years Old, Male | <i class="bi bi-calendar-event"></i> Last Visit: 15 Jul 2026 | <i class="bi bi-heart-pulse"></i> Blood Type: O+</span>
+                    <h4 class="mb-1 fw-bold">@Model.FullName <span class="badge bg-secondary ms-2 fs-6">@Model.MRN</span></h4>
+                    <span class="text-muted"><i class="bi bi-person-fill"></i> @ageText, @genderText | <i class="bi bi-calendar-event"></i> Last Visit: (No Record) | <i class="bi bi-heart-pulse"></i> Blood Type: @bloodTypeText</span>
                 </div>
             </div>
             <div class="text-end">
-                <span class="badge bg-danger mb-2"><i class="bi bi-exclamation-triangle-fill me-1"></i> Allergy: Penicillin</span><br>
-                <span class="badge bg-info text-dark"><i class="bi bi-shield-check me-1"></i> Insurance: BlueCross Active</span>
+                <span class="badge bg-danger mb-2"><i class="bi bi-exclamation-triangle-fill me-1"></i> Allergy: (No Record)</span><br>
+                <span class="badge bg-info text-dark"><i class="bi bi-shield-check me-1"></i> Insurance: (No Record)</span>
             </div>
         </div>
     </div>
@@ -65,19 +70,33 @@
                         <!-- Odontogram Toolbar -->
                         <div class="bg-light border-top border-bottom p-2 mt-3 d-flex justify-content-between align-items-center">
                             <div class="d-flex gap-2">
-                                <select id="selCondition" class="form-select form-select-sm w-auto">
+                                <select id="selCondition" class="form-select w-auto">
                                     <option value="" disabled selected>-- Select Condition --</option>
-                                    <option value="Caries" data-color="#dc3545">Caries (Decay)</option>
-                                    <option value="Missing" data-color="#6c757d">Missing Tooth</option>
-                                    <option value="Fracture" data-color="#fd7e14">Fracture</option>
+                                    @if (ViewBag.Conditions != null)
+                                    {
+                                        foreach (var c in ViewBag.Conditions)
+                                        {
+                                            if (c.IsActive)
+                                            {
+                                                <option value="@c.ConditionName" data-color="@c.Color">@c.ConditionName</option>
+                                            }
+                                        }
+                                    }
                                 </select>
-                                <select id="selTreatment" class="form-select form-select-sm w-auto">
+                                <select id="selTreatment" class="form-select w-auto">
                                     <option value="" disabled selected>-- Select Treatment --</option>
-                                    <option value="Filling" data-color="#0dcaf0">Composite Filling</option>
-                                    <option value="RCT" data-color="#198754">Root Canal</option>
-                                    <option value="Crown" data-color="#ffc107">Crown</option>
+                                    @if (ViewBag.Treatments != null)
+                                    {
+                                        foreach (var t in ViewBag.Treatments)
+                                        {
+                                            if (t.IsActive)
+                                            {
+                                                <option value="@t.TreatmentName" data-color="@t.Color">@t.TreatmentName</option>
+                                            }
+                                        }
+                                    }
                                 </select>
-                                <button class="btn btn-sm btn-primary" onclick="applySelection()"><i class="bi bi-check-circle me-1"></i>Apply</button>
+                                <button class="btn btn-primary" onclick="applySelection()"><i class="bi bi-check-circle me-1"></i>Apply</button>
                             </div>
                             <div>
                                 <button class="btn btn-sm btn-outline-secondary" onclick="odo.undo()"><i class="bi bi-arrow-counterclockwise"></i> Undo</button>
@@ -90,12 +109,29 @@
                         </div>
 
                         <!-- Legend -->
-                        <div class="card-footer bg-white border-top-0 d-flex flex-wrap gap-3 pb-4">
-                            <span class="small"><span class="d-inline-block rounded-circle me-1" style="width:10px; height:10px; background-color:#dc3545;"></span>Caries</span>
-                            <span class="small"><span class="d-inline-block rounded-circle me-1" style="width:10px; height:10px; background-color:#0dcaf0;"></span>Filling</span>
-                            <span class="small"><span class="d-inline-block rounded-circle me-1" style="width:10px; height:10px; background-color:#198754;"></span>RCT</span>
-                            <span class="small"><span class="d-inline-block rounded-circle me-1" style="width:10px; height:10px; background-color:#ffc107;"></span>Crown</span>
-                            <span class="small"><span class="d-inline-block rounded-circle me-1" style="width:10px; height:10px; background-color:#6c757d;"></span>Missing</span>
+                        <div class="card-footer bg-white border-top-0 d-flex flex-wrap gap-3 pb-4" id="odontogramLegend">
+                            <span class="small fw-bold text-danger">Conditions:</span>
+                            @if (ViewBag.Conditions != null)
+                            {
+                                foreach (var c in ViewBag.Conditions)
+                                {
+                                    if (c.IsActive)
+                                    {
+                                        <span class="small"><span class="d-inline-block rounded-circle me-1" style="width:10px; height:10px; background-color:@c.Color;"></span>@c.ConditionName</span>
+                                    }
+                                }
+                            }
+                            <span class="small fw-bold text-primary ms-3">Treatments:</span>
+                            @if (ViewBag.Treatments != null)
+                            {
+                                foreach (var t in ViewBag.Treatments)
+                                {
+                                    if (t.IsActive)
+                                    {
+                                        <span class="small"><span class="d-inline-block rounded-circle me-1" style="width:10px; height:10px; background-color:@t.Color;"></span>@t.TreatmentName</span>
+                                    }
+                                }
+                            }
                         </div>
                     </div>
                 </div>
@@ -342,6 +378,26 @@
 
 <script src="~/js/odontogram.js"></script>
 <script>
+    window.TreatmentColors = {
+        @if (ViewBag.Treatments != null)
+        {
+            foreach (var t in ViewBag.Treatments)
+            {
+                @Html.Raw($"'{t.TreatmentName}': '{t.Color}',\n")
+            }
+        }
+    };
+    
+    window.ConditionColors = {
+        @if (ViewBag.Conditions != null)
+        {
+            foreach (var c in ViewBag.Conditions)
+            {
+                @Html.Raw($"'{c.ConditionName}': '{c.Color}',\n")
+            }
+        }
+    };
+
     let odo;
     document.addEventListener("DOMContentLoaded", function () {
         odo = new Odontogram("odontogramContainer");

@@ -3,6 +3,7 @@ using System;
 using Clinic.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -10,9 +11,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Clinic.Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260824120110_AddTreatmentCatalogColor")]
+    partial class AddTreatmentCatalogColor
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "10.0.10");
@@ -460,90 +463,6 @@ namespace Clinic.Infrastructure.Migrations
                     b.HasIndex("LocationId");
 
                     b.ToTable("Chairs");
-                });
-
-            modelBuilder.Entity("Clinic.Domain.Entities.MasterData.ConditionMaster", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("Color")
-                        .IsRequired()
-                        .HasMaxLength(7)
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("ConditionName")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("TEXT");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("TEXT");
-
-                    b.Property<Guid?>("CreatedBy")
-                        .HasColumnType("TEXT");
-
-                    b.Property<DateTime?>("DeletedAt")
-                        .HasColumnType("TEXT");
-
-                    b.Property<Guid?>("DeletedBy")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("Description")
-                        .HasMaxLength(500)
-                        .HasColumnType("TEXT");
-
-                    b.Property<int>("DisplayOrder")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("TEXT");
-
-                    b.Property<Guid?>("UpdatedBy")
-                        .HasColumnType("TEXT");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("ConditionMasters", (string)null);
-
-                    b.HasData(
-                        new
-                        {
-                            Id = new Guid("00000000-0000-0000-0000-000000000001"),
-                            Color = "#dc3545",
-                            ConditionName = "Caries",
-                            CreatedAt = new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Utc),
-                            DisplayOrder = 1,
-                            IsActive = true,
-                            IsDeleted = false
-                        },
-                        new
-                        {
-                            Id = new Guid("00000000-0000-0000-0000-000000000002"),
-                            Color = "#6c757d",
-                            ConditionName = "Missing",
-                            CreatedAt = new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Utc),
-                            DisplayOrder = 2,
-                            IsActive = true,
-                            IsDeleted = false
-                        },
-                        new
-                        {
-                            Id = new Guid("00000000-0000-0000-0000-000000000003"),
-                            Color = "#fd7e14",
-                            ConditionName = "Fracture",
-                            CreatedAt = new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Utc),
-                            DisplayOrder = 3,
-                            IsActive = true,
-                            IsDeleted = false
-                        });
                 });
 
             modelBuilder.Entity("Clinic.Domain.Entities.MasterData.Doctor", b =>
