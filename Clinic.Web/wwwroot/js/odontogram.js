@@ -148,8 +148,15 @@ class Odontogram {
 
     getSurfaceColor(toothId, surfaceId) {
         const key = `${toothId}_${surfaceId}`;
-        if (this.selectedTooth === toothId && this.selectedSurface === surfaceId) return this.colors['Selected'];
-        if (this.state[key]) return this.colors[this.state[key].code] || this.state[key].color;
+        if (this.selectedTooth == toothId && this.selectedSurface == surfaceId) return this.colors['Selected'];
+        
+        if (this.state[key]) {
+            let entries = Array.isArray(this.state[key]) ? this.state[key] : [this.state[key]];
+            if (entries.length > 0) {
+                let latest = entries[entries.length - 1];
+                return this.colors[latest.code] || latest.color;
+            }
+        }
         return this.colors['Default'];
     }
 
@@ -179,15 +186,44 @@ class Odontogram {
         // Save history for undo
         this.history.push(JSON.stringify(this.state));
         
-        this.state[key] = {
+        if (!this.state[key]) {
+            this.state[key] = [];
+        } else if (!Array.isArray(this.state[key])) {
+            this.state[key] = [this.state[key]];
+        }
+        
+        // Remove existing entry of the same code if present to update it (move to end)
+        this.state[key] = this.state[key].filter(x => x.code !== conditionOrTreatment);
+        
+        this.state[key].push({
             type: 'entry',
             code: conditionOrTreatment,
             color: color
-        };
+        });
         
         this.selectedTooth = null;
         this.selectedSurface = null;
         this.render();
+    }
+
+    removeTreatment(toothId, surfaceId, code) {
+        const key = `${toothId}_${surfaceId}`;
+        if (this.state[key]) {
+            this.history.push(JSON.stringify(this.state));
+            
+            if (Array.isArray(this.state[key])) {
+                this.state[key] = this.state[key].filter(x => x.code !== code);
+                if (this.state[key].length === 0) {
+                    delete this.state[key];
+                }
+            } else {
+                if (this.state[key].code === code) {
+                    delete this.state[key];
+                }
+            }
+            
+            this.render();
+        }
     }
 
     undo() {
@@ -248,11 +284,17 @@ class Odontogram {
                     }
                 }
                 
-                this.state[key] = {
+                if (!this.state[key]) {
+                    this.state[key] = [];
+                } else if (!Array.isArray(this.state[key])) {
+                    this.state[key] = [this.state[key]];
+                }
+                
+                this.state[key].push({
                     type: 'entry',
                     code: t.treatmentItemName || 'Treatment',
                     color: resolvedColor
-                };
+                });
             }
         });
         

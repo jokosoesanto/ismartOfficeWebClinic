@@ -96,7 +96,7 @@
                                     </a>
                                     @if (!appt.IsDeleted)
                                     {
-                                        <a href="/MedicalRecord/Create/@appt.Id" class="btn btn-sm btn-outline-success shadow-sm ms-1" title="Medical Record">
+                                        <a href="/MedicalRecord/Chart/@appt.PatientId?appointmentId=@appt.Id" class="btn btn-sm btn-outline-success shadow-sm ms-1" title="Medical Record">
                                             <i class="bi bi-journal-medical"></i> Medical Record
                                         </a>
                                         <a href="/Appointment/Edit/@appt.Id" class="btn btn-sm btn-outline-primary shadow-sm ms-1" title="Edit Appointment">

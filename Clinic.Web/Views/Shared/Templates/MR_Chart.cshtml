@@ -13,7 +13,14 @@
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h2 class="mb-0 fw-bold">Patient Chart</h2>
         <div>
-            <a href="/MedicalRecord/Create" class="btn btn-primary shadow-sm"><i class="bi bi-plus-lg me-1"></i> Add Treatment / Note</a>
+            @if (ViewBag.AppointmentId != null)
+            {
+                <a href="javascript:void(0)" onclick="openAddTreatment()" class="btn btn-primary shadow-sm"><i class="bi bi-plus-lg me-1"></i> Add Treatment / Note</a>
+            }
+            else
+            {
+                <button class="btn btn-primary shadow-sm" disabled title="Requires active appointment context"><i class="bi bi-plus-lg me-1"></i> Add Treatment / Note</button>
+            }
             <a href="/Billing" class="btn btn-outline-success shadow-sm ms-2"><i class="bi bi-cash-coin me-1"></i> Go to Billing</a>
         </div>
     </div>
@@ -164,7 +171,14 @@
                                         No treatments recorded.
                                     </li>
                                 </ul>
-                                <a href="/MedicalRecord/Create" class="btn btn-sm btn-outline-success w-100"><i class="bi bi-plus"></i> Add Full Treatment Record</a>
+                                @if (ViewBag.AppointmentId != null)
+                                {
+                                    <a href="javascript:void(0)" onclick="openAddTreatment()" class="btn btn-sm btn-outline-success w-100"><i class="bi bi-plus"></i> Add Full Treatment Record</a>
+                                }
+                                else
+                                {
+                                    <button class="btn btn-sm btn-outline-success w-100" disabled title="Requires active appointment context"><i class="bi bi-plus"></i> Add Full Treatment Record</button>
+                                }
                             </div>
                         </div>
                     </div>
@@ -425,14 +439,20 @@
             text = treat.options[treat.selectedIndex].text;
             
             // Add to Treatment List
-            addToList('treatmentList', text, odo.selectedTooth, odo.selectedSurface, "bg-success");
+            if (!addToList('treatmentList', text, odo.selectedTooth, odo.selectedSurface, "bg-success")) {
+                alert("This treatment is already applied to this surface.");
+                return;
+            }
         } else if (cond.value) {
             type = cond.value;
             color = cond.options[cond.selectedIndex].dataset.color;
             text = cond.options[cond.selectedIndex].text;
             
             // Add to Diagnosis List
-            addToList('diagnosisList', text, odo.selectedTooth, odo.selectedSurface, "bg-danger");
+            if (!addToList('diagnosisList', text, odo.selectedTooth, odo.selectedSurface, "bg-danger")) {
+                alert("This condition is already applied to this surface.");
+                return;
+            }
         } else {
             alert("Please select a condition or treatment to apply.");
             return;
@@ -447,18 +467,54 @@
 
     function addToList(listId, text, tooth, surface, badgeClass) {
         const list = document.getElementById(listId);
+        const surfaceNames = { 'T': 'T', 'B': 'B', 'L': 'L', 'R': 'R', 'C': 'C' };
+        
+        const newIdentifier = `${text} #${tooth} (${surfaceNames[surface]})`;
+        const existingItems = list.querySelectorAll("li");
+        for (let i = 0; i < existingItems.length; i++) {
+            if (existingItems[i].innerText.includes(newIdentifier)) {
+                return false;
+            }
+        }
         
         // Remove empty state if present
         if (list.innerHTML.includes("No ")) {
             list.innerHTML = "";
         }
         
-        const surfaceNames = { 'T': 'T', 'B': 'B', 'L': 'L', 'R': 'R', 'C': 'C' };
-        
         const li = document.createElement("li");
         li.className = "list-group-item d-flex justify-content-between align-items-center";
         li.innerHTML = `<span><span class="badge ${badgeClass} me-2">${text}</span> #${tooth} (${surfaceNames[surface]})</span>
-                        <button class="btn btn-sm btn-outline-secondary border-0" onclick="this.parentElement.remove()"><i class="bi bi-trash"></i></button>`;
+                        <button class="btn btn-sm btn-outline-secondary border-0" onclick="removeEntry(this, '${tooth}', '${surface}', '${text}')"><i class="bi bi-trash"></i></button>`;
         list.appendChild(li);
+        return true;
+    }
+
+    function removeEntry(btn, tooth, surface, text) {
+        const li = btn.parentElement;
+        const list = li.parentElement;
+        li.remove();
+        
+        if (list.children.length === 0) {
+            const emptyText = list.id === 'diagnosisList' ? "No conditions recorded." : "No treatments recorded.";
+            list.innerHTML = `<li class="list-group-item d-flex justify-content-between align-items-center text-muted small">${emptyText}</li>`;
+        }
+        
+        odo.removeTreatment(tooth, surface, text);
+    }
+    
+    function openAddTreatment() {
+        var patientId = '@Model.Id';
+        var appointmentId = '@ViewBag.AppointmentId';
+        if (!appointmentId) return;
+        
+        var url = '/MedicalRecord/Chart/' + patientId + '/Treatment/Add?appointmentId=' + appointmentId;
+        if (odo && odo.selectedTooth) {
+            url += '&siteNumber=' + encodeURIComponent(odo.selectedTooth);
+        }
+        if (odo && odo.selectedSurface) {
+            url += '&siteDetail=' + encodeURIComponent(odo.selectedSurface);
+        }
+        window.location.href = url;
     }
 </script>

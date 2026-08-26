@@ -48,13 +48,25 @@ namespace Clinic.Web.Controllers
         }
 
         [HttpGet("Chart/{patientId}")]
-        public async Task<IActionResult> Chart(Guid patientId)
+        public async Task<IActionResult> Chart(Guid patientId, [FromQuery] Guid? appointmentId = null)
         {
             var patient = await _patientService.GetByIdAsync(patientId);
             if (patient == null)
             {
                 TempData["ErrorMessage"] = "Invalid Patient.";
                 return RedirectToAction("Index");
+            }
+
+            if (appointmentId.HasValue)
+            {
+                var appointment = await _appointmentService.GetByIdAsync(appointmentId.Value);
+                if (appointment == null || appointment.PatientId != patientId)
+                {
+                    TempData["ErrorMessage"] = "Invalid Appointment Context.";
+                    return RedirectToAction("Index");
+                }
+                ViewBag.AppointmentId = appointmentId.Value;
+                ViewBag.Appointment = appointment;
             }
 
             var metadata = new UIMetadata
@@ -144,6 +156,86 @@ namespace Clinic.Web.Controllers
                 var metadata2 = new UIMetadata { Title = "Add Treatment", ModuleName = "MedicalRecord", Mode = RenderingMode.Template };
                 ViewBag.Metadata = metadata2;
                 return View("Create", dto);
+            }
+        }
+
+        [HttpGet("Chart/{patientId}/Treatment/Add")]
+        public async Task<IActionResult> AddTreatment(Guid patientId, [FromQuery] Guid appointmentId, [FromQuery] string? siteNumber = null, [FromQuery] string? siteDetail = null)
+        {
+            var appointmentResult = await _appointmentService.GetByIdAsync(appointmentId);
+            if (appointmentResult == null || appointmentResult.PatientId != patientId)
+            {
+                TempData["ErrorMessage"] = "Invalid Appointment Context.";
+                return RedirectToAction("Chart", new { patientId = patientId });
+            }
+
+            var catalogsResult = await _treatmentCatalogService.GetAllAsync();
+            ViewBag.TreatmentItems = catalogsResult ?? new List<Clinic.Application.DTOs.MasterData.TreatmentCatalogDto>();
+
+            var dto = new AppointmentTreatmentDto 
+            { 
+                AppointmentId = appointmentId,
+                SiteNumber = siteNumber,
+                SiteDetail = siteDetail
+            };
+
+            var metadata = new UIMetadata { Title = "Add Treatment", ModuleName = "MedicalRecord", Mode = RenderingMode.Template };
+            ViewBag.Metadata = metadata;
+            
+            var existingTreatments = await _treatmentService.GetTreatmentsByAppointmentIdAsync(appointmentId);
+            ViewBag.ExistingTreatments = existingTreatments;
+            ViewBag.PatientId = patientId;
+
+            return View("AddTreatment", dto);
+        }
+
+        [HttpPost("Chart/{patientId}/Treatment/Add")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> AddTreatment(Guid patientId, [FromQuery] Guid appointmentId, AppointmentTreatmentDto dto)
+        {
+            if (appointmentId != dto.AppointmentId)
+            {
+                return BadRequest();
+            }
+
+            if (!ModelState.IsValid)
+            {
+                var catalogsResult = await _treatmentCatalogService.GetAllAsync();
+                ViewBag.TreatmentItems = catalogsResult ?? new List<Clinic.Application.DTOs.MasterData.TreatmentCatalogDto>();
+                
+                var metadata = new UIMetadata { Title = "Add Treatment", ModuleName = "MedicalRecord", Mode = RenderingMode.Template };
+                ViewBag.Metadata = metadata;
+                ViewBag.PatientId = patientId;
+                return View("AddTreatment", dto);
+            }
+
+            var userId = Guid.Empty;
+            if (User.Identity?.IsAuthenticated == true)
+            {
+                var userIdClaim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier);
+                if (userIdClaim != null && Guid.TryParse(userIdClaim.Value, out Guid parsedId))
+                {
+                    userId = parsedId;
+                }
+            }
+
+            try
+            {
+                var result = await _treatmentService.CreateTreatmentAsync(dto, userId);
+                TempData["SuccessMessage"] = "Treatment created successfully.";
+                return RedirectToAction("Chart", new { patientId = patientId, appointmentId = appointmentId });
+            }
+            catch (Exception ex)
+            {
+                ModelState.AddModelError(string.Empty, $"An error occurred: {ex.Message}");
+                
+                var catalogsResult2 = await _treatmentCatalogService.GetAllAsync();
+                ViewBag.TreatmentItems = catalogsResult2 != null ? catalogsResult2 : new List<Clinic.Application.DTOs.MasterData.TreatmentCatalogDto>();
+                
+                var metadata2 = new UIMetadata { Title = "Add Treatment", ModuleName = "MedicalRecord", Mode = RenderingMode.Template };
+                ViewBag.Metadata = metadata2;
+                ViewBag.PatientId = patientId;
+                return View("AddTreatment", dto);
             }
         }
 
