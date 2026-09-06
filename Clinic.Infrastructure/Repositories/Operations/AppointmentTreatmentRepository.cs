@@ -34,6 +34,17 @@ namespace Clinic.Infrastructure.Repositories.Operations
                 .ToListAsync();
         }
 
+        public async Task<IEnumerable<AppointmentTreatment>> GetByAppointmentIdsAsync(IEnumerable<Guid> appointmentIds)
+        {
+            if (appointmentIds == null || !appointmentIds.Any()) return new List<AppointmentTreatment>();
+
+            return await _context.AppointmentTreatments
+                .Include(t => t.TreatmentItem)
+                .Where(t => appointmentIds.Contains(t.AppointmentId))
+                .OrderByDescending(t => t.CreatedAt)
+                .ToListAsync();
+        }
+
         public async Task AddAsync(AppointmentTreatment treatment)
         {
             await _context.AppointmentTreatments.AddAsync(treatment);

@@ -101,6 +101,8 @@ namespace Clinic.Application.Services.Operations
         {
             var appointment = await _appointmentRepository.GetByIdAsync(dto.Id);
             if (appointment == null) throw new InvalidOperationException("Appointment not found");
+            if (appointment.Status == Clinic.Domain.Enums.AppointmentStatus.OnTime) throw new InvalidOperationException("Checked-In appointment cannot be edited or re-assigned.");
+            if (appointment.Status == Clinic.Domain.Enums.AppointmentStatus.Completed) throw new InvalidOperationException("Completed appointment cannot be edited or re-assigned.");
 
             // Validate references
             // Patient validation is intentionally omitted here to enforce Patient Immutability.
@@ -173,7 +175,35 @@ namespace Clinic.Application.Services.Operations
                 EndTime = a.EndTime,
                 Status = a.Status,
                 Notes = a.Notes,
-                IsDeleted = a.IsDeleted
+                IsDeleted = a.IsDeleted,
+                ChiefComplaints = a.ChiefComplaints?.Where(c => !c.IsDeleted).Select(c => new AppointmentChiefComplaintDto
+                {
+                    Id = c.Id,
+                    AppointmentId = c.AppointmentId,
+                    Complaint = c.Complaint,
+                    Notes = c.Notes,
+                    ToothNumber = c.ToothNumber,
+                    IsDeleted = c.IsDeleted
+                }).ToList() ?? new List<AppointmentChiefComplaintDto>(),
+                VitalSign = a.VitalSign != null && !a.VitalSign.IsDeleted ? new AppointmentVitalSignDto
+                {
+                    Id = a.VitalSign.Id,
+                    AppointmentId = a.VitalSign.AppointmentId,
+                    Systolic = a.VitalSign.Systolic,
+                    Diastolic = a.VitalSign.Diastolic,
+                    HeartRate = a.VitalSign.HeartRate,
+                    Temperature = a.VitalSign.Temperature,
+                    CreatedAt = a.VitalSign.CreatedAt,
+                    UpdatedAt = a.VitalSign.UpdatedAt
+                } : null,
+                ClinicalNote = a.ClinicalNote != null && !a.ClinicalNote.IsDeleted ? new AppointmentClinicalNoteDto
+                {
+                    AppointmentId = a.ClinicalNote.AppointmentId,
+                    Subjective = a.ClinicalNote.Subjective,
+                    Objective = a.ClinicalNote.Objective,
+                    Assessment = a.ClinicalNote.Assessment,
+                    Plan = a.ClinicalNote.Plan
+                } : null
             });
         }
 
@@ -198,8 +228,75 @@ namespace Clinic.Application.Services.Operations
                 EndTime = a.EndTime,
                 Status = a.Status,
                 Notes = a.Notes,
-                IsDeleted = a.IsDeleted
+                IsDeleted = a.IsDeleted,
+                ChiefComplaints = a.ChiefComplaints?.Where(c => !c.IsDeleted).Select(c => new AppointmentChiefComplaintDto
+                {
+                    Id = c.Id,
+                    AppointmentId = c.AppointmentId,
+                    Complaint = c.Complaint,
+                    Notes = c.Notes,
+                    ToothNumber = c.ToothNumber,
+                    IsDeleted = c.IsDeleted
+                }).ToList() ?? new List<AppointmentChiefComplaintDto>(),
+                VitalSign = a.VitalSign != null && !a.VitalSign.IsDeleted ? new AppointmentVitalSignDto
+                {
+                    Id = a.VitalSign.Id,
+                    AppointmentId = a.VitalSign.AppointmentId,
+                    Systolic = a.VitalSign.Systolic,
+                    Diastolic = a.VitalSign.Diastolic,
+                    HeartRate = a.VitalSign.HeartRate,
+                    Temperature = a.VitalSign.Temperature,
+                    CreatedAt = a.VitalSign.CreatedAt,
+                    UpdatedAt = a.VitalSign.UpdatedAt
+                } : null,
+                ClinicalNote = a.ClinicalNote != null && !a.ClinicalNote.IsDeleted ? new AppointmentClinicalNoteDto
+                {
+                    AppointmentId = a.ClinicalNote.AppointmentId,
+                    Subjective = a.ClinicalNote.Subjective,
+                    Objective = a.ClinicalNote.Objective,
+                    Assessment = a.ClinicalNote.Assessment,
+                    Plan = a.ClinicalNote.Plan
+                } : null
             };
+        }
+
+        public async Task CheckInAsync(Guid id, Guid userId)
+        {
+            var appointment = await _appointmentRepository.GetByIdAsync(id);
+            if (appointment == null) throw new InvalidOperationException("Appointment not found");
+            if (appointment.IsDeleted) throw new InvalidOperationException("Cannot check-in a deleted appointment");
+
+            if (appointment.Status == Clinic.Domain.Enums.AppointmentStatus.OnTime) return;
+
+            if (appointment.Status == Clinic.Domain.Enums.AppointmentStatus.Failed) throw new InvalidOperationException("Cannot check-in a failed appointment");
+            if (appointment.Status == Clinic.Domain.Enums.AppointmentStatus.Reschedule) throw new InvalidOperationException("Cannot check-in a rescheduled appointment");
+            if (appointment.Status == Clinic.Domain.Enums.AppointmentStatus.Completed) throw new InvalidOperationException("Cannot check-in a completed appointment");
+
+
+
+            appointment.Status = Clinic.Domain.Enums.AppointmentStatus.OnTime;
+            appointment.UpdatedAt = DateTime.UtcNow;
+            appointment.UpdatedBy = userId;
+
+            _appointmentRepository.Update(appointment);
+            await _unitOfWork.SaveChangesAsync();
+        }
+
+        public async Task CompleteVisitAsync(Guid id, Guid userId)
+        {
+            var appointment = await _appointmentRepository.GetByIdAsync(id);
+            if (appointment == null) throw new InvalidOperationException("Appointment not found");
+            if (appointment.IsDeleted) throw new InvalidOperationException("Cannot complete a deleted appointment");
+
+            if (appointment.Status != Clinic.Domain.Enums.AppointmentStatus.OnTime)
+                throw new InvalidOperationException("Only a Checked-In appointment can be completed.");
+
+            appointment.Status = Clinic.Domain.Enums.AppointmentStatus.Completed;
+            appointment.UpdatedAt = DateTime.UtcNow;
+            appointment.UpdatedBy = userId;
+
+            _appointmentRepository.Update(appointment);
+            await _unitOfWork.SaveChangesAsync();
         }
 
         public async Task DeleteAsync(Guid id, Guid deletedBy)
@@ -207,6 +304,9 @@ namespace Clinic.Application.Services.Operations
             var appointment = await _appointmentRepository.GetByIdAsync(id);
             if (appointment != null)
             {
+                if (appointment.Status == Clinic.Domain.Enums.AppointmentStatus.OnTime) throw new InvalidOperationException("Checked-In appointment cannot be cancelled.");
+                if (appointment.Status == Clinic.Domain.Enums.AppointmentStatus.Completed) throw new InvalidOperationException("Completed appointment cannot be cancelled.");
+
                 appointment.IsDeleted = true;
                 appointment.DeletedAt = DateTime.UtcNow;
                 appointment.DeletedBy = deletedBy;
@@ -238,6 +338,36 @@ namespace Clinic.Application.Services.Operations
             });
         }
 
+        public async Task<IEnumerable<AppointmentDto>> GetAppointmentsByPatientIdAsync(Guid patientId)
+        {
+            var appointments = await _appointmentRepository.GetAppointmentsByPatientIdAsync(patientId);
+            return appointments.Select(a => new AppointmentDto
+            {
+                Id = a.Id,
+                PatientId = a.PatientId,
+                PatientName = a.Patient?.FullName,
+                DoctorId = a.DoctorId,
+                DoctorName = a.Doctor?.FullName,
+                LocationId = a.LocationId,
+                LocationName = a.Location?.ClinicName,
+                ChairId = a.ChairId,
+                ChairName = a.Chair?.Name,
+                Date = a.Date,
+                StartTime = a.StartTime,
+                EndTime = a.EndTime,
+                Status = a.Status,
+                Notes = a.Notes,
+                ClinicalNote = a.ClinicalNote != null ? new AppointmentClinicalNoteDto
+                {
+                    AppointmentId = a.ClinicalNote.AppointmentId,
+                    Subjective = a.ClinicalNote.Subjective,
+                    Objective = a.ClinicalNote.Objective,
+                    Assessment = a.ClinicalNote.Assessment,
+                    Plan = a.ClinicalNote.Plan
+                } : null
+            });
+        }
+
         public async Task<IEnumerable<Guid>> GetEligibleDoctorIdsForReassignmentAsync(Guid appointmentId)
         {
             var appointment = await _appointmentRepository.GetByIdAsync(appointmentId);
@@ -263,6 +393,183 @@ namespace Clinic.Application.Services.Operations
             }
 
             return eligibleIds;
+        }
+        
+        public async Task AddChiefComplaintAsync(AppointmentChiefComplaintDto dto, Guid userId)
+        {
+            var appointment = await _appointmentRepository.GetByIdAsync(dto.AppointmentId);
+            if (appointment == null) throw new InvalidOperationException("Appointment not found");
+            
+            if (appointment.Status == Clinic.Domain.Enums.AppointmentStatus.Completed || 
+                appointment.Status == Clinic.Domain.Enums.AppointmentStatus.Failed || 
+                appointment.Status == Clinic.Domain.Enums.AppointmentStatus.Reschedule ||
+                appointment.IsDeleted)
+            {
+                throw new InvalidOperationException("Cannot modify Chief Complaints for completed, cancelled, or deleted appointments.");
+            }
+
+            var complaint = new AppointmentChiefComplaint
+            {
+                Id = Guid.Empty, // EF Core handles added state
+                AppointmentId = dto.AppointmentId,
+                Complaint = dto.Complaint,
+                Notes = dto.Notes,
+                ToothNumber = dto.ToothNumber,
+                CreatedBy = userId,
+                CreatedAt = DateTime.UtcNow
+            };
+
+            // Assuming we just add it to the context. Since we don't have a specific repo for ChiefComplaints,
+            // we can either add it via Appointment's collection or we need to add a generic Add to UnitOfWork/AppDbContext.
+            // Wait, we can add it to the appointment's collection if tracking is set up, but let's see how Treatment was done.
+            // Actually, we can add it to the appointment object and call Update.
+            appointment.ChiefComplaints.Add(complaint);
+            
+            _appointmentRepository.Update(appointment);
+            await _unitOfWork.SaveChangesAsync();
+        }
+
+        public async Task RemoveChiefComplaintAsync(Guid appointmentId, Guid complaintId, Guid userId)
+        {
+            var appointment = await _appointmentRepository.GetByIdAsync(appointmentId);
+            if (appointment == null) throw new InvalidOperationException("Appointment not found");
+            
+            if (appointment.Status == Clinic.Domain.Enums.AppointmentStatus.Completed || 
+                appointment.Status == Clinic.Domain.Enums.AppointmentStatus.Failed || 
+                appointment.Status == Clinic.Domain.Enums.AppointmentStatus.Reschedule ||
+                appointment.IsDeleted)
+            {
+                throw new InvalidOperationException("Cannot modify Chief Complaints for completed, cancelled, or deleted appointments.");
+            }
+
+            var complaint = appointment.ChiefComplaints.FirstOrDefault(c => c.Id == complaintId && !c.IsDeleted);
+            if (complaint != null)
+            {
+                complaint.IsDeleted = true;
+                complaint.DeletedAt = DateTime.UtcNow;
+                complaint.DeletedBy = userId;
+                
+                _appointmentRepository.Update(appointment);
+                _appointmentRepository.Update(appointment);
+                await _unitOfWork.SaveChangesAsync();
+            }
+        }
+
+        public async Task<AppointmentVitalSignDto> SaveVitalSignAsync(AppointmentVitalSignDto dto, Guid userId)
+        {
+            var appointment = await _appointmentRepository.GetByIdAsync(dto.AppointmentId);
+            if (appointment == null) throw new InvalidOperationException("Appointment not found");
+
+            if (appointment.Status == Clinic.Domain.Enums.AppointmentStatus.Completed || 
+                appointment.Status == Clinic.Domain.Enums.AppointmentStatus.Failed || 
+                appointment.Status == Clinic.Domain.Enums.AppointmentStatus.Reschedule ||
+                appointment.IsDeleted)
+            {
+                throw new InvalidOperationException("Cannot modify Vital Signs for completed, failed, rescheduled, or deleted appointments.");
+            }
+
+            if (appointment.VitalSign == null)
+            {
+                // Must use Guid.Empty insertion pattern to allow EF to track as Added safely
+                var vitalSign = new AppointmentVitalSign
+                {
+                    Id = Guid.Empty,
+                    AppointmentId = dto.AppointmentId,
+                    Systolic = dto.Systolic,
+                    Diastolic = dto.Diastolic,
+                    HeartRate = dto.HeartRate,
+                    Temperature = dto.Temperature,
+                    CreatedBy = userId,
+                    CreatedAt = DateTime.UtcNow
+                };
+
+                appointment.VitalSign = vitalSign;
+            }
+            else
+            {
+                var vitalSign = appointment.VitalSign;
+                
+                vitalSign.Systolic = dto.Systolic;
+                vitalSign.Diastolic = dto.Diastolic;
+                vitalSign.HeartRate = dto.HeartRate;
+                vitalSign.Temperature = dto.Temperature;
+                vitalSign.UpdatedBy = userId;
+                vitalSign.UpdatedAt = DateTime.UtcNow;
+            }
+
+            _appointmentRepository.Update(appointment);
+            await _unitOfWork.SaveChangesAsync();
+
+            var updatedAppointment = await _appointmentRepository.GetByIdAsync(dto.AppointmentId);
+            var vs = updatedAppointment!.VitalSign!;
+
+            return new AppointmentVitalSignDto
+            {
+                Id = vs.Id,
+                AppointmentId = vs.AppointmentId,
+                Systolic = vs.Systolic,
+                Diastolic = vs.Diastolic,
+                HeartRate = vs.HeartRate,
+                Temperature = vs.Temperature,
+                CreatedAt = vs.CreatedAt,
+                UpdatedAt = vs.UpdatedAt
+            };
+        }
+        public async Task<AppointmentClinicalNoteDto> SaveClinicalNoteAsync(AppointmentClinicalNoteDto dto, Guid userId)
+        {
+            var appointment = await _appointmentRepository.GetByIdAsync(dto.AppointmentId);
+            if (appointment == null) throw new InvalidOperationException("Appointment not found");
+
+            if (appointment.Status == Clinic.Domain.Enums.AppointmentStatus.Completed || 
+                appointment.Status == Clinic.Domain.Enums.AppointmentStatus.Failed || 
+                appointment.Status == Clinic.Domain.Enums.AppointmentStatus.Reschedule ||
+                appointment.IsDeleted)
+            {
+                throw new InvalidOperationException("Cannot modify Clinical Note for completed, failed, rescheduled, or deleted appointments.");
+            }
+
+            if (appointment.ClinicalNote == null)
+            {
+                var clinicalNote = new AppointmentClinicalNote
+                {
+                    Id = Guid.Empty, // EF Core EntityState.Added
+                    AppointmentId = dto.AppointmentId,
+                    Subjective = dto.Subjective?.Trim(),
+                    Objective = dto.Objective?.Trim(),
+                    Assessment = dto.Assessment?.Trim(),
+                    Plan = dto.Plan?.Trim(),
+                    CreatedBy = userId,
+                    CreatedAt = DateTime.UtcNow
+                };
+
+                appointment.ClinicalNote = clinicalNote;
+            }
+            else
+            {
+                var clinicalNote = appointment.ClinicalNote;
+                
+                clinicalNote.Subjective = dto.Subjective?.Trim();
+                clinicalNote.Objective = dto.Objective?.Trim();
+                clinicalNote.Assessment = dto.Assessment?.Trim();
+                clinicalNote.Plan = dto.Plan?.Trim();
+                clinicalNote.UpdatedBy = userId;
+                clinicalNote.UpdatedAt = DateTime.UtcNow;
+            }
+
+            _appointmentRepository.Update(appointment);
+            await _unitOfWork.SaveChangesAsync();
+
+            var updatedAppointment = await _appointmentRepository.GetByIdAsync(dto.AppointmentId);
+            var note = updatedAppointment!.ClinicalNote!;
+
+            return new AppointmentClinicalNoteDto
+            {
+                AppointmentId = note.AppointmentId,
+                Subjective = note.Subjective,
+                Objective = note.Objective,
+                Assessment = note.Assessment,
+                Plan = note.Plan
+            };
         }
     }
 }

@@ -546,6 +546,59 @@ namespace Clinic.Infrastructure.Migrations
                         });
                 });
 
+            modelBuilder.Entity("Clinic.Domain.Entities.MasterData.DiagnosisMaster", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("CreatedBy")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("DeletedBy")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(1000)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("DiagnosisCode")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("DiagnosisName")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("UpdatedBy")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DiagnosisCode")
+                        .IsUnique()
+                        .HasFilter("\"IsDeleted\" = 0");
+
+                    b.ToTable("DiagnosisMasters", (string)null);
+                });
+
             modelBuilder.Entity("Clinic.Domain.Entities.MasterData.Doctor", b =>
                 {
                     b.Property<Guid>("Id")
@@ -907,6 +960,11 @@ namespace Clinic.Infrastructure.Migrations
                     b.Property<string>("Address")
                         .HasColumnType("TEXT");
 
+                    b.Property<string>("AllergyStatus")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("TEXT");
+
                     b.Property<DateTime?>("BirthDate")
                         .HasColumnType("TEXT");
 
@@ -978,6 +1036,11 @@ namespace Clinic.Infrastructure.Migrations
                     b.Property<string>("MaritalStatus")
                         .HasColumnType("TEXT");
 
+                    b.Property<string>("MedicalHistoryStatus")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("Mobile")
                         .HasColumnType("TEXT");
 
@@ -1039,6 +1102,105 @@ namespace Clinic.Infrastructure.Migrations
                     b.HasIndex("PhotoFileMetadataId");
 
                     b.ToTable("Patients");
+                });
+
+            modelBuilder.Entity("Clinic.Domain.Entities.MasterData.PatientAllergy", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Allergen")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("CreatedBy")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("DeletedBy")
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Notes")
+                        .HasMaxLength(500)
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("PatientId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Severity")
+                        .HasMaxLength(50)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("UpdatedBy")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PatientId");
+
+                    b.ToTable("PatientAllergies", (string)null);
+                });
+
+            modelBuilder.Entity("Clinic.Domain.Entities.MasterData.PatientMedicalHistory", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Condition")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("CreatedBy")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("DeletedBy")
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Notes")
+                        .HasMaxLength(500)
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("PatientId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("UpdatedBy")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PatientId");
+
+                    b.ToTable("PatientSystemicDiseases");
                 });
 
             modelBuilder.Entity("Clinic.Domain.Entities.MasterData.Specialty", b =>
@@ -1371,6 +1533,153 @@ namespace Clinic.Infrastructure.Migrations
                     b.ToTable("Appointments", (string)null);
                 });
 
+            modelBuilder.Entity("Clinic.Domain.Entities.Operations.AppointmentChiefComplaint", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("AppointmentId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Complaint")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("CreatedBy")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("DeletedBy")
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Notes")
+                        .HasMaxLength(1000)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ToothNumber")
+                        .HasMaxLength(10)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("UpdatedBy")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AppointmentId");
+
+                    b.ToTable("AppointmentChiefComplaints", (string)null);
+                });
+
+            modelBuilder.Entity("Clinic.Domain.Entities.Operations.AppointmentClinicalNote", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("AppointmentId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Assessment")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("CreatedBy")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("DeletedBy")
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Objective")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Plan")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Subjective")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("UpdatedBy")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AppointmentId")
+                        .IsUnique()
+                        .HasFilter("[IsDeleted] = 0");
+
+                    b.ToTable("AppointmentClinicalNotes", (string)null);
+                });
+
+            modelBuilder.Entity("Clinic.Domain.Entities.Operations.AppointmentDiagnosis", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("AppointmentId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("CreatedBy")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("DeletedBy")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("DiagnosisMasterId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Remark")
+                        .HasMaxLength(1000)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("UpdatedBy")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AppointmentId");
+
+                    b.HasIndex("DiagnosisMasterId");
+
+                    b.ToTable("AppointmentDiagnoses");
+                });
+
             modelBuilder.Entity("Clinic.Domain.Entities.Operations.AppointmentTreatment", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1417,6 +1726,57 @@ namespace Clinic.Infrastructure.Migrations
                     b.HasIndex("TreatmentItemId");
 
                     b.ToTable("AppointmentTreatments", (string)null);
+                });
+
+            modelBuilder.Entity("Clinic.Domain.Entities.Operations.AppointmentVitalSign", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("AppointmentId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("CreatedBy")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("DeletedBy")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int?>("Diastolic")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int?>("HeartRate")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int?>("Systolic")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<decimal?>("Temperature")
+                        .HasColumnType("decimal(4,1)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("UpdatedBy")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AppointmentId")
+                        .IsUnique()
+                        .HasFilter("[IsDeleted] = 0");
+
+                    b.ToTable("AppointmentVitalSigns", (string)null);
                 });
 
             modelBuilder.Entity("Clinic.Domain.Entities.Operations.DoctorLeaveDate", b =>
@@ -1898,6 +2258,28 @@ namespace Clinic.Infrastructure.Migrations
                     b.Navigation("PhotoFileMetadata");
                 });
 
+            modelBuilder.Entity("Clinic.Domain.Entities.MasterData.PatientAllergy", b =>
+                {
+                    b.HasOne("Clinic.Domain.Entities.MasterData.Patient", "Patient")
+                        .WithMany("Allergies")
+                        .HasForeignKey("PatientId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Patient");
+                });
+
+            modelBuilder.Entity("Clinic.Domain.Entities.MasterData.PatientMedicalHistory", b =>
+                {
+                    b.HasOne("Clinic.Domain.Entities.MasterData.Patient", "Patient")
+                        .WithMany("SystemicDiseases")
+                        .HasForeignKey("PatientId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Patient");
+                });
+
             modelBuilder.Entity("Clinic.Domain.Entities.MasterData.TreatmentCatalog", b =>
                 {
                     b.HasOne("Clinic.Domain.Entities.MasterData.TreatmentCategory", "Category")
@@ -1971,6 +2353,47 @@ namespace Clinic.Infrastructure.Migrations
                     b.Navigation("Patient");
                 });
 
+            modelBuilder.Entity("Clinic.Domain.Entities.Operations.AppointmentChiefComplaint", b =>
+                {
+                    b.HasOne("Clinic.Domain.Entities.Operations.Appointment", "Appointment")
+                        .WithMany("ChiefComplaints")
+                        .HasForeignKey("AppointmentId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Appointment");
+                });
+
+            modelBuilder.Entity("Clinic.Domain.Entities.Operations.AppointmentClinicalNote", b =>
+                {
+                    b.HasOne("Clinic.Domain.Entities.Operations.Appointment", "Appointment")
+                        .WithOne("ClinicalNote")
+                        .HasForeignKey("Clinic.Domain.Entities.Operations.AppointmentClinicalNote", "AppointmentId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Appointment");
+                });
+
+            modelBuilder.Entity("Clinic.Domain.Entities.Operations.AppointmentDiagnosis", b =>
+                {
+                    b.HasOne("Clinic.Domain.Entities.Operations.Appointment", "Appointment")
+                        .WithMany("Diagnoses")
+                        .HasForeignKey("AppointmentId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Clinic.Domain.Entities.MasterData.DiagnosisMaster", "DiagnosisMaster")
+                        .WithMany()
+                        .HasForeignKey("DiagnosisMasterId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Appointment");
+
+                    b.Navigation("DiagnosisMaster");
+                });
+
             modelBuilder.Entity("Clinic.Domain.Entities.Operations.AppointmentTreatment", b =>
                 {
                     b.HasOne("Clinic.Domain.Entities.Operations.Appointment", "Appointment")
@@ -1988,6 +2411,17 @@ namespace Clinic.Infrastructure.Migrations
                     b.Navigation("Appointment");
 
                     b.Navigation("TreatmentItem");
+                });
+
+            modelBuilder.Entity("Clinic.Domain.Entities.Operations.AppointmentVitalSign", b =>
+                {
+                    b.HasOne("Clinic.Domain.Entities.Operations.Appointment", "Appointment")
+                        .WithOne("VitalSign")
+                        .HasForeignKey("Clinic.Domain.Entities.Operations.AppointmentVitalSign", "AppointmentId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Appointment");
                 });
 
             modelBuilder.Entity("Clinic.Domain.Entities.Operations.DoctorLeaveDate", b =>
@@ -2059,9 +2493,27 @@ namespace Clinic.Infrastructure.Migrations
                     b.Navigation("Users");
                 });
 
+            modelBuilder.Entity("Clinic.Domain.Entities.MasterData.Patient", b =>
+                {
+                    b.Navigation("Allergies");
+
+                    b.Navigation("SystemicDiseases");
+                });
+
             modelBuilder.Entity("Clinic.Domain.Entities.MasterData.Specialty", b =>
                 {
                     b.Navigation("Doctors");
+                });
+
+            modelBuilder.Entity("Clinic.Domain.Entities.Operations.Appointment", b =>
+                {
+                    b.Navigation("ChiefComplaints");
+
+                    b.Navigation("ClinicalNote");
+
+                    b.Navigation("Diagnoses");
+
+                    b.Navigation("VitalSign");
                 });
 
             modelBuilder.Entity("Clinic.Domain.Entities.Operations.DoctorLeaveRequest", b =>

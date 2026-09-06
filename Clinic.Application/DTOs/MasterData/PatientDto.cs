@@ -59,6 +59,11 @@ namespace Clinic.Application.DTOs.MasterData
         public DateTime? RegistrationDate { get; set; }
         public string? Notes { get; set; }
 
+        public string AllergyStatus { get; set; } = "NotRecorded";
+        public List<PatientAllergyDto> Allergies { get; set; } = new();
+
+        public bool IsDeleted { get; set; }
+
         public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
         {
             if (BirthDate.HasValue && BirthDate.Value.Date >= DateTime.Now.Date)

@@ -110,8 +110,16 @@ class Odontogram {
             const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
             path.setAttribute("d", pathData);
             path.setAttribute("fill", this.getSurfaceColor(id, key));
-            path.setAttribute("stroke", "#adb5bd");
-            path.setAttribute("stroke-width", "1.5");
+            
+            const isSelected = (this.selectedTooth == id && this.selectedSurface == key);
+            if (isSelected) {
+                path.setAttribute("stroke", this.colors['Selected']);
+                path.setAttribute("stroke-width", "3");
+            } else {
+                path.setAttribute("stroke", "#adb5bd");
+                path.setAttribute("stroke-width", "1.5");
+            }
+            
             path.setAttribute("stroke-linejoin", "round");
             path.setAttribute("data-surface", key);
             
@@ -148,7 +156,6 @@ class Odontogram {
 
     getSurfaceColor(toothId, surfaceId) {
         const key = `${toothId}_${surfaceId}`;
-        if (this.selectedTooth == toothId && this.selectedSurface == surfaceId) return this.colors['Selected'];
         
         if (this.state[key]) {
             let entries = Array.isArray(this.state[key]) ? this.state[key] : [this.state[key]];
@@ -162,8 +169,10 @@ class Odontogram {
 
     handleHover(e, isEnter) {
         const el = e.target;
-        const currentFill = el.getAttribute("fill");
-        if (currentFill !== this.colors['Selected'] && !this.state[`${el.parentNode.parentNode.getAttribute('data-tooth')}_${el.getAttribute('data-surface')}`]) {
+        const toothId = el.parentNode.parentNode.getAttribute('data-tooth');
+        const surfaceId = el.getAttribute('data-surface');
+        
+        if (!this.state[`${toothId}_${surfaceId}`]) {
             el.setAttribute("fill", isEnter ? this.colors['Hover'] : this.colors['Default']);
         }
     }
@@ -262,21 +271,28 @@ class Odontogram {
         if (!treatments || !Array.isArray(treatments)) return;
         
         treatments.forEach(t => {
-            if (t.siteNumber && t.siteDetail) {
+            const siteNumber = t.siteNumber || t.SiteNumber;
+            const siteDetail = t.siteDetail || t.SiteDetail;
+            const treatmentItemName = t.treatmentItemName || t.TreatmentItemName;
+            const treatmentItemColor = t.treatmentItemColor || t.TreatmentItemColor;
+
+            if (siteNumber && siteDetail) {
                 // Determine if tooth is int or string
-                const toothId = isNaN(t.siteNumber) ? t.siteNumber : parseInt(t.siteNumber);
-                const svgSurface = this.getSvgSurface(toothId, t.siteDetail);
+                const toothId = isNaN(siteNumber) ? siteNumber : parseInt(siteNumber);
+                const svgSurface = this.getSvgSurface(toothId, siteDetail);
                 const key = `${toothId}_${svgSurface}`;
                 
                 let resolvedColor = this.colors['Missing']; // default
-                if (t.treatmentItemName) {
+                if (treatmentItemColor) {
+                    resolvedColor = treatmentItemColor;
+                } else if (treatmentItemName) {
                     // Look up from historical metadata dictionary FIRST
-                    if (window.TreatmentColors && window.TreatmentColors[t.treatmentItemName]) {
-                        resolvedColor = window.TreatmentColors[t.treatmentItemName];
+                    if (window.TreatmentColors && window.TreatmentColors[treatmentItemName]) {
+                        resolvedColor = window.TreatmentColors[treatmentItemName];
                     } else {
                         // Fallback to legacy colors if not found in dictionary
                         for (const c in this.colors) {
-                            if (t.treatmentItemName.toLowerCase().includes(c.toLowerCase())) {
+                            if (treatmentItemName.toLowerCase().includes(c.toLowerCase())) {
                                 resolvedColor = this.colors[c];
                                 break;
                             }
@@ -292,7 +308,7 @@ class Odontogram {
                 
                 this.state[key].push({
                     type: 'entry',
-                    code: t.treatmentItemName || 'Treatment',
+                    code: treatmentItemName || 'Treatment',
                     color: resolvedColor
                 });
             }

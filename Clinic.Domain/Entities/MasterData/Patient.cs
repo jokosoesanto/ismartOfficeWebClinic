@@ -1,5 +1,7 @@
 using System;
+using System.Collections.Generic;
 using Clinic.Domain.Entities.System;
+using Clinic.Domain.Enums;
 
 namespace Clinic.Domain.Entities.MasterData
 {
@@ -53,6 +55,13 @@ namespace Clinic.Domain.Entities.MasterData
         public Location? HomeClinic { get; set; }
         public DateTime? RegistrationDate { get; set; }
         public string? Notes { get; set; }
+
+        // Clinical Profile
+        public AllergyStatus AllergyStatus { get; set; } = AllergyStatus.NotRecorded;
+        public ICollection<PatientAllergy> Allergies { get; set; } = new List<PatientAllergy>();
+        
+        public MedicalHistoryStatus MedicalHistoryStatus { get; set; } = MedicalHistoryStatus.NotRecorded;
+        public ICollection<PatientMedicalHistory> SystemicDiseases { get; set; } = new List<PatientMedicalHistory>();
 
         // Audit & Soft Delete
         public bool IsDeleted { get; set; }

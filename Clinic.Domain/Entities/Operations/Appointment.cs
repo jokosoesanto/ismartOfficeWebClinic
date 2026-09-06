@@ -30,6 +30,14 @@ namespace Clinic.Domain.Entities.Operations
         public AppointmentStatus Status { get; set; } = AppointmentStatus.Schedule;
 
         public string? Notes { get; set; }
+        
+        public ICollection<AppointmentChiefComplaint> ChiefComplaints { get; set; } = new List<AppointmentChiefComplaint>();
+        
+        public AppointmentVitalSign? VitalSign { get; set; }
+
+        public AppointmentClinicalNote? ClinicalNote { get; set; }
+        
+        public ICollection<AppointmentDiagnosis> Diagnoses { get; set; } = new List<AppointmentDiagnosis>();
 
         // Audit fields
         public bool IsDeleted { get; set; }

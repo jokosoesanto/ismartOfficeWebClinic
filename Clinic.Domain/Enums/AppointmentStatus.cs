@@ -6,6 +6,7 @@ namespace Clinic.Domain.Enums
         OnTime,
         Late,
         Failed,
-        Reschedule
+        Reschedule,
+        Completed
     }
 }

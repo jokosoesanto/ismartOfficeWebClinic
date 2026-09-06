@@ -1,0 +1,143 @@
+@model IEnumerable<Clinic.Application.DTOs.MasterData.DiagnosisMasterDto>
+@{
+    var meta = ViewBag.Meta as Clinic.Application.UI.UIMetadata;
+}
+
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="mb-1 fw-bold text-dark">Diagnosis Master</h2>
+            <p class="text-muted mb-0">Manage clinical diagnosis codes and configurations.</p>
+        </div>
+        <div>
+            <a href="/DiagnosisMaster/Create" class="btn btn-primary shadow-sm">
+                <i class="bi bi-plus-lg me-2"></i>Create Diagnosis
+            </a>
+        </div>
+    </div>
+
+    <div class="card shadow-sm border-0">
+        <div class="card-body p-4">
+            @if (!Model.Any())
+            {
+                <div class="text-center py-5">
+                    <i class="bi bi-journal-medical text-muted" style="font-size: 3rem;"></i>
+                    <h5 class="mt-3 fw-semibold text-dark">No Diagnosis Records Found</h5>
+                    <p class="text-muted">Get started by creating your first diagnosis record.</p>
+                    <a href="/DiagnosisMaster/Create" class="btn btn-primary mt-2 shadow-sm">
+                        <i class="bi bi-plus-lg me-2"></i>Create Diagnosis
+                    </a>
+                </div>
+            }
+            else
+            {
+                <div class="d-flex mb-3 align-items-center">
+                    <label class="me-2 fw-semibold text-muted">Status Filter:</label>
+                    <select id="statusFilter" class="form-select w-auto shadow-sm">
+                        <option value="">All Statuses</option>
+                        <option value="Active">Active</option>
+                        <option value="Inactive">Inactive</option>
+                    </select>
+                </div>
+
+                <div class="table-responsive">
+                    <table id="diagnosisTable" class="table table-hover align-middle mb-0" style="width:100%">
+                        <thead class="table-light text-muted">
+                            <tr>
+                                <th>Code</th>
+                                <th>Name</th>
+                                <th>Description</th>
+                                <th>Status</th>
+                                <th class="text-end">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var diag in Model)
+                            {
+                                <tr>
+                                    <td class="fw-semibold text-dark">@diag.DiagnosisCode</td>
+                                    <td class="fw-semibold text-dark">@diag.DiagnosisName</td>
+                                    <td><small class="text-muted">@diag.Description</small></td>
+                                    <td>
+                                        @if (diag.IsActive)
+                                        {
+                                            <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-3">Active</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle rounded-pill px-3">Inactive</span>
+                                        }
+                                    </td>
+                                    <td class="text-end">
+                                        <a href="/DiagnosisMaster/Edit/@diag.Id" class="btn btn-sm btn-outline-primary shadow-sm" title="Edit">
+                                            <i class="bi bi-pencil"></i> Edit
+                                        </a>
+                                        <button type="button" class="btn btn-sm btn-outline-danger shadow-sm ms-1" onclick="deleteDiagnosis('@diag.Id', '@diag.DiagnosisCode.Replace("'", "\\'")')" title="Delete">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+<form id="deleteForm" method="post" style="display:none;">
+    @Html.AntiForgeryToken()
+</form>
+
+@section Scripts {
+    <script>
+        function deleteDiagnosis(id, code) {
+            if (confirm(`Are you sure you want to delete diagnosis '${code}'?`)) {
+                $.ajax({
+                    url: '/DiagnosisMaster/Delete/' + id,
+                    type: 'POST',
+                    headers: {
+                        'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val()
+                    },
+                    success: function(result) {
+                        if (result.success) {
+                            window.location.reload();
+                        } else {
+                            alert('Failed to delete: ' + result.message);
+                        }
+                    },
+                    error: function() {
+                        alert('An error occurred while deleting the diagnosis.');
+                    }
+                });
+            }
+        }
+
+        $(document).ready(function() {
+            if (typeof $.fn.DataTable !== 'undefined') {
+                // Ensure no duplicate filters are pushed if script runs multiple times
+                while ($.fn.dataTable.ext.search.length > 0) {
+                    $.fn.dataTable.ext.search.pop();
+                }
+
+                $.fn.dataTable.ext.search.push(function(settings, data, dataIndex) {
+                    if (settings.nTable.id !== 'diagnosisTable') {
+                        return true;
+                    }
+                    var statusFilter = $('#statusFilter').val();
+                    if (!statusFilter) return true;
+                    
+                    var status = data[3] || ""; // 4th column
+                    return status.indexOf(statusFilter) !== -1;
+                });
+
+                var table = $('#diagnosisTable').DataTable();
+
+                $('#statusFilter').on('change', function() {
+                    table.draw();
+                });
+            }
+        });
+    </script>
+}

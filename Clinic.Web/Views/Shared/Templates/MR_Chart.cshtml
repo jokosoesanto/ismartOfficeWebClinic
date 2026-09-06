@@ -10,12 +10,37 @@
 
 <!-- Comprehensive Medical Record Template -->
 <div class="container-fluid py-4">
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="bi bi-check-circle-fill me-2"></i>@TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+    
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="bi bi-exclamation-triangle-fill me-2"></i>@TempData["ErrorMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h2 class="mb-0 fw-bold">Patient Chart</h2>
         <div>
             @if (ViewBag.AppointmentId != null)
             {
+                var appt = ViewBag.Appointment as Clinic.Application.DTOs.Operations.AppointmentDto;
                 <a href="javascript:void(0)" onclick="openAddTreatment()" class="btn btn-primary shadow-sm"><i class="bi bi-plus-lg me-1"></i> Add Treatment / Note</a>
+                if (appt != null && appt.Status == Clinic.Domain.Enums.AppointmentStatus.OnTime)
+                {
+                    <form action="/MedicalRecord/CompleteVisit/@appt.Id" method="post" class="d-inline ms-2">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="patientId" value="@Model.Id" />
+                        <button type="submit" class="btn btn-success shadow-sm" onclick="return confirm('Are you sure you want to complete this visit?');"><i class="bi bi-check-circle me-1"></i> Complete Visit</button>
+                    </form>
+                }
             }
             else
             {
@@ -36,7 +61,18 @@
                 </div>
             </div>
             <div class="text-end">
-                <span class="badge bg-danger mb-2"><i class="bi bi-exclamation-triangle-fill me-1"></i> Allergy: (No Record)</span><br>
+                @if (Model.AllergyStatus == Clinic.Domain.Enums.AllergyStatus.HasAllergies)
+                {
+                    <span class="badge bg-danger mb-2"><i class="bi bi-exclamation-triangle-fill me-1"></i> Allergy: Known Allergies</span><br>
+                }
+                else if (Model.AllergyStatus == Clinic.Domain.Enums.AllergyStatus.NoKnownAllergy)
+                {
+                    <span class="badge bg-success mb-2"><i class="bi bi-shield-check me-1"></i> Allergy: No Known Allergy</span><br>
+                }
+                else
+                {
+                    <span class="badge bg-secondary mb-2"><i class="bi bi-question-circle me-1"></i> Allergy: Not Recorded</span><br>
+                }
                 <span class="badge bg-info text-dark"><i class="bi bi-shield-check me-1"></i> Insurance: (No Record)</span>
             </div>
         </div>
@@ -65,82 +101,7 @@
         <div class="tab-pane fade show active" id="odontogram" role="tabpanel">
             <div class="row g-4">
                 <div class="col-md-8">
-                    <div class="card shadow-sm border-0 h-100">
-                        <div class="card-header bg-white border-bottom-0 pt-4 pb-0 d-flex justify-content-between align-items-center">
-                            <h5 class="fw-bold text-muted text-uppercase mb-0"><i class="bi bi-images me-2"></i>Interactive Chart</h5>
-                            <div class="btn-group">
-                                <button class="btn btn-outline-secondary btn-sm active" id="btnAdultAdult" onclick="odo.setMode(true); this.classList.add('active'); document.getElementById('btnChildChild').classList.remove('active');">Adult</button>
-                                <button class="btn btn-outline-secondary btn-sm" id="btnChildChild" onclick="odo.setMode(false); this.classList.add('active'); document.getElementById('btnAdultAdult').classList.remove('active');">Child</button>
-                            </div>
-                        </div>
-                        
-                        <!-- Odontogram Toolbar -->
-                        <div class="bg-light border-top border-bottom p-2 mt-3 d-flex justify-content-between align-items-center">
-                            <div class="d-flex gap-2">
-                                <select id="selCondition" class="form-select w-auto">
-                                    <option value="" disabled selected>-- Select Condition --</option>
-                                    @if (ViewBag.Conditions != null)
-                                    {
-                                        foreach (var c in ViewBag.Conditions)
-                                        {
-                                            if (c.IsActive)
-                                            {
-                                                <option value="@c.ConditionName" data-color="@c.Color">@c.ConditionName</option>
-                                            }
-                                        }
-                                    }
-                                </select>
-                                <select id="selTreatment" class="form-select w-auto">
-                                    <option value="" disabled selected>-- Select Treatment --</option>
-                                    @if (ViewBag.Treatments != null)
-                                    {
-                                        foreach (var t in ViewBag.Treatments)
-                                        {
-                                            if (t.IsActive)
-                                            {
-                                                <option value="@t.TreatmentName" data-color="@t.Color">@t.TreatmentName</option>
-                                            }
-                                        }
-                                    }
-                                </select>
-                                <button class="btn btn-primary" onclick="applySelection()"><i class="bi bi-check-circle me-1"></i>Apply</button>
-                            </div>
-                            <div>
-                                <button class="btn btn-sm btn-outline-secondary" onclick="odo.undo()"><i class="bi bi-arrow-counterclockwise"></i> Undo</button>
-                                <button class="btn btn-sm btn-outline-danger" onclick="odo.clearSelection()"><i class="bi bi-x-circle"></i> Clear Selection</button>
-                            </div>
-                        </div>
-
-                        <!-- SVG Container -->
-                        <div class="card-body bg-white m-0 p-3 overflow-auto" style="min-height: 400px;" id="odontogramContainer">
-                        </div>
-
-                        <!-- Legend -->
-                        <div class="card-footer bg-white border-top-0 d-flex flex-wrap gap-3 pb-4" id="odontogramLegend">
-                            <span class="small fw-bold text-danger">Conditions:</span>
-                            @if (ViewBag.Conditions != null)
-                            {
-                                foreach (var c in ViewBag.Conditions)
-                                {
-                                    if (c.IsActive)
-                                    {
-                                        <span class="small"><span class="d-inline-block rounded-circle me-1" style="width:10px; height:10px; background-color:@c.Color;"></span>@c.ConditionName</span>
-                                    }
-                                }
-                            }
-                            <span class="small fw-bold text-primary ms-3">Treatments:</span>
-                            @if (ViewBag.Treatments != null)
-                            {
-                                foreach (var t in ViewBag.Treatments)
-                                {
-                                    if (t.IsActive)
-                                    {
-                                        <span class="small"><span class="d-inline-block rounded-circle me-1" style="width:10px; height:10px; background-color:@t.Color;"></span>@t.TreatmentName</span>
-                                    }
-                                }
-                            }
-                        </div>
-                    </div>
+                    <partial name="Templates/_OdontogramCard" />
                 </div>
 
                 <div class="col-md-4">
@@ -184,6 +145,56 @@
                     </div>
                 </div>
             </div>
+
+            <!-- Treatment History Section (for this appointment) -->
+            <div class="row mt-4">
+                <div class="col-12">
+                    <div class="card shadow-sm border-0 rounded-3">
+                        <div class="card-header bg-white border-bottom-0 pt-4 pb-0">
+                            <h5 class="mb-0 text-primary"><i class="bi bi-clock-history me-2"></i>Treatment History</h5>
+                        </div>
+                        <div class="card-body p-4">
+                            @if (ViewBag.ExistingTreatments != null && ((IEnumerable<Clinic.Application.DTOs.Operations.AppointmentTreatmentDto>)ViewBag.ExistingTreatments).Any())
+                            {
+                                <div class="table-responsive">
+                                    <table class="table table-hover align-middle enterprise-grid" data-page-length="5" data-order='[[0, "desc"]]'>
+                                        <thead class="table-light">
+                                            <tr>
+                                                <th>Date</th>
+                                                <th>Treatment</th>
+                                                <th>Tooth</th>
+                                                <th>Surface</th>
+                                                <th>Price</th>
+                                                <th>Remarks</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @foreach(var t in (IEnumerable<Clinic.Application.DTOs.Operations.AppointmentTreatmentDto>)ViewBag.ExistingTreatments)
+                                            {
+                                                <tr style="cursor: pointer;" onclick="reflectHistory('@t.SiteNumber', '@t.SiteDetail', '@t.TreatmentItemName', '@t.TreatmentItemColor')">
+                                                    <td>@t.CreatedAt.ToString("dd MMM yyyy HH:mm")</td>
+                                                    <td class="fw-semibold">@t.TreatmentItemName</td>
+                                                    <td>@t.SiteNumber</td>
+                                                    <td>@t.SiteDetail</td>
+                                                    <td>$@t.ActualPrice.ToString("F2")</td>
+                                                    <td class="text-muted small">@t.Remark</td>
+                                                </tr>
+                                            }
+                                        </tbody>
+                                    </table>
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="text-center text-muted py-4">
+                                    <i class="bi bi-inbox fs-1"></i>
+                                    <p class="mt-2">No treatments recorded yet.</p>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
 
         <!-- VISIT & TREATMENT HISTORY TAB -->
@@ -196,119 +207,476 @@
                     </div>
                 </div>
                 <div class="card-body">
-                    <div class="border-start border-2 border-primary ms-3 ps-4 py-2 position-relative">
-                        <!-- Timeline Item 1 -->
-                        <div class="mb-5 position-relative">
-                            <span class="position-absolute bg-primary rounded-circle" style="width: 15px; height: 15px; left: -31px; top: 5px;"></span>
-                            <h5 class="fw-bold text-primary mb-0">31 Jul 2026 - Root Canal Treatment (Tooth #14)</h5>
-                            <p class="text-muted small mb-2"><i class="bi bi-person me-1"></i> Provider: Dr. Emily Chen | Status: <span class="badge bg-success">Completed</span></p>
-                            <div class="bg-light p-3 rounded border border-secondary border-opacity-25">
-                                <p class="mb-1 fw-bold">Clinical Note:</p>
-                                <p class="mb-0 text-muted">Patient presented with severe pain in upper left quadrant. Caries reached pulp on #14. Extirpation done. Canals cleaned and shaped. Calcium hydroxide placed. Temporary filling.</p>
-                            </div>
-                            <div class="mt-2">
-                                <button class="btn btn-sm btn-outline-info"><i class="bi bi-paperclip me-1"></i> View X-Ray</button>
-                            </div>
-                        </div>
+                    @if (ViewBag.HistoricalVisits != null && ((IEnumerable<Clinic.Application.DTOs.Operations.AppointmentDto>)ViewBag.HistoricalVisits).Any())
+                    {
+                        var historicalVisits = (IEnumerable<Clinic.Application.DTOs.Operations.AppointmentDto>)ViewBag.HistoricalVisits;
+                        var historicalTreatmentsLookup = ViewBag.HistoricalTreatments as ILookup<Guid, Clinic.Application.DTOs.Operations.AppointmentTreatmentDto>;
 
-                        <!-- Timeline Item 2 -->
-                        <div class="mb-0 position-relative">
-                            <span class="position-absolute bg-secondary rounded-circle" style="width: 15px; height: 15px; left: -31px; top: 5px;"></span>
-                            <h5 class="fw-bold text-secondary mb-0">15 Jul 2026 - General Consultation</h5>
-                            <p class="text-muted small mb-2"><i class="bi bi-person me-1"></i> Provider: Dr. Alan | Status: <span class="badge bg-secondary">Completed</span></p>
-                            <div class="bg-light p-3 rounded border border-secondary border-opacity-25">
-                                <p class="mb-1 fw-bold">Clinical Note:</p>
-                                <p class="mb-0 text-muted">Routine checkup. Patient complained about occasional sensitivity to cold. Identified deep caries on #14. Recommended RCT.</p>
-                            </div>
+                        <div class="border-start border-2 border-primary ms-3 ps-4 py-2 position-relative">
+                            @foreach (var visit in historicalVisits)
+                            {
+                                var badgeClass = visit.Status == Clinic.Domain.Enums.AppointmentStatus.Completed ? "bg-success" : 
+                                                 visit.Status == Clinic.Domain.Enums.AppointmentStatus.Schedule ? "bg-warning text-dark" : "bg-secondary";
+                                
+                                <div class="mb-5 position-relative">
+                                    <span class="position-absolute bg-primary rounded-circle" style="width: 15px; height: 15px; left: -31px; top: 5px;"></span>
+                                    <h5 class="fw-bold text-primary mb-0">@visit.Date.ToString("dd MMM yyyy")</h5>
+                                    <p class="text-muted small mb-2">
+                                        <i class="bi bi-person me-1"></i> Provider: @(visit.DoctorName ?? "Unassigned") | Status: <span class="badge @badgeClass">@visit.Status</span>
+                                    </p>
+
+                                    <!-- Treatments for this visit -->
+                                    @{
+                                        var treatments = historicalTreatmentsLookup?[visit.Id]?.ToList();
+                                    }
+                                    @if (treatments != null && treatments.Any())
+                                    {
+                                        <div class="table-responsive mb-3">
+                                            <table class="table table-sm table-bordered align-middle mb-0">
+                                                <thead class="table-light">
+                                                    <tr>
+                                                        <th>Treatment</th>
+                                                        <th>Tooth</th>
+                                                        <th>Surface</th>
+                                                        <th>Remarks</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    @foreach (var t in treatments)
+                                                    {
+                                                        <tr>
+                                                            <td class="fw-semibold">@t.TreatmentItemName</td>
+                                                            <td>@(string.IsNullOrEmpty(t.SiteNumber) ? "-" : t.SiteNumber)</td>
+                                                            <td>@(string.IsNullOrEmpty(t.SiteDetail) ? "-" : t.SiteDetail)</td>
+                                                            <td class="text-muted small">@t.Remark</td>
+                                                        </tr>
+                                                    }
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    }
+                                    else
+                                    {
+                                        <div class="text-muted small mb-3 fst-italic">No treatments recorded for this visit.</div>
+                                    }
+
+                                    <!-- Clinical Note for this visit -->
+                                    @if (visit.ClinicalNote != null)
+                                    {
+                                        <div class="bg-light p-3 rounded border border-secondary border-opacity-25">
+                                            <p class="mb-1 fw-bold"><i class="bi bi-journal-text me-1"></i>Clinical Note:</p>
+                                            @if (!string.IsNullOrWhiteSpace(visit.ClinicalNote.Subjective)) { <div class="mb-1"><span class="fw-semibold">S:</span> <span class="text-muted">@visit.ClinicalNote.Subjective</span></div> }
+                                            @if (!string.IsNullOrWhiteSpace(visit.ClinicalNote.Objective)) { <div class="mb-1"><span class="fw-semibold">O:</span> <span class="text-muted">@visit.ClinicalNote.Objective</span></div> }
+                                            @if (!string.IsNullOrWhiteSpace(visit.ClinicalNote.Assessment)) { <div class="mb-1"><span class="fw-semibold">A:</span> <span class="text-muted">@visit.ClinicalNote.Assessment</span></div> }
+                                            @if (!string.IsNullOrWhiteSpace(visit.ClinicalNote.Plan)) { <div class="mb-1"><span class="fw-semibold">P:</span> <span class="text-muted">@visit.ClinicalNote.Plan</span></div> }
+                                        </div>
+                                    }
+                                </div>
+                            }
                         </div>
-                    </div>
+                    }
+                    else
+                    {
+                        <div class="text-center text-muted py-5">
+                            <i class="bi bi-clock-history display-4 text-secondary mb-3 d-block"></i>
+                            <h5>No Historical Visits</h5>
+                            <p>This patient does not have any recorded previous encounters.</p>
+                        </div>
+                    }
                 </div>
             </div>
         </div>
 
         <!-- CLINICAL NOTES TAB -->
         <div class="tab-pane fade" id="notes" role="tabpanel">
-            <div class="card shadow-sm border-0">
-                <div class="card-header bg-white border-bottom-0 pt-4 pb-0 d-flex justify-content-between align-items-center">
-                    <h5 class="fw-bold text-muted text-uppercase mb-0">Dedicated Clinical Notes</h5>
-                    <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#addNoteModal"><i class="bi bi-plus"></i> New Note</button>
+            @if (ViewBag.Appointment != null)
+            {
+                var isLocked = ViewBag.Appointment.Status == Clinic.Domain.Enums.AppointmentStatus.Completed ||
+                               ViewBag.Appointment.Status == Clinic.Domain.Enums.AppointmentStatus.Failed ||
+                               ViewBag.Appointment.Status == Clinic.Domain.Enums.AppointmentStatus.Reschedule ||
+                               ViewBag.Appointment.IsDeleted;
+                var note = ViewBag.Appointment.ClinicalNote;
+                
+                <div class="card shadow-sm border-0">
+                    <div class="card-header bg-primary text-white pt-3 pb-2 d-flex justify-content-between align-items-center">
+                        <h6 class="fw-bold text-uppercase mb-0"><i class="bi bi-journal-text me-2"></i>Encounter Clinical Note (SOAP)</h6>
+                    </div>
+                    <div class="card-body">
+                        @if (note == null)
+                        {
+                            <div class="alert alert-secondary py-2"><i class="bi bi-info-circle me-2"></i>No Clinical Note Recorded</div>
+                        }
+
+                        <form action="/MedicalRecord/SaveClinicalNote" method="post">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="patientId" value="@Model.Id" />
+                            <input type="hidden" name="appointmentId" value="@ViewBag.AppointmentId" />
+
+                            <div class="mb-3">
+                                <label class="form-label fw-bold text-primary">S — Subjective</label>
+                                <textarea name="subjective" class="form-control" rows="2" @(isLocked ? "readonly" : "") placeholder="Patient-reported information, symptoms, etc.">@note?.Subjective</textarea>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label fw-bold text-primary">O — Objective</label>
+                                <textarea name="objective" class="form-control" rows="2" @(isLocked ? "readonly" : "") placeholder="Clinician-observed findings, measurements, etc.">@note?.Objective</textarea>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label fw-bold text-primary">A — Assessment</label>
+                                <textarea name="assessment" class="form-control" rows="2" @(isLocked ? "readonly" : "") placeholder="Clinical assessment/findings.">@note?.Assessment</textarea>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label fw-bold text-primary">P — Plan</label>
+                                <textarea name="plan" class="form-control" rows="2" @(isLocked ? "readonly" : "") placeholder="Planned clinical management, follow-up, etc.">@note?.Plan</textarea>
+                            </div>
+
+                            @if (!isLocked)
+                            {
+                                <div class="text-end">
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="bi bi-save me-1"></i> @(note == null ? "Save Clinical Note" : "Update Clinical Note")
+                                    </button>
+                                </div>
+                            }
+                        </form>
+                    </div>
                 </div>
-                <div class="card-body">
-                    <table class="table table-hover align-middle">
-                        <thead class="table-light">
-                            <tr>
-                                <th>Date</th>
-                                <th>Provider</th>
-                                <th>Note Type</th>
-                                <th>Description</th>
-                                <th class="text-end">Action</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td>31 Jul 2026</td>
-                                <td>Dr. Emily Chen</td>
-                                <td><span class="badge bg-primary">Progress Note</span></td>
-                                <td>Post-RCT follow up instructions given to patient.</td>
-                                <td class="text-end"><button class="btn btn-sm btn-outline-secondary"><i class="bi bi-eye"></i></button></td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
+            }
+            else
+            {
+                <div class="alert alert-warning">Please select an active appointment to view/edit clinical notes.</div>
+            }
         </div>
 
         <!-- MEDICAL HISTORY & VITALS TAB -->
         <div class="tab-pane fade" id="medhistory" role="tabpanel">
+            @if (ViewBag.Appointment != null)
+            {
+                <div class="row g-4 mb-4">
+                    <div class="col-12">
+                        <div class="card shadow-sm border-0">
+                            <div class="card-header bg-primary text-white pt-3 pb-2">
+                                <h6 class="fw-bold text-uppercase mb-0"><i class="bi bi-chat-left-text me-2"></i>Chief Complaint (Current Visit)</h6>
+                            </div>
+                            <div class="card-body">
+                                @if (ViewBag.Appointment.ChiefComplaints != null && ((IEnumerable<Clinic.Application.DTOs.Operations.AppointmentChiefComplaintDto>)ViewBag.Appointment.ChiefComplaints).Any(c => !c.IsDeleted))
+                                {
+                                    <ul class="list-group list-group-flush mb-3">
+                                        @foreach (var complaint in ((IEnumerable<Clinic.Application.DTOs.Operations.AppointmentChiefComplaintDto>)ViewBag.Appointment.ChiefComplaints).Where(c => !c.IsDeleted))
+                                        {
+                                            <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+                                                <div>
+                                                    <span class="fw-bold text-dark">@complaint.Complaint</span>
+                                                    @if (!string.IsNullOrEmpty(complaint.ToothNumber))
+                                                    {
+                                                        <span class="badge bg-secondary ms-2">Tooth: @complaint.ToothNumber</span>
+                                                    }
+                                                    @if (!string.IsNullOrEmpty(complaint.Notes))
+                                                    {
+                                                        <div class="text-muted small">@complaint.Notes</div>
+                                                    }
+                                                </div>
+                                                <form action="/MedicalRecord/RemoveChiefComplaint" method="post" class="m-0 p-0">
+                                                    @Html.AntiForgeryToken()
+                                                    <input type="hidden" name="patientId" value="@Model.Id" />
+                                                    <input type="hidden" name="appointmentId" value="@ViewBag.AppointmentId" />
+                                                    <input type="hidden" name="complaintId" value="@complaint.Id" />
+                                                    <button type="submit" class="btn btn-sm btn-outline-danger border-0" title="Remove" onclick="return confirm('Remove this chief complaint?');"><i class="bi bi-trash"></i></button>
+                                                </form>
+                                            </li>
+                                        }
+                                    </ul>
+                                }
+                                else
+                                {
+                                    <div class="alert alert-secondary py-2"><i class="bi bi-info-circle me-2"></i>No chief complaint recorded for this visit.</div>
+                                }
+
+                                <form action="/MedicalRecord/AddChiefComplaint" method="post" class="mt-2 border-top pt-3">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="patientId" value="@Model.Id" />
+                                    <input type="hidden" name="appointmentId" value="@ViewBag.AppointmentId" />
+                                    <div class="row g-2">
+                                        <div class="col-4">
+                                            <input type="text" name="complaint" class="form-control form-control-sm" placeholder="Chief Complaint (e.g., Toothache)" required />
+                                        </div>
+                                        <div class="col-2">
+                                            <input type="text" name="toothNumber" class="form-control form-control-sm" placeholder="Tooth #" />
+                                        </div>
+                                        <div class="col-4">
+                                            <input type="text" name="notes" class="form-control form-control-sm" placeholder="Additional Notes (Optional)" />
+                                        </div>
+                                        <div class="col-2">
+                                            <button type="submit" class="btn btn-sm btn-primary w-100"><i class="bi bi-plus"></i> Add</button>
+                                        </div>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-12">
+                        <div class="card shadow-sm border-0">
+                            <div class="card-header bg-success text-white pt-3 pb-2">
+                                <h6 class="fw-bold text-uppercase mb-0"><i class="bi bi-file-medical me-2"></i>Clinical Diagnosis (Current Visit)</h6>
+                            </div>
+                            <div class="card-body">
+                                @if (ViewBag.ExistingDiagnoses != null && ((IEnumerable<Clinic.Application.DTOs.Operations.AppointmentDiagnosisDto>)ViewBag.ExistingDiagnoses).Any())
+                                {
+                                    <ul class="list-group list-group-flush mb-3">
+                                        @foreach (var diagnosis in (IEnumerable<Clinic.Application.DTOs.Operations.AppointmentDiagnosisDto>)ViewBag.ExistingDiagnoses)
+                                        {
+                                            <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+                                                <div>
+                                                    <span class="fw-bold text-dark">@diagnosis.DiagnosisCode - @diagnosis.DiagnosisName</span>
+                                                    @if (!string.IsNullOrEmpty(diagnosis.Remark))
+                                                    {
+                                                        <div class="text-muted small">@diagnosis.Remark</div>
+                                                    }
+                                                </div>
+                                                <form action="/MedicalRecord/Chart/@Model.Id/RemoveDiagnosis" method="post" class="m-0 p-0">
+                                                    @Html.AntiForgeryToken()
+                                                    <input type="hidden" name="appointmentId" value="@ViewBag.AppointmentId" />
+                                                    <input type="hidden" name="diagnosisId" value="@diagnosis.Id" />
+                                                    <button type="submit" class="btn btn-sm btn-outline-danger border-0" title="Remove" onclick="return confirm('Remove this diagnosis?');"><i class="bi bi-trash"></i></button>
+                                                </form>
+                                            </li>
+                                        }
+                                    </ul>
+                                }
+                                else
+                                {
+                                    <div class="alert alert-secondary py-2"><i class="bi bi-info-circle me-2"></i>No clinical diagnosis recorded for this visit.</div>
+                                }
+
+                                <form action="/MedicalRecord/Chart/@Model.Id/AddDiagnosis" method="post" class="mt-2 border-top pt-3">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="appointmentId" value="@ViewBag.AppointmentId" />
+                                    <div class="row g-2">
+                                        <div class="col-6">
+                                            <select name="diagnosisMasterId" class="form-select form-select-sm" required>
+                                                <option value="">-- Select Diagnosis --</option>
+                                                @if (ViewBag.DiagnosisMasters != null)
+                                                {
+                                                    foreach (var master in (IEnumerable<Clinic.Application.DTOs.MasterData.DiagnosisMasterDto>)ViewBag.DiagnosisMasters)
+                                                    {
+                                                        <option value="@master.Id">@master.DiagnosisCode - @master.DiagnosisName</option>
+                                                    }
+                                                }
+                                            </select>
+                                        </div>
+                                        <div class="col-4">
+                                            <input type="text" name="remark" class="form-control form-control-sm" placeholder="Additional Remarks (Optional)" />
+                                        </div>
+                                        <div class="col-2">
+                                            <button type="submit" class="btn btn-sm btn-success w-100"><i class="bi bi-plus"></i> Add</button>
+                                        </div>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+
             <div class="row g-4">
                 <div class="col-md-6">
                     <div class="card shadow-sm border-0 h-100">
-                        <div class="card-header bg-danger text-white pt-3 pb-2">
+                        <div class="card-header bg-danger text-white pt-3 pb-2 d-flex justify-content-between align-items-center">
                             <h6 class="fw-bold text-uppercase mb-0"><i class="bi bi-exclamation-triangle me-2"></i>Allergies & Alerts</h6>
+                            <form action="/MedicalRecord/UpdateAllergyStatus" method="post" class="m-0 p-0">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="patientId" value="@Model.Id" />
+                                <input type="hidden" name="appointmentId" value="@ViewBag.AppointmentId" />
+                                <input type="hidden" name="status" value="NoKnownAllergy" />
+                                <button type="submit" class="btn btn-sm btn-outline-light py-0" style="font-size: 0.8rem;" onclick="return confirm('Are you sure you want to mark this patient as having No Known Allergy? This will clear active allergies.');">Set 'No Known Allergy'</button>
+                            </form>
                         </div>
                         <div class="card-body">
-                            <ul class="list-group list-group-flush">
-                                <li class="list-group-item d-flex justify-content-between align-items-center">
-                                    <span class="fw-bold text-danger">Penicillin</span>
-                                    <span class="badge bg-danger rounded-pill">Severe</span>
-                                </li>
-                                <li class="list-group-item d-flex justify-content-between align-items-center">
-                                    <span class="fw-bold text-warning">Latex</span>
-                                    <span class="badge bg-warning rounded-pill">Mild</span>
-                                </li>
-                            </ul>
-                            <button class="btn btn-sm btn-outline-danger mt-3 w-100"><i class="bi bi-plus"></i> Add Allergy</button>
+                            @if (Model.AllergyStatus == Clinic.Domain.Enums.AllergyStatus.NoKnownAllergy)
+                            {
+                                <div class="alert alert-success py-2"><i class="bi bi-shield-check me-2"></i>Patient has no known allergies.</div>
+                            }
+                            else if (Model.AllergyStatus == Clinic.Domain.Enums.AllergyStatus.NotRecorded)
+                            {
+                                <div class="alert alert-secondary py-2"><i class="bi bi-question-circle me-2"></i>Allergy information not recorded.</div>
+                            }
+                            else if (Model.AllergyStatus == Clinic.Domain.Enums.AllergyStatus.HasAllergies && Model.Allergies != null && Model.Allergies.Any(a => !a.IsDeleted))
+                            {
+                                <ul class="list-group list-group-flush mb-3">
+                                    @foreach (var allergy in Model.Allergies.Where(a => !a.IsDeleted))
+                                    {
+                                        <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+                                            <div>
+                                                <span class="fw-bold text-danger">@allergy.Allergen</span>
+                                                @if (!string.IsNullOrEmpty(allergy.Severity))
+                                                {
+                                                    <span class="badge bg-danger rounded-pill ms-2">@allergy.Severity</span>
+                                                }
+                                                @if (!string.IsNullOrEmpty(allergy.Notes))
+                                                {
+                                                    <div class="text-muted small">@allergy.Notes</div>
+                                                }
+                                            </div>
+                                            <form action="/MedicalRecord/RemoveAllergy" method="post" class="m-0 p-0">
+                                                @Html.AntiForgeryToken()
+                                                <input type="hidden" name="patientId" value="@Model.Id" />
+                                                <input type="hidden" name="appointmentId" value="@ViewBag.AppointmentId" />
+                                                <input type="hidden" name="allergyId" value="@allergy.Id" />
+                                                <button type="submit" class="btn btn-sm btn-outline-danger border-0" title="Remove" onclick="return confirm('Remove this allergy?');"><i class="bi bi-trash"></i></button>
+                                            </form>
+                                        </li>
+                                    }
+                                </ul>
+                            }
+
+                            <form action="/MedicalRecord/AddAllergy" method="post" class="mt-2 border-top pt-3">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="patientId" value="@Model.Id" />
+                                <input type="hidden" name="appointmentId" value="@ViewBag.AppointmentId" />
+                                <div class="row g-2">
+                                    <div class="col-6">
+                                        <input type="text" name="allergen" class="form-control form-control-sm" placeholder="Allergen (e.g., Penicillin)" required />
+                                    </div>
+                                    <div class="col-6">
+                                        <select name="severity" class="form-select form-select-sm">
+                                            <option value="">-- Severity --</option>
+                                            <option value="Mild">Mild</option>
+                                            <option value="Moderate">Moderate</option>
+                                            <option value="Severe">Severe</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-8">
+                                        <input type="text" name="notes" class="form-control form-control-sm" placeholder="Notes (Optional)" />
+                                    </div>
+                                    <div class="col-4">
+                                        <button type="submit" class="btn btn-sm btn-danger w-100"><i class="bi bi-plus"></i> Add</button>
+                                    </div>
+                                </div>
+                            </form>
                         </div>
                     </div>
                 </div>
                 
                 <div class="col-md-6">
                     <div class="card shadow-sm border-0 h-100">
-                        <div class="card-header bg-info text-white pt-3 pb-2">
-                            <h6 class="fw-bold text-uppercase mb-0"><i class="bi bi-heart-pulse me-2"></i>Vital Signs (Latest)</h6>
+                        <div class="card-header bg-info text-white pt-3 pb-2 d-flex justify-content-between align-items-center">
+                            <h6 class="fw-bold text-uppercase mb-0"><i class="bi bi-heart-pulse me-2"></i>Vital Signs (Current Encounter)</h6>
+                            @if (ViewBag.Appointment != null && 
+                                 ViewBag.Appointment.Status != Clinic.Domain.Enums.AppointmentStatus.Completed && 
+                                 ViewBag.Appointment.Status != Clinic.Domain.Enums.AppointmentStatus.Failed && 
+                                 ViewBag.Appointment.Status != Clinic.Domain.Enums.AppointmentStatus.Reschedule &&
+                                 !ViewBag.Appointment.IsDeleted)
+                            {
+                                <button type="button" class="btn btn-sm btn-outline-light py-0" style="font-size: 0.8rem;" data-bs-toggle="modal" data-bs-target="#vitalsModal">
+                                    @(ViewBag.Appointment.VitalSign == null ? "Record Vitals" : "Update Vitals")
+                                </button>
+                            }
                         </div>
                         <div class="card-body">
-                            <div class="row text-center mb-3">
-                                <div class="col-4">
-                                    <h3 class="fw-bold text-primary mb-0">120/80</h3>
-                                    <small class="text-muted">Blood Pressure</small>
+                            @if (ViewBag.Appointment == null)
+                            {
+                                <div class="alert alert-warning py-2 text-center">
+                                    <i class="bi bi-info-circle me-2"></i>Please select an active appointment to view/edit vital signs.
                                 </div>
-                                <div class="col-4 border-start border-end">
-                                    <h3 class="fw-bold text-primary mb-0">72</h3>
-                                    <small class="text-muted">Heart Rate</small>
+                            }
+                            else if (ViewBag.Appointment.VitalSign == null)
+                            {
+                                <div class="alert alert-secondary py-2 text-center">
+                                    <i class="bi bi-info-circle me-2"></i>No Vital Signs Recorded.
                                 </div>
-                                <div class="col-4">
-                                    <h3 class="fw-bold text-primary mb-0">36.5°C</h3>
-                                    <small class="text-muted">Temperature</small>
+                            }
+                            else
+                            {
+                                <div class="row text-center mb-3">
+                                    <div class="col-4">
+                                        <h3 class="fw-bold text-primary mb-0">@(ViewBag.Appointment.VitalSign.Systolic?.ToString() ?? "--")/@(ViewBag.Appointment.VitalSign.Diastolic?.ToString() ?? "--")</h3>
+                                        <small class="text-muted">Blood Pressure</small>
+                                    </div>
+                                    <div class="col-4 border-start border-end">
+                                        <h3 class="fw-bold text-primary mb-0">@(ViewBag.Appointment.VitalSign.HeartRate?.ToString() ?? "--")</h3>
+                                        <small class="text-muted">Heart Rate</small>
+                                    </div>
+                                    <div class="col-4">
+                                        <h3 class="fw-bold text-primary mb-0">@(ViewBag.Appointment.VitalSign.Temperature?.ToString("0.0") ?? "--")°C</h3>
+                                        <small class="text-muted">Temperature</small>
+                                    </div>
                                 </div>
-                            </div>
-                            <div class="text-center text-muted small">Recorded on: 31 Jul 2026</div>
-                            <button class="btn btn-sm btn-outline-info mt-3 w-100"><i class="bi bi-plus"></i> Record Vitals</button>
+                                <div class="text-center text-muted small">
+                                    Recorded on: @ViewBag.Appointment.VitalSign.UpdatedAt?.ToString("dd MMM yyyy HH:mm")
+                                    @(ViewBag.Appointment.VitalSign.UpdatedAt == null ? ViewBag.Appointment.VitalSign.CreatedAt.ToString("dd MMM yyyy HH:mm") : "")
+                                </div>
+                            }
                         </div>
                     </div>
                 </div>
 
-                <div class="col-12">
+                <div class="col-12 mt-2">
+                    <div class="card shadow-sm border-0">
+                        <div class="card-header bg-warning text-dark pt-3 pb-2 d-flex justify-content-between align-items-center">
+                            <h6 class="fw-bold text-uppercase mb-0"><i class="bi bi-clipboard-pulse me-2"></i>Systemic Diseases & Medical History</h6>
+                            <form action="/MedicalRecord/UpdateMedicalHistoryStatus" method="post" class="m-0 p-0">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="patientId" value="@Model.Id" />
+                                <input type="hidden" name="appointmentId" value="@ViewBag.AppointmentId" />
+                                <input type="hidden" name="status" value="NoKnownMedicalCondition" />
+                                <button type="submit" class="btn btn-sm btn-outline-dark py-0" style="font-size: 0.8rem;" onclick="return confirm('Are you sure you want to mark this patient as having No Known Medical Condition? This will clear active conditions.');">Set 'No Known Medical Condition'</button>
+                            </form>
+                        </div>
+                        <div class="card-body">
+                            @if (Model.MedicalHistoryStatus == Clinic.Domain.Enums.MedicalHistoryStatus.NoKnownMedicalCondition)
+                            {
+                                <div class="alert alert-success py-2"><i class="bi bi-shield-check me-2"></i>Patient has no known systemic diseases.</div>
+                            }
+                            else if (Model.MedicalHistoryStatus == Clinic.Domain.Enums.MedicalHistoryStatus.NotRecorded)
+                            {
+                                <div class="alert alert-secondary py-2"><i class="bi bi-question-circle me-2"></i>Medical history information not recorded.</div>
+                            }
+                            else if (Model.MedicalHistoryStatus == Clinic.Domain.Enums.MedicalHistoryStatus.HasMedicalConditions && Model.SystemicDiseases != null && Model.SystemicDiseases.Any(d => !d.IsDeleted && d.IsActive))
+                            {
+                                <ul class="list-group list-group-flush mb-3">
+                                    @foreach (var disease in Model.SystemicDiseases.Where(d => !d.IsDeleted && d.IsActive))
+                                    {
+                                        <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+                                            <div>
+                                                <span class="fw-bold text-dark">@disease.Condition</span>
+                                                @if (!string.IsNullOrEmpty(disease.Notes))
+                                                {
+                                                    <div class="text-muted small">@disease.Notes</div>
+                                                }
+                                            </div>
+                                            <form action="/MedicalRecord/RemoveSystemicDisease" method="post" class="m-0 p-0">
+                                                @Html.AntiForgeryToken()
+                                                <input type="hidden" name="patientId" value="@Model.Id" />
+                                                <input type="hidden" name="appointmentId" value="@ViewBag.AppointmentId" />
+                                                <input type="hidden" name="diseaseId" value="@disease.Id" />
+                                                <button type="submit" class="btn btn-sm btn-outline-danger border-0" title="Remove" onclick="return confirm('Remove this condition?');"><i class="bi bi-trash"></i></button>
+                                            </form>
+                                        </li>
+                                    }
+                                </ul>
+                            }
+
+                            <form action="/MedicalRecord/AddSystemicDisease" method="post" class="mt-2 border-top pt-3">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="patientId" value="@Model.Id" />
+                                <input type="hidden" name="appointmentId" value="@ViewBag.AppointmentId" />
+                                <div class="row g-2">
+                                    <div class="col-4">
+                                        <input type="text" name="condition" class="form-control form-control-sm" placeholder="Condition (e.g., Diabetes)" required />
+                                    </div>
+                                    <div class="col-6">
+                                        <input type="text" name="notes" class="form-control form-control-sm" placeholder="Notes (Optional)" />
+                                    </div>
+                                    <div class="col-2">
+                                        <button type="submit" class="btn btn-sm btn-warning w-100"><i class="bi bi-plus"></i> Add</button>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-12 mt-2">
                     <div class="card shadow-sm border-0">
                         <div class="card-header bg-secondary text-white pt-3 pb-2">
                             <h6 class="fw-bold text-uppercase mb-0"><i class="bi bi-capsule me-2"></i>Medication History</h6>
@@ -358,157 +726,77 @@
     </div>
 </div>
 
-<!-- Add Note Modal -->
-<div class="modal fade" id="addNoteModal" tabindex="-1">
+
+<!-- Vital Signs Modal -->
+<div class="modal fade" id="vitalsModal" tabindex="-1" aria-labelledby="vitalsModalLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
-            <div class="modal-header border-0 pb-0">
-                <h5 class="modal-title fw-bold text-primary">New Clinical Note</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            <div class="modal-header bg-info text-white">
+                <h5 class="modal-title" id="vitalsModalLabel"><i class="bi bi-heart-pulse me-2"></i>Record Encounter Vital Signs</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <div class="modal-body">
-                <form>
-                    <div class="mb-3">
-                        <label class="form-label fw-bold">Note Type</label>
-                        <select class="form-select">
-                            <option>Progress Note</option>
-                            <option>Consultation Note</option>
-                            <option>Discharge Summary</option>
-                        </select>
+            <form action="/MedicalRecord/SaveVitalSign" method="post">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="patientId" value="@Model.Id" />
+                <input type="hidden" name="appointmentId" value="@ViewBag.AppointmentId" />
+                
+                <div class="modal-body">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold">Systolic BP</label>
+                            <input type="number" class="form-control" name="systolic" value="@(ViewBag.Appointment?.VitalSign?.Systolic)" placeholder="mmHg (e.g. 120)" min="50" max="250">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold">Diastolic BP</label>
+                            <input type="number" class="form-control" name="diastolic" value="@(ViewBag.Appointment?.VitalSign?.Diastolic)" placeholder="mmHg (e.g. 80)" min="30" max="150">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold">Heart Rate</label>
+                            <input type="number" class="form-control" name="heartRate" value="@(ViewBag.Appointment?.VitalSign?.HeartRate)" placeholder="bpm (e.g. 72)" min="30" max="200">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold">Temperature (°C)</label>
+                            <input type="number" step="0.1" class="form-control" name="temperature" value="@(ViewBag.Appointment?.VitalSign?.Temperature?.ToString("0.0", System.Globalization.CultureInfo.InvariantCulture))" placeholder="°C (e.g. 36.5)" min="30" max="45">
+                        </div>
                     </div>
-                    <div class="mb-3">
-                        <label class="form-label fw-bold">Description</label>
-                        <textarea class="form-control" rows="4"></textarea>
-                    </div>
-                </form>
-            </div>
-            <div class="modal-footer border-0 pt-0">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Save Note</button>
-            </div>
+                </div>
+                <div class="modal-footer border-0 pt-0">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-info text-white">Save Vital Signs</button>
+                </div>
+            </form>
         </div>
     </div>
 </div>
 
-<script src="~/js/odontogram.js"></script>
+<partial name="Templates/_OdontogramScripts" />
+<form id="applyTreatmentForm" method="post" action="/MedicalRecord/Chart/@Model.Id/ApplyTreatment" style="display:none;">
+    @Html.AntiForgeryToken()
+    <input type="hidden" name="appointmentId" value="@ViewBag.AppointmentId" />
+    <input type="hidden" name="treatmentName" id="hiddenTreatmentName" />
+    <input type="hidden" name="siteNumber" id="hiddenSiteNumber" />
+    <input type="hidden" name="siteDetail" id="hiddenSiteDetail" />
+</form>
 <script>
-    window.TreatmentColors = {
-        @if (ViewBag.Treatments != null)
-        {
-            foreach (var t in ViewBag.Treatments)
-            {
-                @Html.Raw($"'{t.TreatmentName}': '{t.Color}',\n")
+    function reflectHistory(tooth, surface, text, color) {
+        if (!odo) return;
+        odo.clearSelection();
+        
+        if (tooth) {
+            let svgSurface = 'C';
+            if (surface) {
+                svgSurface = odo.getSvgSurface(tooth, surface);
             }
+            odo.handleClick(tooth, svgSurface);
         }
-    };
-    
-    window.ConditionColors = {
-        @if (ViewBag.Conditions != null)
-        {
-            foreach (var c in ViewBag.Conditions)
-            {
-                @Html.Raw($"'{c.ConditionName}': '{c.Color}',\n")
-            }
-        }
-    };
-
-    let odo;
-    document.addEventListener("DOMContentLoaded", function () {
-        odo = new Odontogram("odontogramContainer");
-        
-        odo.onSelectSurface = function(toothId, surfaceId) {
-            document.getElementById('txtSelectedTooth').value = `Tooth #${toothId}`;
-            
-            const surfaceNames = { 'T': 'Top (Buccal/Facial)', 'B': 'Bottom (Lingual)', 'L': 'Left (Mesial/Distal)', 'R': 'Right (Distal/Mesial)', 'C': 'Center (Occlusal/Incisal)' };
-            document.getElementById('txtSelectedSurface').innerText = `Surface: ${surfaceNames[surfaceId] || surfaceId}`;
-        };
-    });
-
-    function applySelection() {
-        const cond = document.getElementById('selCondition');
-        const treat = document.getElementById('selTreatment');
-        
-        let type = null;
-        let color = null;
-        let text = null;
-        
-        // Prioritize treatment over condition if both selected (or could enforce only one)
-        if (treat.value) {
-            type = treat.value;
-            color = treat.options[treat.selectedIndex].dataset.color;
-            text = treat.options[treat.selectedIndex].text;
-            
-            // Add to Treatment List
-            if (!addToList('treatmentList', text, odo.selectedTooth, odo.selectedSurface, "bg-success")) {
-                alert("This treatment is already applied to this surface.");
-                return;
-            }
-        } else if (cond.value) {
-            type = cond.value;
-            color = cond.options[cond.selectedIndex].dataset.color;
-            text = cond.options[cond.selectedIndex].text;
-            
-            // Add to Diagnosis List
-            if (!addToList('diagnosisList', text, odo.selectedTooth, odo.selectedSurface, "bg-danger")) {
-                alert("This condition is already applied to this surface.");
-                return;
-            }
-        } else {
-            alert("Please select a condition or treatment to apply.");
-            return;
-        }
-
-        odo.applyTreatment(type, color);
-        
-        // Reset dropdowns
-        cond.value = "";
-        treat.value = "";
     }
 
-    function addToList(listId, text, tooth, surface, badgeClass) {
-        const list = document.getElementById(listId);
-        const surfaceNames = { 'T': 'T', 'B': 'B', 'L': 'L', 'R': 'R', 'C': 'C' };
-        
-        const newIdentifier = `${text} #${tooth} (${surfaceNames[surface]})`;
-        const existingItems = list.querySelectorAll("li");
-        for (let i = 0; i < existingItems.length; i++) {
-            if (existingItems[i].innerText.includes(newIdentifier)) {
-                return false;
-            }
-        }
-        
-        // Remove empty state if present
-        if (list.innerHTML.includes("No ")) {
-            list.innerHTML = "";
-        }
-        
-        const li = document.createElement("li");
-        li.className = "list-group-item d-flex justify-content-between align-items-center";
-        li.innerHTML = `<span><span class="badge ${badgeClass} me-2">${text}</span> #${tooth} (${surfaceNames[surface]})</span>
-                        <button class="btn btn-sm btn-outline-secondary border-0" onclick="removeEntry(this, '${tooth}', '${surface}', '${text}')"><i class="bi bi-trash"></i></button>`;
-        list.appendChild(li);
-        return true;
-    }
-
-    function removeEntry(btn, tooth, surface, text) {
-        const li = btn.parentElement;
-        const list = li.parentElement;
-        li.remove();
-        
-        if (list.children.length === 0) {
-            const emptyText = list.id === 'diagnosisList' ? "No conditions recorded." : "No treatments recorded.";
-            list.innerHTML = `<li class="list-group-item d-flex justify-content-between align-items-center text-muted small">${emptyText}</li>`;
-        }
-        
-        odo.removeTreatment(tooth, surface, text);
-    }
-    
     function openAddTreatment() {
         var patientId = '@Model.Id';
         var appointmentId = '@ViewBag.AppointmentId';
         if (!appointmentId) return;
         
-        var url = '/MedicalRecord/Chart/' + patientId + '/Treatment/Add?appointmentId=' + appointmentId;
+        var url = '/MedicalRecord/Create/' + appointmentId + '?patientId=' + patientId;
         if (odo && odo.selectedTooth) {
             url += '&siteNumber=' + encodeURIComponent(odo.selectedTooth);
         }
@@ -517,4 +805,60 @@
         }
         window.location.href = url;
     }
+
+    document.addEventListener("DOMContentLoaded", function () {
+        var sessionKey = 'activeTab_' + window.location.pathname;
+        var hash = window.location.hash;
+
+        var savedHash = sessionStorage.getItem(sessionKey);
+        sessionStorage.removeItem(sessionKey);
+
+        var tabTrigger = null;
+
+        // 1. Try to use the hash from the URL
+        if (hash) {
+            tabTrigger = document.querySelector('button[data-bs-target="' + hash + '"]');
+        }
+
+        // 2. If the URL hash is invalid or missing, try to use the saved hash
+        if (!tabTrigger && savedHash) {
+            tabTrigger = document.querySelector('button[data-bs-target="' + savedHash + '"]');
+            if (tabTrigger) {
+                hash = savedHash;
+            }
+        }
+
+        // 3. If a valid trigger was found, activate it and update URL
+        if (tabTrigger) {
+            var tab = new bootstrap.Tab(tabTrigger);
+            tab.show();
+            history.replaceState(null, null, hash);
+        }
+
+        // Update hash when a tab is clicked
+        var tabElements = document.querySelectorAll('button[data-bs-toggle="tab"]');
+        tabElements.forEach(function (tabEl) {
+            tabEl.addEventListener('shown.bs.tab', function (event) {
+                var target = event.target.getAttribute("data-bs-target");
+                if (target) {
+                    history.replaceState(null, null, target);
+                }
+            });
+        });
+
+        // Store active tab before form submission
+        document.addEventListener('submit', function (e) {
+            var currentHash = window.location.hash;
+            // If no hash in URL but a tab is active, try to find the active tab pane manually
+            if (!currentHash) {
+                var activePane = document.querySelector('.tab-pane.active');
+                if (activePane) {
+                    currentHash = '#' + activePane.id;
+                }
+            }
+            if (currentHash) {
+                sessionStorage.setItem(sessionKey, currentHash);
+            }
+        });
+    });
 </script>

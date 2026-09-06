@@ -351,7 +351,12 @@
                 { 
                     data: "status", name: "Status",
                     render: function (data, type, row) {
-                        if (row.isAppointment) return '<span class="badge bg-info-subtle text-info border border-info-subtle"><i class="bi bi-calendar-check-fill me-1"></i> Appointment</span>';
+                        if (row.isAppointment) {
+                            if (row.appointmentStatus === 'Completed') {
+                                return '<span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle"><i class="bi bi-check2-all me-1"></i> Completed Visit</span>';
+                            }
+                            return '<span class="badge bg-info-subtle text-info border border-info-subtle"><i class="bi bi-calendar-check-fill me-1"></i> Appointment</span>';
+                        }
                         if (data === "Available") return '<span class="badge bg-success-subtle text-success border border-success-subtle"><i class="bi bi-check-circle-fill me-1"></i> Available</span>';
                         if (data === "Break") return '<span class="badge bg-warning-subtle text-warning border border-warning-subtle"><i class="bi bi-cup-hot-fill me-1"></i> Break</span>';
                         if (data === "Leave") return '<span class="badge bg-danger-subtle text-danger border border-danger-subtle"><i class="bi bi-dash-circle-fill me-1"></i> Leave</span>';
@@ -558,7 +563,8 @@
                                                 isAppointment: item.isAppointment,
                                                 patientName: item.patientName,
                                                 doctorName: item.doctorName,
-                                                baseColor: item.color
+                                                baseColor: item.color,
+                                                appointmentStatus: item.appointmentStatus
                                             }
                                         });
                                     });
@@ -588,8 +594,13 @@
                                 var displayTitle = title ? title + ' ' : '';
                                 var finalContent = displayTitle + intervalText;
                                 
-                                html = '<div class="w-100' + heightClass + ' rounded px-1 py-1 text-white overflow-hidden" style="background-color: ' + baseColor + '; font-size: 0.75rem; line-height: 1.2; border: 1px solid rgba(0,0,0,0.1); cursor: pointer;" title="' + finalContent + '">' +
-                                       finalContent + '</div>';
+                                if (props.appointmentStatus === 'Completed') {
+                                    html = '<div class="w-100' + heightClass + ' rounded px-1 py-1 text-white overflow-hidden" style="background-color: #6c757d; font-size: 0.75rem; line-height: 1.2; border: 1px solid rgba(0,0,0,0.1); cursor: pointer; opacity: 0.85;" title="Completed Visit: ' + finalContent + '">' +
+                                           '<i class="bi bi-check2-all me-1"></i>' + finalContent + '</div>';
+                                } else {
+                                    html = '<div class="w-100' + heightClass + ' rounded px-1 py-1 text-white overflow-hidden" style="background-color: ' + baseColor + '; font-size: 0.75rem; line-height: 1.2; border: 1px solid rgba(0,0,0,0.1); cursor: pointer;" title="' + finalContent + '">' +
+                                           finalContent + '</div>';
+                                }
                             } else if (props.status === 'DoctorLeave') {
                                 // Doctor Leave visualization
                                 var displayTitle = title ? title + ' - Leave ' : '';

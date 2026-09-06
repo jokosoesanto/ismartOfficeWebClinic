@@ -51,6 +51,12 @@ namespace Clinic.Application.UseCases.Operations
             return treatments.Select(MapToDto).ToList();
         }
 
+        public async Task<IEnumerable<AppointmentTreatmentDto>> GetTreatmentsByAppointmentIdsAsync(IEnumerable<Guid> appointmentIds)
+        {
+            var treatments = await _treatmentRepository.GetByAppointmentIdsAsync(appointmentIds);
+            return treatments.Select(MapToDto).ToList();
+        }
+
         private AppointmentTreatmentDto MapToDto(AppointmentTreatment entity)
         {
             return new AppointmentTreatmentDto
@@ -59,6 +65,7 @@ namespace Clinic.Application.UseCases.Operations
                 AppointmentId = entity.AppointmentId,
                 TreatmentItemId = entity.TreatmentItemId,
                 TreatmentItemName = entity.TreatmentItem?.TreatmentName,
+                TreatmentItemColor = entity.TreatmentItem?.Color,
                 SiteNumber = entity.SiteNumber,
                 SiteDetail = entity.SiteDetail,
                 ActualPrice = entity.ActualPrice,

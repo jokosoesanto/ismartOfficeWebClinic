@@ -12,12 +12,30 @@
         <div>
             @if (!Model.IsDeleted)
             {
-                <a href="/MedicalRecord/Chart/@Model.PatientId?appointmentId=@Model.Id" class="btn btn-success shadow-sm me-2">
-                    <i class="bi bi-journal-medical me-2"></i>Medical Record
-                </a>
-                <a href="/Appointment/Edit/@Model.Id" class="btn btn-primary shadow-sm me-2">
-                    <i class="bi bi-pencil me-2"></i>Edit Appointment
-                </a>
+                @if (Model.Status == Clinic.Domain.Enums.AppointmentStatus.OnTime)
+                {
+                    <a href="/MedicalRecord/Chart/@Model.PatientId?appointmentId=@Model.Id" class="btn btn-success shadow-sm me-2">
+                        <i class="bi bi-journal-medical me-2"></i>Add Treatment
+                    </a>
+                }
+                else
+                {
+                    <button class="btn btn-secondary shadow-sm me-2" disabled title="Check-In required to Add Treatment">
+                        <i class="bi bi-journal-medical me-2"></i>Add Treatment
+                    </button>
+                }
+                @if (Model.Status == Clinic.Domain.Enums.AppointmentStatus.OnTime)
+                {
+                    <button class="btn btn-secondary shadow-sm me-2" disabled title="Cannot edit Checked-In appointment">
+                        <i class="bi bi-pencil me-2"></i>Edit Appointment
+                    </button>
+                }
+                else
+                {
+                    <a href="/Appointment/Edit/@Model.Id" class="btn btn-primary shadow-sm me-2">
+                        <i class="bi bi-pencil me-2"></i>Edit Appointment
+                    </a>
+                }
             }
             <a href="/Appointment" class="btn btn-outline-secondary shadow-sm">
                 <i class="bi bi-arrow-left me-2"></i>Back to List
@@ -46,7 +64,7 @@
                                 }
                                 else if(Model.Status == Clinic.Domain.Enums.AppointmentStatus.OnTime)
                                 {
-                                    <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 px-3 py-2 rounded-pill">@Model.Status</span>
+                                    <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 px-3 py-2 rounded-pill">Checked-In</span>
                                 }
                                 else if(Model.Status == Clinic.Domain.Enums.AppointmentStatus.Late)
                                 {

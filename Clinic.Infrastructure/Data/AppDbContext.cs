@@ -29,6 +29,7 @@ namespace Clinic.Infrastructure.Data
         public DbSet<Clinic.Domain.Entities.MasterData.DoctorLocation> DoctorLocations { get; set; } = null!;
         public DbSet<Clinic.Domain.Entities.MasterData.DoctorSchedule> DoctorSchedules { get; set; } = null!;
         public DbSet<Clinic.Domain.Entities.MasterData.Patient> Patients { get; set; } = null!;
+
         public DbSet<Clinic.Domain.Entities.Configuration.AppConfiguration> AppConfigurations { get; set; } = null!;
         public DbSet<Clinic.Domain.Entities.System.FileMetadata> FileMetadatas { get; set; } = null!;
         public DbSet<Clinic.Domain.Entities.MasterData.TreatmentCategory> TreatmentCategories { get; set; } = null!;
@@ -36,10 +37,16 @@ namespace Clinic.Infrastructure.Data
         public DbSet<Clinic.Domain.Entities.MasterData.TreatmentCatalog> TreatmentCatalogs { get; set; } = null!;
         public DbSet<Clinic.Domain.Entities.MasterData.Insurance> Insurances { get; set; } = null!;
         public DbSet<Clinic.Domain.Entities.MasterData.ConditionMaster> ConditionMasters { get; set; } = null!;
+        public DbSet<Clinic.Domain.Entities.MasterData.DiagnosisMaster> DiagnosisMasters { get; set; } = null!;
         public DbSet<Clinic.Domain.Entities.Operations.Appointment> Appointments { get; set; } = null!;
         public DbSet<Clinic.Domain.Entities.Operations.DoctorLeaveRequest> DoctorLeaveRequests { get; set; } = null!;
         public DbSet<Clinic.Domain.Entities.Operations.DoctorLeaveDate> DoctorLeaveDates { get; set; } = null!;
         public DbSet<Clinic.Domain.Entities.Operations.AppointmentTreatment> AppointmentTreatments { get; set; } = null!;
+        public DbSet<Clinic.Domain.Entities.Operations.AppointmentDiagnosis> AppointmentDiagnoses { get; set; } = null!;
+        public DbSet<Clinic.Domain.Entities.MasterData.PatientAllergy> PatientAllergies { get; set; } = null!;
+        public DbSet<Clinic.Domain.Entities.MasterData.PatientMedicalHistory> PatientSystemicDiseases { get; set; } = null!;
+        public DbSet<Clinic.Domain.Entities.Operations.AppointmentVitalSign> AppointmentVitalSigns { get; set; } = null!;
+        public DbSet<Clinic.Domain.Entities.Operations.AppointmentClinicalNote> AppointmentClinicalNotes { get; set; } = null!;
 
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -51,12 +58,18 @@ namespace Clinic.Infrastructure.Data
             modelBuilder.ApplyConfiguration(new Configurations.TreatmentSubCategoryConfiguration());
             modelBuilder.ApplyConfiguration(new Configurations.TreatmentCatalogConfiguration());
             modelBuilder.ApplyConfiguration(new Configurations.InsuranceConfiguration());
+            modelBuilder.ApplyConfiguration(new Configurations.ConditionMasterConfiguration());
+            modelBuilder.ApplyConfiguration(new Configurations.DiagnosisMasterConfiguration());
             modelBuilder.ApplyConfiguration(new Configurations.AppointmentConfiguration());
             modelBuilder.ApplyConfiguration(new Configurations.DoctorLeaveRequestConfiguration());
             modelBuilder.ApplyConfiguration(new Configurations.DoctorLeaveDateConfiguration());
             modelBuilder.ApplyConfiguration(new Configurations.AppointmentTreatmentConfiguration());
-            modelBuilder.ApplyConfiguration(new Configurations.ConditionMasterConfiguration());
-
+            modelBuilder.ApplyConfiguration(new Configurations.PatientAllergyConfiguration());
+            modelBuilder.ApplyConfiguration(new Configurations.PatientMedicalHistoryConfiguration());
+            modelBuilder.ApplyConfiguration(new Configurations.AppointmentChiefComplaintConfiguration());
+            modelBuilder.ApplyConfiguration(new Configurations.AppointmentVitalSignConfiguration());
+            modelBuilder.ApplyConfiguration(new Configurations.AppointmentClinicalNoteConfiguration());
+            modelBuilder.ApplyConfiguration(new Configurations.AppointmentDiagnosisConfiguration());
 
             modelBuilder.Entity<Clinic.Domain.Entities.Configuration.AppConfiguration>(entity =>
             {
@@ -84,6 +97,16 @@ namespace Clinic.Infrastructure.Data
             {
                 entity.HasIndex(e => e.MRN).IsUnique();
                 
+                entity.Property(e => e.AllergyStatus)
+                      .HasConversion<string>()
+                      .HasMaxLength(20)
+                      .IsRequired();
+                      
+                entity.Property(e => e.MedicalHistoryStatus)
+                      .HasConversion<string>()
+                      .HasMaxLength(30)
+                      .IsRequired();
+
                 // Add soft delete query filter
                 entity.HasQueryFilter(e => !e.IsDeleted);
             });
@@ -96,6 +119,9 @@ namespace Clinic.Infrastructure.Data
             modelBuilder.Entity<Clinic.Domain.Entities.MasterData.TreatmentCatalog>().HasQueryFilter(e => !e.IsDeleted);
             modelBuilder.Entity<Clinic.Domain.Entities.MasterData.Insurance>().HasQueryFilter(e => !e.IsDeleted);
             modelBuilder.Entity<Clinic.Domain.Entities.MasterData.ConditionMaster>().HasQueryFilter(e => !e.IsDeleted);
+            modelBuilder.Entity<Clinic.Domain.Entities.MasterData.DiagnosisMaster>().HasQueryFilter(e => !e.IsDeleted);
+
+            modelBuilder.Entity<Clinic.Domain.Entities.Operations.DoctorLeaveRequest>().HasQueryFilter(e => !e.IsDeleted);
 
             // Explicitly set max length for string to avoid NTEXT/TEXT
             modelBuilder.Entity<SystemSetting>(entity =>

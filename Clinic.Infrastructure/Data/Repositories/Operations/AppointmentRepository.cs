@@ -24,6 +24,9 @@ namespace Clinic.Infrastructure.Data.Repositories.Operations
                 .Include(a => a.Doctor)
                 .Include(a => a.Location)
                 .Include(a => a.Chair)
+                .Include(a => a.ChiefComplaints)
+                .Include(a => a.VitalSign)
+                .Include(a => a.ClinicalNote)
                 .AsQueryable();
 
             if (includeDeleted)
@@ -41,6 +44,9 @@ namespace Clinic.Infrastructure.Data.Repositories.Operations
                 .Include(a => a.Doctor)
                 .Include(a => a.Location)
                 .Include(a => a.Chair)
+                .Include(a => a.ChiefComplaints)
+                .Include(a => a.VitalSign)
+                .Include(a => a.ClinicalNote)
                 .AsQueryable();
 
             if (showCancelled)
@@ -127,6 +133,23 @@ namespace Clinic.Infrastructure.Data.Repositories.Operations
                 .Where(a => requestedDates.Contains(a.Date.Date))
                 .OrderBy(a => a.Date)
                 .ThenBy(a => a.StartTime)
+                .ToList();
+        }
+
+        public async Task<IEnumerable<Appointment>> GetAppointmentsByPatientIdAsync(Guid patientId)
+        {
+            var appointments = await _context.Appointments
+                .Include(a => a.Doctor)
+                .Include(a => a.ClinicalNote)
+                .Include(a => a.Location)
+                .Include(a => a.Chair)
+                .Where(a => a.PatientId == patientId)
+                .OrderByDescending(a => a.Date)
+                .ToListAsync();
+
+            return appointments
+                .OrderByDescending(a => a.Date)
+                .ThenByDescending(a => a.StartTime)
                 .ToList();
         }
     }

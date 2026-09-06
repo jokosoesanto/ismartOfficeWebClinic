@@ -31,6 +31,8 @@ namespace Clinic.Infrastructure.Repositories.MasterData
             return await _context.Patients
                 .Include(p => p.HomeClinic)
                 .Include(p => p.PhotoFileMetadata)
+                .Include(p => p.Allergies)
+                .Include(p => p.SystemicDiseases)
                 .FirstOrDefaultAsync(p => p.Id == id);
         }
 
@@ -82,6 +84,11 @@ namespace Clinic.Infrastructure.Repositories.MasterData
         public void Update(Patient patient)
         {
             _context.Patients.Update(patient);
+        }
+
+        public AppDbContext GetContextForForensics()
+        {
+            return _context;
         }
     }
 }

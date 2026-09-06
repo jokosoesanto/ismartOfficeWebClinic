@@ -143,6 +143,12 @@ namespace Clinic.Web.Controllers
             var dto = await _appointmentService.GetByIdAsync(id);
             if (dto == null) return NotFound();
 
+            if (dto.Status == Clinic.Domain.Enums.AppointmentStatus.OnTime || dto.Status == Clinic.Domain.Enums.AppointmentStatus.Completed)
+            {
+                TempData["ErrorMessage"] = "Checked-In or Completed appointments cannot be edited.";
+                return RedirectToAction(nameof(Index));
+            }
+
             await PopulateDropdownsAsync();
             return View(dto);
         }
@@ -153,6 +159,15 @@ namespace Clinic.Web.Controllers
         public async Task<IActionResult> Edit(Guid id, AppointmentDto dto)
         {
             if (id != dto.Id) return BadRequest();
+
+            var originalDto = await _appointmentService.GetByIdAsync(id);
+            if (originalDto == null) return NotFound();
+
+            if (originalDto.Status == Clinic.Domain.Enums.AppointmentStatus.OnTime || originalDto.Status == Clinic.Domain.Enums.AppointmentStatus.Completed)
+            {
+                TempData["ErrorMessage"] = "Checked-In or Completed appointments cannot be edited.";
+                return RedirectToAction(nameof(Index));
+            }
 
             if (ModelState.IsValid)
             {
@@ -198,6 +213,12 @@ namespace Clinic.Web.Controllers
             var dto = await _appointmentService.GetByIdAsync(id);
             if (dto == null) return NotFound();
 
+            if (dto.Status == Clinic.Domain.Enums.AppointmentStatus.OnTime || dto.Status == Clinic.Domain.Enums.AppointmentStatus.Completed)
+            {
+                TempData["ErrorMessage"] = "Checked-In or Completed appointments cannot be re-assigned.";
+                return RedirectToAction(nameof(Index));
+            }
+
             var eligibleIds = await _appointmentService.GetEligibleDoctorIdsForReassignmentAsync(id);
             var allDoctors = await _doctorService.GetAllAsync();
             var validDoctors = allDoctors.Where(d => eligibleIds.Contains(d.Id)).ToList();
@@ -216,6 +237,12 @@ namespace Clinic.Web.Controllers
             // Retrieve original appointment to ensure read-only fields haven't been tampered with
             var originalDto = await _appointmentService.GetByIdAsync(id);
             if (originalDto == null) return NotFound();
+
+            if (originalDto.Status == Clinic.Domain.Enums.AppointmentStatus.OnTime || originalDto.Status == Clinic.Domain.Enums.AppointmentStatus.Completed)
+            {
+                TempData["ErrorMessage"] = "Checked-In or Completed appointments cannot be re-assigned.";
+                return RedirectToAction(nameof(Index));
+            }
 
             var originalDoctorId = originalDto.DoctorId;
 
@@ -310,6 +337,28 @@ namespace Clinic.Web.Controllers
             ViewBag.Chairs = new SelectList(Enumerable.Empty<SelectListItem>(), "Value", "Text");
         }
 
+
+        [HttpPost("CheckIn/{id}")]
+        [Authorize(Policy = "Appointment.Edit")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> CheckIn(Guid id)
+        {
+            Guid? currentUserId = null;
+            if (Guid.TryParse(User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value, out var uid))
+                currentUserId = uid;
+
+            try
+            {
+                await _appointmentService.CheckInAsync(id, currentUserId ?? Guid.Empty);
+                TempData["SuccessMessage"] = "Patient checked-in successfully.";
+            }
+            catch (Exception ex)
+            {
+                TempData["ErrorMessage"] = ex.Message;
+            }
+            return RedirectToAction(nameof(Index));
+        }
+
         [HttpPost("Delete/{id}")]
         [Authorize(Policy = "Appointment.Delete")]
         [ValidateAntiForgeryToken]
@@ -319,8 +368,15 @@ namespace Clinic.Web.Controllers
             if (Guid.TryParse(User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value, out var uid))
                 currentUserId = uid;
 
-            await _appointmentService.DeleteAsync(id, currentUserId ?? Guid.Empty);
-            TempData["SuccessMessage"] = "Appointment cancelled successfully.";
+            try
+            {
+                await _appointmentService.DeleteAsync(id, currentUserId ?? Guid.Empty);
+                TempData["SuccessMessage"] = "Appointment cancelled successfully.";
+            }
+            catch (Exception ex)
+            {
+                TempData["ErrorMessage"] = ex.Message;
+            }
             return RedirectToAction(nameof(Index));
         }
     }

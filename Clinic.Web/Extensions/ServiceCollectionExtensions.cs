@@ -46,10 +46,11 @@ namespace Clinic.Web.Extensions
             services.AddScoped<ITreatmentSubCategoryService, Clinic.Application.Services.MasterData.TreatmentSubCategoryService>();
             services.AddScoped<ITreatmentCatalogService, Clinic.Application.Services.MasterData.TreatmentCatalogService>();
             services.AddScoped<IConditionMasterService, Clinic.Application.Services.ConditionMasterService>();
-            services.AddScoped<IInsuranceService, Clinic.Application.Services.MasterData.InsuranceService>();
+            services.AddScoped<IDiagnosisMasterService, Clinic.Application.Services.MasterData.DiagnosisMasterService>();
             services.AddScoped<IAppointmentService, Clinic.Application.Services.Operations.AppointmentService>();
             services.AddScoped<IDoctorLeaveRequestService, Clinic.Application.Services.Operations.DoctorLeaveRequestService>();
             services.AddScoped<Clinic.Application.Interfaces.Operations.IAppointmentTreatmentService, Clinic.Application.UseCases.Operations.AppointmentTreatmentService>();
+            services.AddScoped<Clinic.Application.Interfaces.Operations.IAppointmentDiagnosisService, Clinic.Application.UseCases.Operations.AppointmentDiagnosisService>();
 
             return services;
         }
@@ -78,6 +79,7 @@ namespace Clinic.Web.Extensions
             services.AddScoped<ITreatmentSubCategoryRepository, TreatmentSubCategoryRepository>();
             services.AddScoped<ITreatmentCatalogRepository, TreatmentCatalogRepository>();
             services.AddScoped<IInsuranceRepository, Clinic.Infrastructure.Repositories.MasterData.InsuranceRepository>();
+            services.AddScoped<Clinic.Application.Interfaces.MasterData.IDiagnosisMasterRepository, Clinic.Infrastructure.Repositories.MasterData.DiagnosisMasterRepository>();
             services.AddScoped<Clinic.Application.Interfaces.MasterData.IConditionMasterRepository, Clinic.Infrastructure.Repositories.MasterData.ConditionMasterRepository>();
 
             // Operations Repositories
@@ -88,6 +90,7 @@ namespace Clinic.Web.Extensions
             // System/Config Repositories
             services.AddScoped<INumberSequenceRepository, NumberSequenceRepository>();
             services.AddScoped<IAppConfigurationRepository, AppConfigurationRepository>();
+            services.AddScoped<Clinic.Application.Interfaces.Repositories.Operations.IAppointmentDiagnosisRepository, Clinic.Infrastructure.Repositories.Operations.AppointmentDiagnosisRepository>();
 
             return services;
         }

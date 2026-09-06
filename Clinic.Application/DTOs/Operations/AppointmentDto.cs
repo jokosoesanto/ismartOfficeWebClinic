@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using Clinic.Domain.Enums;
 
@@ -40,5 +41,11 @@ namespace Clinic.Application.DTOs.Operations
         public string? ChairName { get; set; }
 
         public bool IsDeleted { get; set; }
+        
+        public IEnumerable<AppointmentChiefComplaintDto> ChiefComplaints { get; set; } = new List<AppointmentChiefComplaintDto>();
+        
+        public AppointmentVitalSignDto? VitalSign { get; set; }
+
+        public AppointmentClinicalNoteDto? ClinicalNote { get; set; }
     }
 }

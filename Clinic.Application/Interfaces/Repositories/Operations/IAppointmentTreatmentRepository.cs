@@ -9,6 +9,7 @@ namespace Clinic.Application.Interfaces.Repositories.Operations
     {
         Task<AppointmentTreatment?> GetByIdAsync(Guid id);
         Task<IEnumerable<AppointmentTreatment>> GetByAppointmentIdAsync(Guid appointmentId);
+        Task<IEnumerable<AppointmentTreatment>> GetByAppointmentIdsAsync(IEnumerable<Guid> appointmentIds);
         Task AddAsync(AppointmentTreatment treatment);
     }
 }

@@ -63,6 +63,7 @@ namespace Clinic.Infrastructure.MockProviders
                         new NavigationItem { Id = "master-doctors", Title = "Doctors / Providers", Icon = "bi-person-badge", Route = "/Doctor", BreadcrumbTitle = "Doctors", RequiredPermission = "Doctor.Index" },
                         new NavigationItem { Id = "master-specialties", Title = "Specialties", Icon = "bi-award", Route = "/Specialty", BreadcrumbTitle = "Specialties", RequiredPermission = "Specialty.Index" },
                         new NavigationItem { Id = "master-insurance", Title = "Insurance", Icon = "bi-card-checklist", Route = "/Insurance", BreadcrumbTitle = "Insurance", RequiredPermission = "MasterData.Insurance.View" },
+                        new NavigationItem { Id = "master-diagnosis", Title = "Diagnosis Master", Icon = "bi-file-medical", Route = "/DiagnosisMaster", BreadcrumbTitle = "Diagnosis Master", RequiredPermission = "MasterData.DiagnosisMaster.View" },
                         new NavigationItem { 
                             Id = "system-treatment-management", 
                             Title = "Treatment Management", 

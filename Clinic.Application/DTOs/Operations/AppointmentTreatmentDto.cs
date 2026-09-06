@@ -14,6 +14,7 @@ namespace Clinic.Application.DTOs.Operations
         public Guid TreatmentItemId { get; set; }
         
         public string? TreatmentItemName { get; set; }
+        public string? TreatmentItemColor { get; set; }
         
         public string? SiteNumber { get; set; }
         

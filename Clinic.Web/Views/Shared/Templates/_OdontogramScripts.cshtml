@@ -1,0 +1,169 @@
+<script src="~/js/odontogram.js"></script>
+<script>
+    window.TreatmentColors = {
+        @if (ViewBag.Treatments != null)
+        {
+            foreach (var t in ViewBag.Treatments)
+            {
+                @Html.Raw($"'{t.TreatmentName}': '{t.Color}',\n")
+            }
+        }
+    };
+    
+    window.ConditionColors = {
+        @if (ViewBag.Conditions != null)
+        {
+            foreach (var c in ViewBag.Conditions)
+            {
+                @Html.Raw($"'{c.ConditionName}': '{c.Color}',\n")
+            }
+        }
+    };
+
+    let odo;
+    document.addEventListener("DOMContentLoaded", function () {
+        odo = new Odontogram("odontogramContainer");
+        
+        odo.onSelectSurface = function(toothId, surfaceId) {
+            const elTooth = document.getElementById('txtSelectedTooth');
+            if (elTooth) elTooth.value = `Tooth #${toothId}`;
+            
+            const elSurface = document.getElementById('txtSelectedSurface');
+            if (elSurface) {
+                const clinicalSurfaceNames = { 
+                    'M': 'Mesial', 
+                    'D': 'Distal', 
+                    'B': 'Buccal', 
+                    'P': 'Palatal / Lingual', 
+                    'O': 'Occlusal', 
+                    'I': 'Incisal', 
+                    'L': 'Lingual'
+                };
+                elSurface.innerText = `Surface: ${clinicalSurfaceNames[surfaceId] || surfaceId}`;
+            }
+
+            const elSiteNumber = document.getElementById('SiteNumber');
+            if (elSiteNumber) elSiteNumber.value = toothId;
+            const elSiteDetail = document.getElementById('SiteDetail');
+            if (elSiteDetail) elSiteDetail.value = surfaceId;
+        };
+
+        @if (ViewBag.ExistingTreatments != null)
+        {
+            <text>
+            const existingTreatments = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(ViewBag.ExistingTreatments));
+            odo.loadState(existingTreatments);
+            </text>
+        }
+    });
+
+    function applySelection() {
+        if (!odo || !odo.selectedTooth) {
+            alert("Please select a tooth surface before applying a condition or treatment.");
+            return;
+        }
+
+        const cond = document.getElementById('selCondition');
+        const treat = document.getElementById('selTreatment');
+        
+        let type = null;
+        let color = null;
+        let text = null;
+        
+        if (cond && treat && cond.value && treat.value) {
+            alert("Select either a Condition or Treatment, not both.");
+            return;
+        }
+        
+        if (treat && treat.value) {
+            type = treat.value;
+            color = treat.options[treat.selectedIndex].dataset.color;
+            text = treat.options[treat.selectedIndex].text;
+            
+            const form = document.getElementById('applyTreatmentForm');
+            if (form) {
+                const appId = form.querySelector('[name="appointmentId"]').value;
+                if (!appId) {
+                    alert("A valid appointment context is required to save a treatment.");
+                    return;
+                }
+                
+                // Use the existing UI duplicate protection
+                if (!addToList('treatmentList', text, odo.selectedTooth, odo.selectedSurface, "bg-success")) {
+                    alert("This treatment is already applied to this surface.");
+                    return;
+                }
+
+                document.getElementById('hiddenTreatmentName').value = type;
+                document.getElementById('hiddenSiteNumber').value = odo.selectedTooth;
+                
+                const clinicalSurface = odo.getClinicalSurface(odo.selectedTooth, odo.selectedSurface);
+                document.getElementById('hiddenSiteDetail').value = clinicalSurface || '';
+                
+                form.submit();
+                return;
+            } else {
+                if (!addToList('treatmentList', text, odo.selectedTooth, odo.selectedSurface, "bg-success")) {
+                    alert("This treatment is already applied to this surface.");
+                    return;
+                }
+            }
+        } else if (cond && cond.value) {
+            type = cond.value;
+            color = cond.options[cond.selectedIndex].dataset.color;
+            text = cond.options[cond.selectedIndex].text;
+            
+            if (!addToList('diagnosisList', text, odo.selectedTooth, odo.selectedSurface, "bg-danger")) {
+                alert("This condition is already applied to this surface.");
+                return;
+            }
+        } else {
+            alert("Please select a condition or treatment to apply.");
+            return;
+        }
+
+        odo.applyTreatment(type, color);
+        
+        if (cond) cond.value = "";
+        if (treat) treat.value = "";
+    }
+
+    function addToList(listId, text, tooth, surface, badgeClass) {
+        const list = document.getElementById(listId);
+        if (!list) return true; // Graceful fallback if lists don't exist
+        
+        const surfaceNames = { 'T': 'T', 'B': 'B', 'L': 'L', 'R': 'R', 'C': 'C' };
+        const newIdentifier = `${text} #${tooth} (${surfaceNames[surface]})`;
+        
+        const existingItems = list.querySelectorAll("li");
+        for (let i = 0; i < existingItems.length; i++) {
+            if (existingItems[i].innerText.includes(newIdentifier)) {
+                return false;
+            }
+        }
+        
+        if (list.innerHTML.includes("No ")) {
+            list.innerHTML = "";
+        }
+        
+        const li = document.createElement("li");
+        li.className = "list-group-item d-flex justify-content-between align-items-center";
+        li.innerHTML = `<span><span class="badge ${badgeClass} me-2">${text}</span> #${tooth} (${surfaceNames[surface]})</span>
+                        <button class="btn btn-sm btn-outline-secondary border-0" onclick="removeEntry(this, '${tooth}', '${surface}', '${text}')"><i class="bi bi-trash"></i></button>`;
+        list.appendChild(li);
+        return true;
+    }
+
+    function removeEntry(btn, tooth, surface, text) {
+        const li = btn.parentElement;
+        const list = li.parentElement;
+        li.remove();
+        
+        if (list.children.length === 0) {
+            const emptyText = list.id === 'diagnosisList' ? "No conditions recorded." : "No treatments recorded.";
+            list.innerHTML = `<li class="list-group-item d-flex justify-content-between align-items-center text-muted small">${emptyText}</li>`;
+        }
+        
+        odo.removeTreatment(tooth, surface, text);
+    }
+</script>
