@@ -54,6 +54,7 @@ namespace Clinic.Infrastructure.Data.Seeders
             AddRefs("PreferredCommunication", new[] { "Phone", "WhatsApp", "SMS", "Email" });
             AddRefs("Currency", new[] { "IDR", "USD", "EUR", "SGD", "MYR", "AUD", "JPY" });
             AddRefs("InsuranceGroup", new[] { "PPO", "HMO", "Medicare", "Medicaid", "Commercial", "Other" });
+            AddRefs("PaymentMethod", new[] { "Cash", "Credit Card", "Debit Card", "Bank Transfer", "QRIS", "E-Wallet" });
 
             foreach (var r in systemReferences)
             {
@@ -75,6 +76,22 @@ namespace Clinic.Infrastructure.Data.Seeders
                     Prefix = "MR",
                     Padding = 10,
                     ResetPolicy = Clinic.Domain.Enums.SequenceResetPolicy.Never,
+                    IncrementStep = 1,
+                    CurrentValue = 0,
+                    CreatedAt = DateTime.UtcNow
+                });
+            }
+
+            if (!context.NumberSequences.Any(x => x.SequenceCode == "RCPT"))
+            {
+                context.NumberSequences.Add(new NumberSequence
+                {
+                    Id = Guid.NewGuid(),
+                    SequenceCode = "RCPT",
+                    Prefix = "RCPT",
+                    Padding = 6,
+                    DatePattern = "yyyyMMdd",
+                    ResetPolicy = Clinic.Domain.Enums.SequenceResetPolicy.Monthly,
                     IncrementStep = 1,
                     CurrentValue = 0,
                     CreatedAt = DateTime.UtcNow

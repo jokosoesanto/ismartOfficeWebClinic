@@ -51,6 +51,8 @@ namespace Clinic.Web.Extensions
             services.AddScoped<IDoctorLeaveRequestService, Clinic.Application.Services.Operations.DoctorLeaveRequestService>();
             services.AddScoped<Clinic.Application.Interfaces.Operations.IAppointmentTreatmentService, Clinic.Application.UseCases.Operations.AppointmentTreatmentService>();
             services.AddScoped<Clinic.Application.Interfaces.Operations.IAppointmentDiagnosisService, Clinic.Application.UseCases.Operations.AppointmentDiagnosisService>();
+            services.AddScoped<Clinic.Application.Interfaces.Operations.IInvoiceService, Clinic.Application.UseCases.Operations.InvoiceService>();
+            services.AddScoped<Clinic.Application.Interfaces.Operations.IPaymentService, Clinic.Application.UseCases.Operations.PaymentService>();
 
             return services;
         }
@@ -87,6 +89,8 @@ namespace Clinic.Web.Extensions
             services.AddScoped<IAppointmentRepository, Clinic.Infrastructure.Data.Repositories.Operations.AppointmentRepository>();
             services.AddScoped<IDoctorLeaveRequestRepository, Clinic.Infrastructure.Data.Repositories.Operations.DoctorLeaveRequestRepository>();
             services.AddScoped<Clinic.Application.Interfaces.Repositories.Operations.IAppointmentTreatmentRepository, Clinic.Infrastructure.Repositories.Operations.AppointmentTreatmentRepository>();
+            services.AddScoped<Clinic.Application.Interfaces.Operations.IInvoiceRepository, Clinic.Infrastructure.Repositories.Operations.InvoiceRepository>();
+            services.AddScoped<Clinic.Application.Interfaces.Operations.IPaymentRepository, Clinic.Infrastructure.Repositories.Operations.PaymentRepository>();
             // System/Config Repositories
             services.AddScoped<INumberSequenceRepository, NumberSequenceRepository>();
             services.AddScoped<IAppConfigurationRepository, AppConfigurationRepository>();

@@ -574,6 +574,30 @@ namespace Clinic.Web.Controllers
             return RedirectToAction("Chart", new { patientId = patientId, appointmentId = appointmentId });
         }
 
+        [HttpPost("DeleteTreatment")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DeleteTreatment(Guid treatmentId, Guid patientId, Guid appointmentId)
+        {
+            if (treatmentId == Guid.Empty)
+            {
+                TempData["ErrorMessage"] = "Invalid treatment selected for deletion.";
+                return RedirectToAction("Chart", new { patientId = patientId, appointmentId = appointmentId });
+            }
+
+            var result = await _treatmentService.DeleteTreatmentAsync(treatmentId);
+            
+            if (result.Success)
+            {
+                TempData["SuccessMessage"] = result.Message;
+            }
+            else
+            {
+                TempData["ErrorMessage"] = result.Message;
+            }
+
+            return RedirectToAction("Chart", new { patientId = patientId, appointmentId = appointmentId });
+        }
+
         [HttpGet("History/{id}")]
         public IActionResult History(string id)
         {

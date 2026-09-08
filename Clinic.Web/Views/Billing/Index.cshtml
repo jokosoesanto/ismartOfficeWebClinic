@@ -1,0 +1,82 @@
+@model IEnumerable<Clinic.Domain.Entities.Operations.Invoice>
+@inject Clinic.Application.Interfaces.Configuration.ICurrencyService CurrencyService
+
+@{
+    ViewData["Title"] = "Billing Dashboard";
+    ViewData["ModuleName"] = "Billing";
+}
+
+<div class="card shadow-sm">
+    <div class="card-header bg-white p-3 d-flex justify-content-between align-items-center">
+        <h4 class="mb-0 text-dark font-weight-bold">Invoice List</h4>
+    </div>
+    
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover table-striped mb-0 align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th class="ps-4">Invoice No</th>
+                        <th>Date</th>
+                        <th>Patient Name</th>
+                        <th>Total Amount</th>
+                        <th>Status</th>
+                        <th>Payment</th>
+                        <th class="text-end pe-4">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model != null && Model.Any())
+                    {
+                        foreach (var invoice in Model)
+                        {
+                            var patientName = invoice.Appointment?.Patient?.FullName;
+                            if (string.IsNullOrWhiteSpace(patientName))
+                            {
+                                patientName = "Unknown Patient";
+                            }
+                            
+                            var totalPaid = invoice.Payments?.Where(p => !p.IsDeleted).Sum(p => p.Amount) ?? 0m;
+                            var paymentStatus = "Unpaid";
+                            var paymentBadgeClass = "bg-danger";
+                            if (totalPaid >= invoice.TotalAmount)
+                            {
+                                paymentStatus = "Paid";
+                                paymentBadgeClass = "bg-success";
+                            }
+                            else if (totalPaid > 0)
+                            {
+                                paymentStatus = "Partially Paid";
+                                paymentBadgeClass = "bg-warning text-dark";
+                            }
+                            
+                            <tr>
+                                <td class="ps-4 fw-bold">@invoice.InvoiceNumber</td>
+                                <td>@invoice.InvoiceDate.ToString("dd/MM/yyyy")</td>
+                                <td>@patientName</td>
+                                <td class="fw-bold">@await CurrencyService.FormatAmountAsync(invoice.TotalAmount)</td>
+                                <td><span class="badge bg-secondary">@invoice.Status</span></td>
+                                <td><span class="badge @paymentBadgeClass">@paymentStatus</span></td>
+                                <td class="text-end pe-4">
+                                    <a href="/Billing/Appointment/@invoice.AppointmentId/Invoice" class="btn btn-sm btn-outline-info" title="View Details">
+                                        <i class="bi bi-eye"></i> View Invoice
+                                    </a>
+                                </td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="7" class="text-center p-5 text-muted">
+                                <i class="bi bi-receipt display-4 d-block mb-3 text-secondary"></i>
+                                <h5 class="fw-bold">No Invoices Found</h5>
+                                <p class="mb-0">There are no billing records at the moment.</p>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

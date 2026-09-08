@@ -166,6 +166,7 @@
                                                 <th>Surface</th>
                                                 <th>Price</th>
                                                 <th>Remarks</th>
+                                                <th class="text-end">Action</th>
                                             </tr>
                                         </thead>
                                         <tbody>
@@ -178,6 +179,16 @@
                                                     <td>@t.SiteDetail</td>
                                                     <td>$@t.ActualPrice.ToString("F2")</td>
                                                     <td class="text-muted small">@t.Remark</td>
+                                                    <td class="text-end" onclick="event.stopPropagation();">
+                                                        <form asp-controller="MedicalRecord" asp-action="DeleteTreatment" method="post" class="d-inline" onsubmit="return confirm('Are you sure you want to remove this treatment (@t.TreatmentItemName on Tooth @t.SiteNumber)? This action cannot be undone.');">
+                                                            <input type="hidden" name="treatmentId" value="@t.Id" />
+                                                            <input type="hidden" name="patientId" value="@Model.Id" />
+                                                            <input type="hidden" name="appointmentId" value="@ViewBag.AppointmentId" />
+                                                            <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete Treatment">
+                                                                <i class="bi bi-trash"></i>
+                                                            </button>
+                                                        </form>
+                                                    </td>
                                                 </tr>
                                             }
                                         </tbody>

@@ -57,6 +57,32 @@ namespace Clinic.Application.UseCases.Operations
             return treatments.Select(MapToDto).ToList();
         }
 
+        public async Task<(bool Success, string Message)> DeleteTreatmentAsync(Guid id)
+        {
+            var treatment = await _treatmentRepository.GetByIdAsync(id);
+            if (treatment == null)
+            {
+                return (false, "Treatment could not be found.");
+            }
+
+            var isBilled = await _treatmentRepository.HasInvoiceLineAsync(id);
+            if (isBilled)
+            {
+                return (false, "This treatment cannot be deleted because it has already been billed.");
+            }
+
+            try
+            {
+                await _treatmentRepository.DeleteAsync(treatment);
+                await _unitOfWork.SaveChangesAsync();
+                return (true, "Treatment removed successfully.");
+            }
+            catch (Exception)
+            {
+                return (false, "An error occurred while deleting the treatment. It may be locked by another process.");
+            }
+        }
+
         private AppointmentTreatmentDto MapToDto(AppointmentTreatment entity)
         {
             return new AppointmentTreatmentDto

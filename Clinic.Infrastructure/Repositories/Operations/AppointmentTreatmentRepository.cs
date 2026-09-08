@@ -49,5 +49,17 @@ namespace Clinic.Infrastructure.Repositories.Operations
         {
             await _context.AppointmentTreatments.AddAsync(treatment);
         }
+
+        public async Task DeleteAsync(AppointmentTreatment treatment)
+        {
+            _context.AppointmentTreatments.Remove(treatment);
+            await Task.CompletedTask;
+        }
+
+        public async Task<bool> HasInvoiceLineAsync(Guid treatmentId)
+        {
+            return await _context.Set<InvoiceLine>()
+                .AnyAsync(il => il.AppointmentTreatmentId == treatmentId);
+        }
     }
 }

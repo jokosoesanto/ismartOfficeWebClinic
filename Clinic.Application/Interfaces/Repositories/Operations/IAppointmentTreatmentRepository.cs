@@ -11,5 +11,7 @@ namespace Clinic.Application.Interfaces.Repositories.Operations
         Task<IEnumerable<AppointmentTreatment>> GetByAppointmentIdAsync(Guid appointmentId);
         Task<IEnumerable<AppointmentTreatment>> GetByAppointmentIdsAsync(IEnumerable<Guid> appointmentIds);
         Task AddAsync(AppointmentTreatment treatment);
+        Task DeleteAsync(AppointmentTreatment treatment);
+        Task<bool> HasInvoiceLineAsync(Guid treatmentId);
     }
 }

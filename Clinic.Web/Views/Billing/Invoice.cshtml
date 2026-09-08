@@ -1,0 +1,237 @@
+@model Clinic.Domain.Entities.Operations.Invoice
+@inject Clinic.Application.Interfaces.Configuration.ICurrencyService CurrencyService
+
+@{
+    ViewData["Title"] = "Invoice " + Model.InvoiceNumber;
+    ViewData["ModuleName"] = "Billing";
+    var payments = ViewBag.Payments as IEnumerable<Clinic.Domain.Entities.Operations.Payment> ?? new List<Clinic.Domain.Entities.Operations.Payment>();
+    var totalPaid = ViewBag.TotalPaid as decimal? ?? 0m;
+    var outstanding = ViewBag.Outstanding as decimal? ?? Model.TotalAmount;
+    var paymentMethods = ViewBag.PaymentMethods as IEnumerable<Clinic.Domain.Entities.System.MasterReference> ?? new List<Clinic.Domain.Entities.System.MasterReference>();
+}
+
+<div class="card card-custom">
+    <div class="card-header border-0 pb-0">
+        <h3 class="card-title">
+            <span class="card-label font-weight-bolder text-dark">Invoice: @Model.InvoiceNumber</span>
+        </h3>
+        <div class="card-toolbar">
+            <a href="/Appointment/Chart/@Model.AppointmentId" class="btn btn-secondary font-weight-bold mr-2">
+                <i class="ki ki-long-arrow-back icon-sm"></i> Back to Chart
+            </a>
+            <button class="btn btn-primary font-weight-bold">
+                <i class="flaticon2-print"></i> Print Invoice
+            </button>
+        </div>
+    </div>
+    
+    <div class="card-body">
+        <!-- Invoice Header -->
+        <div class="row mb-8">
+            <div class="col-md-6">
+                <h6 class="font-weight-bolder text-muted">Patient Details:</h6>
+                @if (Model.Appointment?.Patient != null)
+                {
+                    <div class="text-dark-75 font-weight-bolder font-size-lg">@Model.Appointment.Patient.FullName</div>
+                    <div class="text-muted">MRN: @Model.Appointment.Patient.MRN</div>
+                }
+                else
+                {
+                    <div class="text-danger">Patient data missing</div>
+                }
+            </div>
+            <div class="col-md-6 text-md-right">
+                <h6 class="font-weight-bolder text-muted">Invoice Details:</h6>
+                <div class="text-dark-75 font-weight-bold">Invoice Date: @Model.InvoiceDate.ToString("dd MMM yyyy HH:mm")</div>
+                <div class="text-dark-75 font-weight-bold">Appointment Date: @Model.Appointment?.Date.ToString("dd MMM yyyy")</div>
+                <div class="text-dark-75 font-weight-bold">Status: <span class="label label-inline label-light-success font-weight-bold">@Model.Status</span></div>
+                <div class="text-dark-75 font-weight-bold mt-2">
+                    Payment: 
+                    @if (ViewBag.PaymentStatus == "Paid")
+                    {
+                        <span class="label label-inline label-success font-weight-bold">Paid</span>
+                    }
+                    else if (ViewBag.PaymentStatus == "Partially Paid")
+                    {
+                        <span class="label label-inline label-warning font-weight-bold">Partially Paid</span>
+                    }
+                    else
+                    {
+                        <span class="label label-inline label-danger font-weight-bold">Unpaid</span>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <!-- Invoice Lines -->
+        <div class="table-responsive">
+            <table class="table table-borderless table-vertical-center">
+                <thead>
+                    <tr class="text-left text-uppercase font-weight-bolder">
+                        <th class="pl-0" style="width: 50%">Description</th>
+                        <th class="text-right">Quantity</th>
+                        <th class="text-right">Unit Price</th>
+                        <th class="text-right pr-0">Amount</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model.InvoiceLines != null && Model.InvoiceLines.Any())
+                    {
+                        foreach (var line in Model.InvoiceLines)
+                        {
+                            <tr class="border-bottom border-light">
+                                <td class="pl-0">
+                                    <div class="font-weight-bold text-dark-75">
+                                        @line.Description
+                                    </div>
+                                    <div class="text-muted font-size-sm">
+                                        Treatment ID: @line.AppointmentTreatmentId.ToString().Substring(0, 8)
+                                    </div>
+                                </td>
+                                <td class="text-right">
+                                    <span class="font-weight-bolder">@line.Quantity</span>
+                                </td>
+                                <td class="text-right">
+                                    <span class="font-weight-bolder">@await CurrencyService.FormatAmountAsync(line.UnitPrice)</span>
+                                </td>
+                                <td class="text-right pr-0">
+                                    <span class="text-primary font-weight-bolder font-size-h6">@await CurrencyService.FormatAmountAsync(line.LineTotal)</span>
+                                </td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="4" class="text-center text-muted py-5">
+                                No invoice lines found.
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Payment History -->
+        <div class="row mt-8">
+            <div class="col-md-12">
+                <h5 class="font-weight-bolder text-dark mb-4">Payment History</h5>
+                <div class="table-responsive">
+                    <table class="table table-borderless table-vertical-center">
+                        <thead>
+                            <tr class="text-left text-uppercase font-weight-bolder bg-light">
+                                <th class="pl-4" style="width: 25%">Receipt Number</th>
+                                <th>Date</th>
+                                <th>Method</th>
+                                <th>Reference</th>
+                                <th class="text-right pr-4">Amount</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (payments.Any())
+                            {
+                                foreach (var p in payments)
+                                {
+                                    <tr class="border-bottom border-light">
+                                        <td class="pl-4 font-weight-bold">@p.ReceiptNumber</td>
+                                        <td>@p.PaymentDate.ToString("dd MMM yyyy HH:mm")</td>
+                                        <td>@p.PaymentMethod</td>
+                                        <td>@p.ReferenceNumber</td>
+                                        <td class="text-right pr-4 font-weight-bolder text-success">@await CurrencyService.FormatAmountAsync(p.Amount)</td>
+                                    </tr>
+                                }
+                            }
+                            else
+                            {
+                                <tr>
+                                    <td colspan="5" class="text-center text-muted py-5">
+                                        No payments recorded yet.
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Invoice Total -->
+        <div class="row mt-8">
+            <div class="col-md-12 text-right">
+                <div class="border-top border-light pt-6">
+                    <div class="d-flex justify-content-end mb-3">
+                        <span class="text-muted font-weight-bolder font-size-lg mr-5">Invoice Total:</span>
+                        <span class="text-dark-75 font-weight-bolder font-size-h3">@await CurrencyService.FormatAmountAsync(Model.TotalAmount)</span>
+                    </div>
+                    <div class="d-flex justify-content-end mb-3">
+                        <span class="text-muted font-weight-bolder font-size-lg mr-5">Total Paid:</span>
+                        <span class="text-success font-weight-bolder font-size-h3">@await CurrencyService.FormatAmountAsync(totalPaid)</span>
+                    </div>
+                    <div class="d-flex justify-content-end">
+                        <span class="text-muted font-weight-bolder font-size-lg mr-5">Outstanding Balance:</span>
+                        <span class="text-danger font-weight-bolder font-size-h2">@await CurrencyService.FormatAmountAsync(outstanding)</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        @if (outstanding > 0)
+        {
+            <div class="row mt-10">
+                <div class="col-md-12">
+                    <div class="card card-custom bg-light-primary border-0">
+                        <div class="card-header border-0 pb-0">
+                            <h3 class="card-title text-primary font-weight-bolder">Add Payment</h3>
+                        </div>
+                        <div class="card-body">
+                            <form action="/Billing/Appointment/@Model.AppointmentId/Invoice/Payment" method="post">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="InvoiceId" value="@Model.Id" />
+                                <div class="row">
+                                    <div class="col-md-3">
+                                        <div class="form-group">
+                                            <label>Amount</label>
+                                            <div class="input-group">
+                                                <div class="input-group-prepend"><span class="input-group-text">@await CurrencyService.GetCurrencySymbolAsync()</span></div>
+                                                <input type="number" step="0.01" max="@outstanding" class="form-control" name="Amount" value="@outstanding" required />
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="form-group">
+                                            <label>Payment Method</label>
+                                            <select class="form-control" name="PaymentMethod" required>
+                                                <option value="">Select Method...</option>
+                                                @foreach(var m in paymentMethods)
+                                                {
+                                                    <option value="@m.Code">@m.Name</option>
+                                                }
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="form-group">
+                                            <label>Reference #</label>
+                                            <input type="text" class="form-control" name="ReferenceNumber" placeholder="e.g. Card/Transfer No." />
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="form-group">
+                                            <label>Notes</label>
+                                            <input type="text" class="form-control" name="Notes" placeholder="Optional notes" />
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-12 text-right">
+                                        <button type="submit" class="btn btn-primary font-weight-bold">Record Payment</button>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+</div>

@@ -47,6 +47,9 @@ namespace Clinic.Infrastructure.Data
         public DbSet<Clinic.Domain.Entities.MasterData.PatientMedicalHistory> PatientSystemicDiseases { get; set; } = null!;
         public DbSet<Clinic.Domain.Entities.Operations.AppointmentVitalSign> AppointmentVitalSigns { get; set; } = null!;
         public DbSet<Clinic.Domain.Entities.Operations.AppointmentClinicalNote> AppointmentClinicalNotes { get; set; } = null!;
+        public DbSet<Clinic.Domain.Entities.Operations.Invoice> Invoices { get; set; } = null!;
+        public DbSet<Clinic.Domain.Entities.Operations.InvoiceLine> InvoiceLines { get; set; } = null!;
+        public DbSet<Clinic.Domain.Entities.Operations.Payment> Payments { get; set; } = null!;
 
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -70,6 +73,9 @@ namespace Clinic.Infrastructure.Data
             modelBuilder.ApplyConfiguration(new Configurations.AppointmentVitalSignConfiguration());
             modelBuilder.ApplyConfiguration(new Configurations.AppointmentClinicalNoteConfiguration());
             modelBuilder.ApplyConfiguration(new Configurations.AppointmentDiagnosisConfiguration());
+            modelBuilder.ApplyConfiguration(new Configurations.InvoiceConfiguration());
+            modelBuilder.ApplyConfiguration(new Configurations.InvoiceLineConfiguration());
+            modelBuilder.ApplyConfiguration(new Configurations.PaymentConfiguration());
 
             modelBuilder.Entity<Clinic.Domain.Entities.Configuration.AppConfiguration>(entity =>
             {
