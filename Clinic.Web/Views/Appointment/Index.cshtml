@@ -103,7 +103,7 @@
                                             </a>
                                             @if(appt.Status == Clinic.Domain.Enums.AppointmentStatus.Completed)
                                             {
-                                                <a href="/Billing/Appointment/@appt.Id/Invoice" class="btn btn-sm btn-warning shadow-sm ms-1 text-dark" title="Checkout">
+                                                <a href="/Billing/Appointment/@appt.Id/CheckoutReview" class="btn btn-sm btn-warning shadow-sm ms-1 text-dark" title="Checkout">
                                                     <i class="bi bi-receipt"></i> Checkout
                                                 </a>
                                             }

@@ -83,6 +83,32 @@ namespace Clinic.Application.UseCases.Operations
             }
         }
 
+        public async Task<(bool Success, string Message)> UpdateFinancialsAsync(Guid appointmentId, Dictionary<Guid, decimal> priceUpdates)
+        {
+            var treatments = (await _treatmentRepository.GetByAppointmentIdAsync(appointmentId)).ToList();
+            
+            foreach (var update in priceUpdates)
+            {
+                var treatment = treatments.FirstOrDefault(t => t.Id == update.Key);
+                if (treatment == null) continue;
+
+                if (await _treatmentRepository.HasInvoiceLineAsync(treatment.Id))
+                {
+                    return (false, $"Treatment cannot be modified because it has already been billed.");
+                }
+
+                if (update.Value < 0)
+                {
+                    return (false, "Price cannot be negative.");
+                }
+
+                treatment.ActualPrice = update.Value;
+            }
+
+            await _unitOfWork.SaveChangesAsync();
+            return (true, "Financial review saved successfully.");
+        }
+
         private AppointmentTreatmentDto MapToDto(AppointmentTreatment entity)
         {
             return new AppointmentTreatmentDto

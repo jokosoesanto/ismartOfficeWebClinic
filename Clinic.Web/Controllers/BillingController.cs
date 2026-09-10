@@ -15,15 +15,21 @@ namespace Clinic.Web.Controllers
         private readonly Clinic.Application.Interfaces.Operations.IInvoiceService _invoiceService;
         private readonly Clinic.Application.Interfaces.Operations.IPaymentService _paymentService;
         private readonly Clinic.Application.Interfaces.MasterData.IMasterReferenceService _masterReferenceService;
+        private readonly Clinic.Application.Interfaces.Operations.IAppointmentTreatmentService _appointmentTreatmentService;
+        private readonly Clinic.Application.Interfaces.Operations.IAppointmentService _appointmentService;
 
         public BillingController(
             Clinic.Application.Interfaces.Operations.IInvoiceService invoiceService,
             Clinic.Application.Interfaces.Operations.IPaymentService paymentService,
-            Clinic.Application.Interfaces.MasterData.IMasterReferenceService masterReferenceService)
+            Clinic.Application.Interfaces.MasterData.IMasterReferenceService masterReferenceService,
+            Clinic.Application.Interfaces.Operations.IAppointmentTreatmentService appointmentTreatmentService,
+            Clinic.Application.Interfaces.Operations.IAppointmentService appointmentService)
         {
             _invoiceService = invoiceService;
             _paymentService = paymentService;
             _masterReferenceService = masterReferenceService;
+            _appointmentTreatmentService = appointmentTreatmentService;
+            _appointmentService = appointmentService;
         }
 
         [HttpGet]
@@ -52,6 +58,47 @@ namespace Clinic.Web.Controllers
         {
             var metadata = new UIMetadata { Title = "Receipt Preview", ModuleName = "Billing", Mode = RenderingMode.Template };
             return View("Templates/Payment_Preview", metadata);
+        }
+
+        [HttpGet("Appointment/{appointmentId:guid}/CheckoutReview")]
+        public async Task<IActionResult> CheckoutReview(Guid appointmentId)
+        {
+            var appointment = await _appointmentService.GetByIdAsync(appointmentId);
+            if (appointment == null) return NotFound();
+
+            var existingInvoice = await _invoiceService.GetInvoiceByAppointmentIdAsync(appointmentId);
+            if (existingInvoice != null)
+            {
+                TempData["ErrorMessage"] = "Invoice already generated for this appointment.";
+                return RedirectToAction("AppointmentInvoice", new { appointmentId });
+            }
+
+            var treatments = await _appointmentTreatmentService.GetTreatmentsByAppointmentIdAsync(appointmentId);
+            
+            ViewBag.Appointment = appointment;
+            ViewBag.Treatments = treatments;
+            
+            var metadata = new UIMetadata { Title = "Checkout Review", ModuleName = "Billing", Mode = RenderingMode.Template };
+            ViewBag.Metadata = metadata;
+
+            return View("Templates/CheckoutReview", treatments);
+        }
+
+        [HttpPost("Appointment/{appointmentId:guid}/CheckoutReview")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> CheckoutReviewPost(Guid appointmentId, [FromForm] Dictionary<Guid, decimal> actualPrices)
+        {
+            var appointment = await _appointmentService.GetByIdAsync(appointmentId);
+            if (appointment == null) return NotFound();
+
+            var result = await _appointmentTreatmentService.UpdateFinancialsAsync(appointmentId, actualPrices);
+            if (!result.Success)
+            {
+                TempData["ErrorMessage"] = result.Message;
+                return RedirectToAction("CheckoutReview", new { appointmentId });
+            }
+
+            return RedirectToAction("AppointmentInvoice", new { appointmentId });
         }
 
         [HttpGet("Appointment/{appointmentId:guid}/Invoice")]

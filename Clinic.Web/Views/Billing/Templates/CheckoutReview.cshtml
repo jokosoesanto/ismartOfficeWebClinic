@@ -1,0 +1,164 @@
+@model IEnumerable<Clinic.Application.DTOs.Operations.AppointmentTreatmentDto>
+@inject Clinic.Application.Interfaces.Configuration.ICurrencyService CurrencyService
+@{
+    var metadata = ViewBag.Metadata as Clinic.Application.UI.UIMetadata;
+    var appointment = ViewBag.Appointment as Clinic.Application.DTOs.Operations.AppointmentDto;
+    var patientName = appointment?.PatientName ?? "Unknown";
+    var doctorName = appointment?.DoctorName ?? "Unknown";
+    var appointmentDate = appointment?.Date.ToString("dd MMM yyyy") ?? "";
+    
+    Layout = "_Layout";
+    ViewData["Title"] = metadata?.Title ?? "Checkout Review";
+    decimal totalInitial = Model?.Sum(t => t.ActualPrice) ?? 0m;
+}
+
+<div class="container-fluid py-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h2 class="mb-0 text-gray-800"><i class="bi bi-receipt-cutoff me-2"></i>@ViewData["Title"]</h2>
+            <p class="text-muted">Review financial details and actual prices before generating the invoice.</p>
+        </div>
+    </div>
+
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="bi bi-exclamation-triangle-fill me-2"></i>@TempData["ErrorMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    <div class="card shadow-sm mb-4">
+        <div class="card-header bg-white py-3">
+            <h5 class="mb-0 fw-bold">Appointment Information</h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-3 mb-3 mb-md-0">
+                    <span class="text-muted d-block small">Patient</span>
+                    <span class="fw-semibold">@patientName</span>
+                </div>
+                <div class="col-md-3 mb-3 mb-md-0">
+                    <span class="text-muted d-block small">Date</span>
+                    <span class="fw-semibold">@appointmentDate</span>
+                </div>
+                <div class="col-md-3 mb-3 mb-md-0">
+                    <span class="text-muted d-block small">Doctor</span>
+                    <span class="fw-semibold">@doctorName</span>
+                </div>
+                <div class="col-md-3">
+                    <span class="text-muted d-block small">Status</span>
+                    <span class="badge bg-success">@appointment?.Status</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <form asp-controller="Billing" asp-action="CheckoutReviewPost" asp-route-appointmentId="@appointment?.Id" method="post">
+        <input type="hidden" name="appointmentId" value="@appointment?.Id" />
+        
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-white py-3">
+                <h5 class="mb-0 fw-bold">Treatment Financial Review</h5>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Treatment</th>
+                                <th>Tooth / Surface</th>
+                                <th>Clinical Remark</th>
+                                <th class="text-end" style="width: 200px;">Actual Price</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (Model != null && Model.Any())
+                            {
+                                foreach (var t in Model)
+                                {
+                                    <tr>
+                                        <td>
+                                            <div class="fw-semibold">@t.TreatmentItemName</div>
+                                        </td>
+                                        <td>
+                                            @if (!string.IsNullOrEmpty(t.SiteNumber))
+                                            {
+                                                <span class="badge bg-light text-dark border">Tooth @t.SiteNumber</span>
+                                                @if (!string.IsNullOrEmpty(t.SiteDetail))
+                                                {
+                                                    <span class="badge bg-light text-dark border ms-1">@t.SiteDetail</span>
+                                                }
+                                            }
+                                            else
+                                            {
+                                                <span class="text-muted small">N/A</span>
+                                            }
+                                        </td>
+                                        <td class="text-muted small">@t.Remark</td>
+                                        <td class="text-end">
+                                            <div class="input-group input-group-sm">
+                                                <span class="input-group-text">@(await CurrencyService.GetCurrencySymbolAsync())</span>
+                                                <input type="number" step="0.01" min="0" max="999999999.99" required name="actualPrices[@t.Id]" class="form-control text-end treatment-price" value="@t.ActualPrice.ToString("F2", System.Globalization.CultureInfo.InvariantCulture)" onchange="calculateTotal()" />
+                                            </div>
+                                        </td>
+                                    </tr>
+                                }
+                            }
+                            else
+                            {
+                                <tr>
+                                    <td colspan="4" class="text-center text-muted py-4">No unbilled treatments found for this appointment.</td>
+                                </tr>
+                            }
+                        </tbody>
+                        @if (Model != null && Model.Any())
+                        {
+                            <tfoot class="table-light">
+                                <tr>
+                                    <td colspan="3" class="text-end fw-bold">Total Initial Price:</td>
+                                    <td class="text-end fw-bold">@(await CurrencyService.FormatAmountAsync(totalInitial))</td>
+                                </tr>
+                                <tr>
+                                    <td colspan="3" class="text-end fw-bold text-primary fs-5">Total After Review:</td>
+                                    <td class="text-end fw-bold text-primary fs-5" id="totalReviewAmount">@(await CurrencyService.FormatAmountAsync(totalInitial))</td>
+                                </tr>
+                            </tfoot>
+                        }
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="d-flex justify-content-between align-items-center mb-5">
+            <a href="/Appointment" class="btn btn-outline-secondary">
+                <i class="bi bi-x-circle me-1"></i> Cancel
+            </a>
+            @if (Model != null && Model.Any())
+            {
+                <button type="submit" class="btn btn-primary px-4 shadow-sm">
+                    <i class="bi bi-receipt me-1"></i> Confirm & Generate Invoice
+                </button>
+            }
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    <script>
+        function calculateTotal() {
+            let total = 0;
+            const priceInputs = document.querySelectorAll('.treatment-price');
+            priceInputs.forEach(input => {
+                const val = parseFloat(input.value);
+                if (!isNaN(val)) {
+                    total += val;
+                }
+            });
+            
+            const formattedTotal = total.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            const symbol = '@Html.Raw(await CurrencyService.GetCurrencySymbolAsync())';
+            document.getElementById('totalReviewAmount').innerText = symbol + ' ' + formattedTotal;
+        }
+    </script>
+}
