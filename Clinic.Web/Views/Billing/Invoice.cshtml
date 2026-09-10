@@ -10,16 +10,43 @@
     var paymentMethods = ViewBag.PaymentMethods as IEnumerable<Clinic.Domain.Entities.System.MasterReference> ?? new List<Clinic.Domain.Entities.System.MasterReference>();
 }
 
+@section Styles {
+    <style>
+        @@media print {
+            .sidebar, .header, .footer {
+                display: none !important;
+            }
+            .main-content {
+                margin: 0 !important;
+                padding: 0 !important;
+            }
+            .card {
+                border: none !important;
+                box-shadow: none !important;
+            }
+            .d-print-none {
+                display: none !important;
+            }
+            body {
+                background-color: white !important;
+            }
+        }
+    </style>
+}
+
 <div class="card card-custom">
     <div class="card-header border-0 pb-0">
         <h3 class="card-title">
             <span class="card-label font-weight-bolder text-dark">Invoice: @Model.InvoiceNumber</span>
         </h3>
-        <div class="card-toolbar">
-            <a href="/Appointment/Chart/@Model.AppointmentId" class="btn btn-secondary font-weight-bold mr-2">
-                <i class="ki ki-long-arrow-back icon-sm"></i> Back to Chart
-            </a>
-            <button class="btn btn-primary font-weight-bold">
+        <div class="card-toolbar d-print-none">
+            @if (Model.Appointment != null)
+            {
+                <a href="/MedicalRecord/Chart/@Model.Appointment.PatientId?appointmentId=@Model.AppointmentId" class="btn btn-secondary font-weight-bold mr-2">
+                    <i class="ki ki-long-arrow-back icon-sm"></i> Back to Chart
+                </a>
+            }
+            <button onclick="window.print()" class="btn btn-primary font-weight-bold">
                 <i class="flaticon2-print"></i> Print Invoice
             </button>
         </div>
@@ -177,7 +204,7 @@
 
         @if (outstanding > 0)
         {
-            <div class="row mt-10">
+            <div class="row mt-10 d-print-none">
                 <div class="col-md-12">
                     <div class="card card-custom bg-light-primary border-0">
                         <div class="card-header border-0 pb-0">
