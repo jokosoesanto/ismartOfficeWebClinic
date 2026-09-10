@@ -1,6 +1,8 @@
 using Microsoft.AspNetCore.Mvc;
 using Clinic.Application.UI;
 using System.Collections.Generic;
+using Microsoft.EntityFrameworkCore;
+using System.Linq;
 using Microsoft.AspNetCore.Authorization;
 using Clinic.Application.Interfaces.Operations;
 using Clinic.Application.DTOs.Operations;
@@ -21,6 +23,8 @@ namespace Clinic.Web.Controllers
         private readonly Clinic.Application.Interfaces.MasterData.IDiagnosisMasterService _diagnosisMasterService;
         private readonly IPatientService _patientService;
         private readonly Clinic.Application.Interfaces.IConditionMasterService _conditionMasterService;
+        private readonly Clinic.Infrastructure.Data.AppDbContext _dbContext;
+        private readonly Clinic.Application.Interfaces.Storage.IFileStorageService _storageService;
 
         public MedicalRecordController(
             IAppointmentTreatmentService treatmentService,
@@ -29,7 +33,9 @@ namespace Clinic.Web.Controllers
             ITreatmentCatalogService treatmentCatalogService,
             Clinic.Application.Interfaces.MasterData.IDiagnosisMasterService diagnosisMasterService,
             IPatientService patientService,
-            Clinic.Application.Interfaces.IConditionMasterService conditionMasterService)
+            Clinic.Application.Interfaces.IConditionMasterService conditionMasterService,
+            Clinic.Infrastructure.Data.AppDbContext dbContext,
+            Clinic.Application.Interfaces.Storage.IFileStorageService storageService)
         {
             _treatmentService = treatmentService;
             _appointmentService = appointmentService;
@@ -38,6 +44,8 @@ namespace Clinic.Web.Controllers
             _diagnosisMasterService = diagnosisMasterService;
             _patientService = patientService;
             _conditionMasterService = conditionMasterService;
+            _dbContext = dbContext;
+            _storageService = storageService;
         }
         [HttpGet]
         public async Task<IActionResult> Index()
@@ -54,7 +62,7 @@ namespace Clinic.Web.Controllers
         }
 
         [HttpGet("Chart/{patientId}")]
-        public async Task<IActionResult> Chart(Guid patientId, [FromQuery] Guid? appointmentId = null)
+        public async Task<IActionResult> Chart(Guid patientId, [FromQuery] Guid? appointmentId = null, [FromQuery] Clinic.Domain.Enums.AppointmentStatus? historyStatus = null)
         {
             var patient = await _patientService.GetByIdAsync(patientId);
             if (patient == null)
@@ -100,11 +108,37 @@ namespace Clinic.Web.Controllers
             
             // Historical Visits
             var historicalAppointments = (await _appointmentService.GetAppointmentsByPatientIdAsync(patientId))?.ToList() ?? new List<Clinic.Application.DTOs.Operations.AppointmentDto>();
+            
+            if (historyStatus.HasValue)
+            {
+                historicalAppointments = historicalAppointments.Where(a => a.Status == historyStatus.Value).ToList();
+            }
+
             ViewBag.HistoricalVisits = historicalAppointments;
+            ViewBag.HistoryStatusFilter = historyStatus;
             
             var historicalApptIds = historicalAppointments.Select(a => a.Id).ToList();
             var historicalTreatments = await _treatmentService.GetTreatmentsByAppointmentIdsAsync(historicalApptIds);
             ViewBag.HistoricalTreatments = historicalTreatments.ToLookup(t => t.AppointmentId);
+
+            var medications = await _dbContext.PatientMedications
+                .Where(m => m.PatientId == patientId && !m.IsDeleted)
+                .OrderByDescending(m => m.PrescribedDate)
+                .ToListAsync();
+            ViewBag.Medications = medications;
+
+            if (appointmentId.HasValue)
+            {
+                var attachments = await _dbContext.FileMetadatas
+                    .Where(f => f.EntityId == appointmentId.Value && !f.IsDeleted && f.Module == Clinic.Domain.Enums.StorageModule.Document)
+                    .OrderByDescending(f => f.CreatedAt)
+                    .ToListAsync();
+                ViewBag.Attachments = attachments;
+            }
+            else
+            {
+                ViewBag.Attachments = new List<Clinic.Domain.Entities.System.FileMetadata>();
+            }
 
             return View("Templates/MR_Chart", patient);
         }
@@ -533,6 +567,19 @@ namespace Clinic.Web.Controllers
                 return RedirectToAction("Chart", new { patientId = patientId });
             }
 
+            var appt = await _appointmentService.GetByIdAsync(appointmentId);
+            if (appt == null)
+            {
+                TempData["ErrorMessage"] = "Appointment not found.";
+                return RedirectToAction("Chart", new { patientId = patientId });
+            }
+
+            if (appt.Status == Clinic.Domain.Enums.AppointmentStatus.Completed)
+            {
+                TempData["ErrorMessage"] = "Treatment capture is locked because the appointment is completed.";
+                return RedirectToAction("Chart", new { patientId = patientId, appointmentId = appointmentId });
+            }
+
             var catalogsResult = await _treatmentCatalogService.GetAllAsync();
             var catalog = catalogsResult?.FirstOrDefault(c => c.TreatmentName == treatmentName);
             if (catalog == null)
@@ -548,7 +595,7 @@ namespace Clinic.Web.Controllers
                 SiteNumber = siteNumber,
                 SiteDetail = siteDetail,
                 ActualPrice = catalog.DefaultPrice,
-                Remark = "Applied from Odontogram"
+                Remark = null
             };
 
             var userId = Guid.Empty;
@@ -610,6 +657,83 @@ namespace Clinic.Web.Controllers
         {
             var metadata = new UIMetadata { Title = "Treatment Detail", ModuleName = "MedicalRecord", Mode = RenderingMode.Template };
             return View("Templates/MR_Detail", metadata);
+        }
+
+        [HttpPost("Chart/{patientId}/UpdateMedicalHistoryStatus")]
+        public async Task<IActionResult> UpdateMedicalHistoryStatus(Guid patientId, [FromForm] Guid appointmentId, [FromForm] Clinic.Domain.Enums.MedicalHistoryStatus status)
+        {
+            await _patientService.UpdateMedicalHistoryStatusAsync(patientId, status, Guid.Empty);
+            return RedirectToAction("Chart", "MedicalRecord", new { patientId = patientId, appointmentId = appointmentId }, "medhistory");
+        }
+
+        [HttpPost("Chart/{patientId}/AddMedication")]
+        public async Task<IActionResult> AddMedication(Guid patientId, [FromForm] Guid appointmentId, [FromForm] string medicationName, [FromForm] string? dosage, [FromForm] DateTime? prescribedDate)
+        {
+            var med = new Clinic.Domain.Entities.MasterData.PatientMedication
+            {
+                PatientId = patientId,
+                MedicationName = medicationName,
+                Dosage = dosage,
+                PrescribedDate = prescribedDate ?? DateTime.Today,
+                IsActive = true
+            };
+            _dbContext.PatientMedications.Add(med);
+            await _dbContext.SaveChangesAsync();
+            return RedirectToAction("Chart", "MedicalRecord", new { patientId = patientId, appointmentId = appointmentId }, "medhistory");
+        }
+
+        [HttpPost("Chart/{patientId}/RemoveMedication")]
+        public async Task<IActionResult> RemoveMedication(Guid patientId, [FromForm] Guid appointmentId, [FromForm] Guid medicationId)
+        {
+            var med = await _dbContext.PatientMedications.FindAsync(medicationId);
+            if (med != null)
+            {
+                med.IsDeleted = true;
+                await _dbContext.SaveChangesAsync();
+            }
+            return RedirectToAction("Chart", "MedicalRecord", new { patientId = patientId, appointmentId = appointmentId }, "medhistory");
+        }
+
+        [HttpPost("Chart/{patientId}/UploadAttachment")]
+        public async Task<IActionResult> UploadAttachment(Guid patientId, [FromForm] Guid appointmentId, Microsoft.AspNetCore.Http.IFormFile documentUpload)
+        {
+            if (documentUpload != null && documentUpload.Length > 0)
+            {
+                using var stream = documentUpload.OpenReadStream();
+                await _storageService.UploadAsync(
+                    stream,
+                    documentUpload.FileName,
+                    documentUpload.ContentType,
+                    Clinic.Domain.Enums.StorageModule.Document,
+                    appointmentId,
+                    Guid.Empty);
+            }
+            return RedirectToAction("Chart", "MedicalRecord", new { patientId = patientId, appointmentId = appointmentId }, "medhistory");
+        }
+
+        [HttpPost("Chart/{patientId}/RemoveAttachment")]
+        public async Task<IActionResult> RemoveAttachment(Guid patientId, [FromForm] Guid appointmentId, [FromForm] Guid attachmentId)
+        {
+            var attachment = await _dbContext.FileMetadatas.FindAsync(attachmentId);
+            if (attachment != null)
+            {
+                await _storageService.DeleteAsync(attachment, Guid.Empty);
+            }
+            return RedirectToAction("Chart", "MedicalRecord", new { patientId = patientId, appointmentId = appointmentId }, "medhistory");
+        }
+
+        [HttpGet("Attachment/{fileId}")]
+        public async Task<IActionResult> DownloadAttachment(Guid fileId)
+        {
+            var fileMeta = await _dbContext.FileMetadatas.FindAsync(fileId);
+            if (fileMeta == null || fileMeta.IsDeleted)
+                return NotFound();
+
+            var stream = await _storageService.OpenReadAsync(fileMeta);
+            if (stream == null)
+                return NotFound();
+
+            return File(stream, fileMeta.MimeType ?? "application/octet-stream", fileMeta.OriginalFileName);
         }
     }
 }

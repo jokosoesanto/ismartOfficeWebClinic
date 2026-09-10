@@ -86,12 +86,32 @@ namespace Clinic.Web.Controllers
 
         [HttpPost("Appointment/{appointmentId:guid}/CheckoutReview")]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> CheckoutReviewPost(Guid appointmentId, [FromForm] Dictionary<Guid, decimal> actualPrices)
+        public async Task<IActionResult> CheckoutReviewPost(Guid appointmentId, [FromForm] Dictionary<Guid, string> actualPrices)
         {
             var appointment = await _appointmentService.GetByIdAsync(appointmentId);
             if (appointment == null) return NotFound();
 
-            var result = await _appointmentTreatmentService.UpdateFinancialsAsync(appointmentId, actualPrices);
+            var parsedPrices = new Dictionary<Guid, decimal>();
+            if (actualPrices != null)
+            {
+                foreach (var kvp in actualPrices)
+                {
+                    // W3C <input type="number"> submits values using '.' as the decimal separator.
+                    // By capturing raw string and parsing with InvariantCulture, we bypass OS locale-dependent
+                    // thousands-separator inflation (e.g., 850.00 -> 85000 in id-ID).
+                    if (decimal.TryParse(kvp.Value, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out var parsedValue))
+                    {
+                        parsedPrices[kvp.Key] = parsedValue;
+                    }
+                    else
+                    {
+                        TempData["ErrorMessage"] = "Invalid price format received.";
+                        return RedirectToAction("CheckoutReview", new { appointmentId });
+                    }
+                }
+            }
+
+            var result = await _appointmentTreatmentService.UpdateFinancialsAsync(appointmentId, parsedPrices);
             if (!result.Success)
             {
                 TempData["ErrorMessage"] = result.Message;

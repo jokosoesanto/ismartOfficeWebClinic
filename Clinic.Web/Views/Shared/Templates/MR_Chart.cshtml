@@ -32,7 +32,6 @@
             @if (ViewBag.AppointmentId != null)
             {
                 var appt = ViewBag.Appointment as Clinic.Application.DTOs.Operations.AppointmentDto;
-                <a href="javascript:void(0)" onclick="openAddTreatment()" class="btn btn-primary shadow-sm"><i class="bi bi-plus-lg me-1"></i> Add Treatment / Note</a>
                 if (appt != null && appt.Status == Clinic.Domain.Enums.AppointmentStatus.OnTime)
                 {
                     <form action="/MedicalRecord/CompleteVisit/@appt.Id" method="post" class="d-inline ms-2">
@@ -41,10 +40,6 @@
                         <button type="submit" class="btn btn-success shadow-sm" onclick="return confirm('Are you sure you want to complete this visit?');"><i class="bi bi-check-circle me-1"></i> Complete Visit</button>
                     </form>
                 }
-            }
-            else
-            {
-                <button class="btn btn-primary shadow-sm" disabled title="Requires active appointment context"><i class="bi bi-plus-lg me-1"></i> Add Treatment / Note</button>
             }
             <a href="/Billing" class="btn btn-outline-success shadow-sm ms-2"><i class="bi bi-cash-coin me-1"></i> Go to Billing</a>
         </div>
@@ -124,23 +119,6 @@
                                     </li>
                                 </ul>
                             </div>
-
-                            <div class="mb-4">
-                                <label class="form-label fw-bold text-success">Planned/Completed Treatments</label>
-                                <ul class="list-group list-group-flush border rounded mb-2" id="treatmentList">
-                                    <li class="list-group-item d-flex justify-content-between align-items-center text-muted small">
-                                        No treatments recorded.
-                                    </li>
-                                </ul>
-                                @if (ViewBag.AppointmentId != null)
-                                {
-                                    <a href="javascript:void(0)" onclick="openAddTreatment()" class="btn btn-sm btn-outline-success w-100"><i class="bi bi-plus"></i> Add Full Treatment Record</a>
-                                }
-                                else
-                                {
-                                    <button class="btn btn-sm btn-outline-success w-100" disabled title="Requires active appointment context"><i class="bi bi-plus"></i> Add Full Treatment Record</button>
-                                }
-                            </div>
                         </div>
                     </div>
                 </div>
@@ -213,8 +191,40 @@
             <div class="card shadow-sm border-0">
                 <div class="card-header bg-white border-bottom-0 pt-4 pb-0 d-flex justify-content-between align-items-center">
                     <h5 class="fw-bold text-muted text-uppercase mb-0">Timeline View</h5>
-                    <div>
-                        <button class="btn btn-sm btn-outline-secondary"><i class="bi bi-filter"></i> Filter</button>
+                    <div class="dropdown">
+                        <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" id="filterDropdown" data-bs-toggle="dropdown" aria-expanded="false" data-bs-auto-close="outside">
+                            <i class="bi bi-filter"></i> Filter
+                            @(ViewBag.HistoryStatusFilter != null ? "(Active)" : "")
+                        </button>
+                        <div class="dropdown-menu dropdown-menu-end p-3 shadow" style="min-width: 250px;">
+                            <form method="get" action="/MedicalRecord/Chart/@Model.Id">
+                                @if (ViewBag.AppointmentId != null)
+                                {
+                                    <input type="hidden" name="appointmentId" value="@ViewBag.AppointmentId" />
+                                }
+                                <div class="mb-3">
+                                    <label class="form-label small fw-bold">Visit Status</label>
+                                    <select name="historyStatus" class="form-select form-select-sm">
+                                        <option value="">All Statuses</option>
+                                        @foreach (var status in Enum.GetValues(typeof(Clinic.Domain.Enums.AppointmentStatus)).Cast<Clinic.Domain.Enums.AppointmentStatus>())
+                                        {
+                                            if (ViewBag.HistoryStatusFilter != null && (Clinic.Domain.Enums.AppointmentStatus)ViewBag.HistoryStatusFilter == status)
+                                            {
+                                                <option value="@status" selected>@status</option>
+                                            }
+                                            else
+                                            {
+                                                <option value="@status">@status</option>
+                                            }
+                                        }
+                                    </select>
+                                </div>
+                                <div class="d-flex justify-content-between">
+                                    <a href="/MedicalRecord/Chart/@Model.Id@(ViewBag.AppointmentId != null ? "?appointmentId=" + ViewBag.AppointmentId : "")#history" class="btn btn-sm btn-outline-secondary" onclick="sessionStorage.setItem('activeTab_' + window.location.pathname, '#history');">Clear</a>
+                                    <button type="submit" class="btn btn-sm btn-primary" onclick="sessionStorage.setItem('activeTab_' + window.location.pathname, '#history');">Apply</button>
+                                </div>
+                            </form>
+                        </div>
                     </div>
                 </div>
                 <div class="card-body">
@@ -700,34 +710,114 @@
                                         <th>Dosage</th>
                                         <th>Prescribed Date</th>
                                         <th>Status</th>
+                                        <th></th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <tr>
-                                        <td>Amoxicillin</td>
-                                        <td>500mg, 3x/day</td>
-                                        <td>15 Jul 2026</td>
-                                        <td><span class="badge bg-secondary">Completed</span></td>
-                                    </tr>
-                                    <tr>
-                                        <td>Ibuprofen</td>
-                                        <td>400mg, as needed</td>
-                                        <td>31 Jul 2026</td>
-                                        <td><span class="badge bg-success">Active</span></td>
-                                    </tr>
+                                    @if (ViewBag.Medications != null)
+                                    {
+                                        foreach (var med in ViewBag.Medications)
+                                        {
+                                            <tr>
+                                                <td>@med.MedicationName</td>
+                                                <td>@med.Dosage</td>
+                                                <td>@(med.PrescribedDate?.ToString("dd MMM yyyy") ?? "-")</td>
+                                                <td>
+                                                    @if (med.IsActive)
+                                                    {
+                                                        <span class="badge bg-success">Active</span>
+                                                    }
+                                                    else
+                                                    {
+                                                        <span class="badge bg-secondary">Completed</span>
+                                                    }
+                                                </td>
+                                                <td class="text-end">
+                                                    <form action="/MedicalRecord/Chart/@Model.Id/RemoveMedication" method="post" class="m-0 p-0 d-inline">
+                                                        @Html.AntiForgeryToken()
+                                                        <input type="hidden" name="appointmentId" value="@ViewBag.AppointmentId" />
+                                                        <input type="hidden" name="medicationId" value="@med.Id" />
+                                                        <button type="submit" class="btn btn-sm text-danger border-0 p-0" title="Remove" onclick="return confirm('Remove this medication?');"><i class="bi bi-trash"></i></button>
+                                                    </form>
+                                                </td>
+                                            </tr>
+                                        }
+                                    }
                                 </tbody>
                             </table>
+                            
+                            <form action="/MedicalRecord/Chart/@Model.Id/AddMedication" method="post" class="mt-2 border-top pt-3">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="appointmentId" value="@ViewBag.AppointmentId" />
+                                <div class="row g-2">
+                                    <div class="col-4">
+                                        <input type="text" name="medicationName" class="form-control form-control-sm" placeholder="Medication Name" required />
+                                    </div>
+                                    <div class="col-4">
+                                        <input type="text" name="dosage" class="form-control form-control-sm" placeholder="Dosage (e.g., 500mg, 3x/day)" />
+                                    </div>
+                                    <div class="col-2">
+                                        <input type="date" name="prescribedDate" class="form-control form-control-sm" />
+                                    </div>
+                                    <div class="col-2">
+                                        <button type="submit" class="btn btn-sm btn-primary w-100"><i class="bi bi-plus"></i> Add</button>
+                                    </div>
+                                </div>
+                            </form>
                         </div>
                     </div>
                 </div>
 
                 <div class="col-12">
-                    <div class="card shadow-sm border-0 border-dashed">
-                        <div class="card-body text-center p-4">
-                            <i class="bi bi-cloud-arrow-up display-4 text-muted mb-3 d-block"></i>
-                            <h5 class="fw-bold">Attachments / Documents Placeholder</h5>
-                            <p class="text-muted">Drag and drop X-Rays, Lab Results, or Consent Forms here.</p>
-                            <button class="btn btn-outline-primary">Browse Files</button>
+                    <div class="card shadow-sm border-0">
+                        <div class="card-header bg-primary text-white pt-3 pb-2">
+                            <h6 class="fw-bold text-uppercase mb-0"><i class="bi bi-paperclip me-2"></i>Attachments & Documents</h6>
+                        </div>
+                        <div class="card-body p-3">
+                            @if (ViewBag.Appointments == null && ViewBag.AppointmentId == null)
+                            {
+                                <div class="alert alert-secondary py-2">
+                                    <i class="bi bi-info-circle me-2"></i>Please select an active appointment to upload attachments.
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="mb-3">
+                                    <ul class="list-group">
+                                        @if (ViewBag.Attachments != null)
+                                        {
+                                            foreach (var doc in ViewBag.Attachments)
+                                            {
+                                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                                    <div>
+                                                        <i class="bi bi-file-earmark-text me-2"></i>
+                                                        <a href="/MedicalRecord/Attachment/@doc.Id" target="_blank" class="text-decoration-none">@doc.OriginalFileName</a>
+                                                        <small class="text-muted ms-2">(@(doc.FileSize / 1024) KB)</small>
+                                                    </div>
+                                                    <form action="/MedicalRecord/Chart/@Model.Id/RemoveAttachment" method="post" class="m-0 p-0">
+                                                        @Html.AntiForgeryToken()
+                                                        <input type="hidden" name="appointmentId" value="@ViewBag.AppointmentId" />
+                                                        <input type="hidden" name="attachmentId" value="@doc.Id" />
+                                                        <button type="submit" class="btn btn-sm btn-outline-danger border-0 p-1" title="Delete" onclick="return confirm('Delete this file?');"><i class="bi bi-trash"></i></button>
+                                                    </form>
+                                                </li>
+                                            }
+                                        }
+                                        @if (ViewBag.Attachments == null || ((IEnumerable<object>)ViewBag.Attachments).Count() == 0)
+                                        {
+                                            <li class="list-group-item text-muted text-center py-3">No attachments uploaded for this encounter.</li>
+                                        }
+                                    </ul>
+                                </div>
+                                <div class="border-dashed p-3 text-center bg-light rounded">
+                                    <form action="/MedicalRecord/Chart/@Model.Id/UploadAttachment" method="post" enctype="multipart/form-data" class="d-flex align-items-center justify-content-center">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="appointmentId" value="@ViewBag.AppointmentId" />
+                                        <input type="file" name="documentUpload" class="form-control form-control-sm me-2" style="max-width: 300px;" required />
+                                        <button type="submit" class="btn btn-sm btn-outline-primary"><i class="bi bi-cloud-arrow-up me-1"></i> Upload</button>
+                                    </form>
+                                </div>
+                            }
                         </div>
                     </div>
                 </div>

@@ -63,6 +63,9 @@ namespace Clinic.Domain.Entities.MasterData
         public MedicalHistoryStatus MedicalHistoryStatus { get; set; } = MedicalHistoryStatus.NotRecorded;
         public ICollection<PatientMedicalHistory> SystemicDiseases { get; set; } = new List<PatientMedicalHistory>();
 
+        public ICollection<PatientMedication> Medications { get; set; } = new List<PatientMedication>();
+
+
         // Audit & Soft Delete
         public bool IsDeleted { get; set; }
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;

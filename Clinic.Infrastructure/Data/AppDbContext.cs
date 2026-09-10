@@ -45,6 +45,7 @@ namespace Clinic.Infrastructure.Data
         public DbSet<Clinic.Domain.Entities.Operations.AppointmentDiagnosis> AppointmentDiagnoses { get; set; } = null!;
         public DbSet<Clinic.Domain.Entities.MasterData.PatientAllergy> PatientAllergies { get; set; } = null!;
         public DbSet<Clinic.Domain.Entities.MasterData.PatientMedicalHistory> PatientSystemicDiseases { get; set; } = null!;
+        public DbSet<Clinic.Domain.Entities.MasterData.PatientMedication> PatientMedications { get; set; } = null!;
         public DbSet<Clinic.Domain.Entities.Operations.AppointmentVitalSign> AppointmentVitalSigns { get; set; } = null!;
         public DbSet<Clinic.Domain.Entities.Operations.AppointmentClinicalNote> AppointmentClinicalNotes { get; set; } = null!;
         public DbSet<Clinic.Domain.Entities.Operations.Invoice> Invoices { get; set; } = null!;

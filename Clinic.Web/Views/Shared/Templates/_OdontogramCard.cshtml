@@ -7,42 +7,56 @@
         </div>
     </div>
     
+    @{
+        var apptContext = ViewBag.Appointment as Clinic.Application.DTOs.Operations.AppointmentDto;
+        bool isReadOnly = apptContext == null || apptContext.Status == Clinic.Domain.Enums.AppointmentStatus.Completed;
+    }
+
     <!-- Odontogram Toolbar -->
-    <div class="bg-light border-top border-bottom p-2 mt-3 d-flex justify-content-between align-items-center">
-        <div class="d-flex gap-2">
-            <select id="selCondition" class="form-select w-auto">
-                <option value="" disabled selected>-- Select Condition --</option>
-                @if (ViewBag.Conditions != null)
-                {
-                    foreach (var c in ViewBag.Conditions)
+    @if (!isReadOnly)
+    {
+        <div class="bg-light border-top border-bottom p-2 mt-3 d-flex justify-content-between align-items-center">
+            <div class="d-flex gap-2">
+                <select id="selCondition" class="form-select w-auto">
+                    <option value="" disabled selected>-- Select Condition --</option>
+                    @if (ViewBag.Conditions != null)
                     {
-                        if (c.IsActive)
+                        foreach (var c in ViewBag.Conditions)
                         {
-                            <option value="@c.ConditionName" data-color="@c.Color">@c.ConditionName</option>
+                            if (c.IsActive)
+                            {
+                                <option value="@c.ConditionName" data-color="@c.Color">@c.ConditionName</option>
+                            }
                         }
                     }
-                }
-            </select>
-            <select id="selTreatment" class="form-select w-auto">
-                <option value="" disabled selected>-- Select Treatment --</option>
-                @if (ViewBag.Treatments != null)
-                {
-                    foreach (var t in ViewBag.Treatments)
+                </select>
+                <select id="selTreatment" class="form-select w-auto">
+                    <option value="" disabled selected>-- Select Treatment --</option>
+                    @if (ViewBag.Treatments != null)
                     {
-                        if (t.IsActive)
+                        foreach (var t in ViewBag.Treatments)
                         {
-                            <option value="@t.TreatmentName" data-color="@t.Color">@t.TreatmentName</option>
+                            if (t.IsActive)
+                            {
+                                <option value="@t.TreatmentName" data-color="@t.Color">@t.TreatmentName</option>
+                            }
                         }
                     }
-                }
-            </select>
-            <button class="btn btn-primary" onclick="applySelection()"><i class="bi bi-check-circle me-1"></i>Apply</button>
+                </select>
+                <button class="btn btn-primary" onclick="applySelection()"><i class="bi bi-check-circle me-1"></i>Apply</button>
+            </div>
+            <div>
+                <button class="btn btn-sm btn-outline-secondary" onclick="odo.undo()"><i class="bi bi-arrow-counterclockwise"></i> Undo</button>
+                <button class="btn btn-sm btn-outline-danger" onclick="odo.clearSelection()"><i class="bi bi-x-circle"></i> Clear Selection</button>
+            </div>
         </div>
-        <div>
-            <button class="btn btn-sm btn-outline-secondary" onclick="odo.undo()"><i class="bi bi-arrow-counterclockwise"></i> Undo</button>
-            <button class="btn btn-sm btn-outline-danger" onclick="odo.clearSelection()"><i class="bi bi-x-circle"></i> Clear Selection</button>
+    }
+    else
+    {
+        <div class="bg-light border-top border-bottom p-3 mt-3 text-center text-muted">
+            <i class="bi bi-lock-fill me-2"></i> Treatment capture is locked because the appointment is completed or no active appointment context.
         </div>
-    </div>
+    }
 
     <!-- SVG Container -->
     <div class="card-body bg-white m-0 p-3 overflow-auto" style="min-height: 400px;" id="odontogramContainer">
