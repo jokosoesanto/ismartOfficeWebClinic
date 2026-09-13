@@ -16,7 +16,13 @@ namespace Clinic.Infrastructure.MockProviders
                 new NavigationItem { Id = "patient", Title = "Patient Management", Icon = "bi-person-lines-fill", Route = "/Patient", BreadcrumbTitle = "Patients", Description = "Patient Management", RequiredPermission = "Patient.Index" },
                 new NavigationItem { Id = "appointment", Title = "Appointment", Icon = "bi-calendar-check", Route = "/Appointment", BreadcrumbTitle = "Appointments", Description = "Manage Appointments", RequiredPermission = "Appointment.Index" },
                 new NavigationItem { Id = "medicalrecord", Title = "Medical Record", Icon = "bi-clipboard2-pulse", Route = "/MedicalRecord", BreadcrumbTitle = "Medical Records", Description = "Patient Medical Records", RequiredPermission = "MedicalRecord.Index" },
-                new NavigationItem { Id = "billing", Title = "Billing & Payment", Icon = "bi-cash-coin", Route = "/Billing", BreadcrumbTitle = "Billing", Description = "Invoices and Payments", RequiredPermission = "Billing.Index" },
+                new NavigationItem { Id = "billing", Title = "Billing & Payment", Icon = "bi-cash-coin", Route = "/Billing", BreadcrumbTitle = "Billing", Description = "Invoices and Payments", RequiredPermission = "Billing.Index",
+                    Children = new List<NavigationItem>
+                    {
+                        new NavigationItem { Id = "billing-invoices", Title = "Invoices", Icon = "bi-file-earmark-text", Route = "/Billing", BreadcrumbTitle = "Invoices", RequiredPermission = "Billing.Index" },
+                        new NavigationItem { Id = "billing-history", Title = "Payment History", Icon = "bi-receipt", Route = "/Billing/History", BreadcrumbTitle = "Payment History", RequiredPermission = "Billing.Index" }
+                    }
+                },
                 new NavigationItem { Id = "inventory", Title = "Inventory", Icon = "bi-box-seam", Route = "/Inventory", BreadcrumbTitle = "Inventory", Description = "Stock Management", RequiredPermission = "Inventory.Index" },
                 new NavigationItem { Id = "report", Title = "Reports", Icon = "bi-bar-chart", Route = "/Report", BreadcrumbTitle = "Reports", Description = "Analytics and Reports", RequiredPermission = "Report.Index" },
                 new NavigationItem { Id = "operations", Title = "Operations", Icon = "bi-activity", Route = "/Operations", BreadcrumbTitle = "Operations", Description = "Operational Modules", RequiredPermission = "ScheduleBoard.View",

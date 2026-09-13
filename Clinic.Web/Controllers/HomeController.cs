@@ -64,12 +64,23 @@ namespace Clinic.Web.Controllers
             var todaysCollection = todaysPayments.Sum(p => p.Amount);
             var formattedCollection = await _currencyService.FormatAmountAsync(todaysCollection);
 
+            // 4. Global Outstanding Receivables
+            var outstandingReceivables = await _dbContext.Invoices
+                .Where(i => !i.IsDeleted && i.Status == "Finalized")
+                .Select(i => i.TotalAmount - i.Payments.Where(p => !p.IsDeleted).Sum(p => p.Amount))
+                .Where(balance => balance > 0)
+                .SumAsync();
+
+            var formattedOutstanding = await _currencyService.FormatAmountAsync(outstandingReceivables);
+
             var viewModel = new DashboardViewModel
             {
                 TodaysAppointments = todaysAppointments,
                 WaitingPatients = waitingPatients,
                 TodaysCollection = todaysCollection,
                 FormattedTodaysCollection = formattedCollection,
+                OutstandingReceivables = outstandingReceivables,
+                FormattedOutstandingReceivables = formattedOutstanding,
                 RecentPayments = todaysPayments.Take(5).ToList()
             };
 

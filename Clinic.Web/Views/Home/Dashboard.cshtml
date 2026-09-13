@@ -148,9 +148,16 @@
                     <a href="/Billing" class="btn btn-sm btn-link text-decoration-none">Go to Billing</a>
                 </div>
                 <div class="card-body">
-                    <div class="mb-4 pb-3 border-bottom text-center">
-                        <h3 class="fw-bold text-dark mb-0">@Model.FormattedTodaysCollection</h3>
-                        <small class="text-muted text-uppercase fw-bold">Today's Collection</small>
+                    <div class="mb-4 pb-3 border-bottom d-flex justify-content-between text-center px-2">
+                        <div class="flex-fill">
+                            <h3 class="fw-bold text-success mb-0">@Model.FormattedTodaysCollection</h3>
+                            <small class="text-muted text-uppercase fw-bold">Today's Collection</small>
+                        </div>
+                        <div class="border-start border-2 mx-2"></div>
+                        <div class="flex-fill">
+                            <h3 class="fw-bold text-danger mb-0">@Model.FormattedOutstandingReceivables</h3>
+                            <small class="text-muted text-uppercase fw-bold">Global Outstanding</small>
+                        </div>
                     </div>
                     <ul class="list-group list-group-flush">
                         @if (!Model.RecentPayments.Any())

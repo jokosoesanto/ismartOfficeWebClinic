@@ -47,10 +47,13 @@ namespace Clinic.Web.Controllers
         }
 
         [HttpGet("History")]
-        public IActionResult History()
+        public async Task<IActionResult> History()
         {
             var metadata = new UIMetadata { Title = "Payment History", ModuleName = "Billing", Mode = RenderingMode.Template };
-            return View("Templates/Payment_History", metadata);
+            ViewBag.Metadata = metadata;
+            
+            var invoices = await _invoiceService.GetAllInvoicesAsync();
+            return View("Templates/Payment_History", invoices);
         }
 
         [HttpGet("Preview/{id}")]

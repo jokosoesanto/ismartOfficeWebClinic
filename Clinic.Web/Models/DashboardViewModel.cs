@@ -10,6 +10,8 @@ namespace Clinic.Web.Models
         public List<Appointment> WaitingPatients { get; set; } = new List<Appointment>();
         public decimal TodaysCollection { get; set; }
         public string FormattedTodaysCollection { get; set; } = "$0.00";
+        public decimal OutstandingReceivables { get; set; }
+        public string FormattedOutstandingReceivables { get; set; } = "$0.00";
         public List<Payment> RecentPayments { get; set; } = new List<Payment>();
     }
 }
