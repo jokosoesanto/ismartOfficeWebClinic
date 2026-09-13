@@ -735,5 +735,62 @@ namespace Clinic.Web.Controllers
 
             return File(stream, fileMeta.MimeType ?? "application/octet-stream", fileMeta.OriginalFileName);
         }
+        [HttpPost("ExecuteTreatment")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ExecuteTreatment([FromForm] Guid patientId, [FromForm] Guid treatmentId, [FromForm] Guid appointmentId)
+        {
+            var result = await _treatmentService.ExecuteTreatmentAsync(treatmentId);
+            if (result.Success)
+            {
+                TempData["SuccessMessage"] = "Treatment executed successfully. It is now billable.";
+            }
+            else
+            {
+                TempData["ErrorMessage"] = "Failed to execute treatment: " + result.Message;
+            }
+            return RedirectToAction("Chart", new { patientId = patientId, appointmentId = appointmentId });
+        }
+
+        [HttpPost("RecordConsent")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> RecordConsent([FromForm] Guid patientId, [FromForm] Guid treatmentId, [FromForm] Guid appointmentId)
+        {
+            var userId = Guid.Empty;
+            if (User.Identity?.IsAuthenticated == true)
+            {
+                var userIdClaim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier);
+                if (userIdClaim != null && Guid.TryParse(userIdClaim.Value, out Guid parsedId))
+                {
+                    userId = parsedId;
+                }
+            }
+
+            var result = await _treatmentService.RecordConsentAsync(treatmentId, userId);
+            if (result.Success)
+            {
+                TempData["SuccessMessage"] = "Consent recorded successfully.";
+            }
+            else
+            {
+                TempData["ErrorMessage"] = "Failed to record consent: " + result.Message;
+            }
+            return RedirectToAction("Chart", new { patientId = patientId, appointmentId = appointmentId });
+        }
+
+        [HttpPost("CancelTreatment")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> CancelTreatment([FromForm] Guid patientId, [FromForm] Guid treatmentId, [FromForm] Guid appointmentId)
+        {
+            var result = await _treatmentService.CancelTreatmentAsync(treatmentId);
+            if (result.Success)
+            {
+                TempData["SuccessMessage"] = "Treatment cancelled successfully.";
+            }
+            else
+            {
+                TempData["ErrorMessage"] = "Failed to cancel treatment: " + result.Message;
+            }
+            return RedirectToAction("Chart", new { patientId = patientId, appointmentId = appointmentId });
+        }
     }
 }

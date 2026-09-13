@@ -1,16 +1,16 @@
-@model Clinic.Application.UI.UIMetadata
+@model Clinic.Web.Models.CollectionReportViewModel
 @{
-    
+    var meta = ViewBag.Meta as Clinic.Application.UI.UIMetadata;
 }
 
 <!-- Report Viewer Template -->
 <div class="container-fluid py-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2 class="mb-0 fw-bold">@Model.Title</h2>
+        <h2 class="mb-0 fw-bold">@(meta?.Title ?? "Collection Report")</h2>
         <div>
-            <button class="btn btn-primary shadow-sm"><i class="bi bi-printer me-1"></i> Print</button>
-            <button class="btn btn-outline-success shadow-sm ms-2"><i class="bi bi-file-earmark-excel me-1"></i> Export Excel</button>
-            <button class="btn btn-outline-danger shadow-sm ms-2"><i class="bi bi-file-earmark-pdf me-1"></i> Export PDF</button>
+            <button class="btn btn-primary shadow-sm disabled" title="Printing is out of scope"><i class="bi bi-printer me-1"></i> Print</button>
+            <button class="btn btn-outline-success shadow-sm ms-2 disabled" title="Export is out of scope"><i class="bi bi-file-earmark-excel me-1"></i> Export Excel</button>
+            <button class="btn btn-outline-danger shadow-sm ms-2 disabled" title="Export is out of scope"><i class="bi bi-file-earmark-pdf me-1"></i> Export PDF</button>
         </div>
     </div>
 
@@ -29,20 +29,9 @@
                     </div>
                     
                     <div class="list-group list-group-flush border rounded" style="max-height: 400px; overflow-y: auto;">
-                        <a href="#" class="list-group-item list-group-item-action fw-bold"><i class="bi bi-star-fill text-warning me-2"></i>Favorites</a>
-                        <a href="#" class="list-group-item list-group-item-action ps-4" onclick="selectReport('Daily Revenue')"><i class="bi bi-file-bar-graph me-2"></i>Daily Revenue</a>
-                        
-                        <a href="#" class="list-group-item list-group-item-action fw-bold mt-2"><i class="bi bi-clock-history text-info me-2"></i>Recent Reports</a>
-                        <a href="#" class="list-group-item list-group-item-action ps-4" onclick="selectReport('Treatment Summary')"><i class="bi bi-file-medical me-2"></i>Treatment Summary</a>
-                        
-                        <a href="#" class="list-group-item list-group-item-action fw-bold mt-2"><i class="bi bi-folder-fill text-primary me-2"></i>Financial Reports</a>
-                        <a href="#" class="list-group-item list-group-item-action ps-4 active" onclick="selectReport('Daily Revenue')" id="reportLink-Daily Revenue"><i class="bi bi-file-bar-graph me-2"></i>Daily Revenue</a>
-                        <a href="#" class="list-group-item list-group-item-action ps-4" onclick="selectReport('Outstanding Balances')"><i class="bi bi-file-bar-graph me-2"></i>Outstanding Balances</a>
-                        <a href="#" class="list-group-item list-group-item-action ps-4" onclick="selectReport('Insurance Claims')"><i class="bi bi-file-earmark-medical me-2"></i>Insurance Claims</a>
-                        
-                        <a href="#" class="list-group-item list-group-item-action fw-bold mt-2"><i class="bi bi-folder-fill text-success me-2"></i>Clinical Reports</a>
-                        <a href="#" class="list-group-item list-group-item-action ps-4" onclick="selectReport('Patient Visits')"><i class="bi bi-people me-2"></i>Patient Visits</a>
-                        <a href="#" class="list-group-item list-group-item-action ps-4" onclick="selectReport('Treatment Summary')"><i class="bi bi-file-medical me-2"></i>Treatment Summary</a>
+                        <a href="/Report" class="list-group-item list-group-item-action ps-4 active">
+                            <i class="bi bi-file-bar-graph me-2"></i>Collection Report
+                        </a>
                     </div>
                 </div>
             </div>
@@ -52,43 +41,21 @@
                     <h6 class="fw-bold text-primary text-uppercase mb-0"><i class="bi bi-sliders me-2"></i>Report Parameters</h6>
                 </div>
                 <div class="card-body bg-light">
-                    <div class="mb-3">
-                        <label class="form-label fw-bold small">Date Range</label>
-                        <select class="form-select form-select-sm mb-2">
-                            <option>Today</option>
-                            <option>This Week</option>
-                            <option selected>This Month</option>
-                            <option>Custom Date...</option>
-                        </select>
-                        <div class="input-group input-group-sm mb-2">
-                            <span class="input-group-text">From</span>
-                            <input type="date" class="form-control" value="2026-07-01">
+                    <form method="get" action="/Report">
+                        <div class="mb-3">
+                            <label class="form-label fw-bold small">Date Range</label>
+                            <div class="input-group input-group-sm mb-2">
+                                <span class="input-group-text">From</span>
+                                <input type="date" name="fromDate" class="form-control" value="@Model.FromDate.ToString("yyyy-MM-dd")" required>
+                            </div>
+                            <div class="input-group input-group-sm mb-3">
+                                <span class="input-group-text">To</span>
+                                <input type="date" name="toDate" class="form-control" value="@Model.ToDate.ToString("yyyy-MM-dd")" required>
+                            </div>
                         </div>
-                        <div class="input-group input-group-sm">
-                            <span class="input-group-text">To</span>
-                            <input type="date" class="form-control" value="2026-07-31">
-                        </div>
-                    </div>
-                    
-                    <!-- Grouping / Sorting -->
-                    <div class="mb-3">
-                        <label class="form-label fw-bold small">Grouping By</label>
-                        <select class="form-select form-select-sm">
-                            <option>Provider</option>
-                            <option>Patient</option>
-                            <option>Date</option>
-                        </select>
-                    </div>
-
-                    <div class="mb-3">
-                        <label class="form-label fw-bold small">Provider Filter</label>
-                        <select class="form-select form-select-sm">
-                            <option>All Providers</option>
-                            <option>Dr. Alan</option>
-                            <option>Dr. Emily Chen</option>
-                        </select>
-                    </div>
-                    <button class="btn btn-primary btn-sm w-100" onclick="generateReport()"><i class="bi bi-arrow-clockwise me-1"></i> Generate Preview</button>
+                        
+                        <button type="submit" class="btn btn-primary btn-sm w-100"><i class="bi bi-arrow-clockwise me-1"></i> Apply / View Report</button>
+                    </form>
                 </div>
             </div>
         </div>
@@ -107,20 +74,12 @@
                 </div>
 
                 <div class="card-body p-4 d-flex justify-content-center align-items-start overflow-auto" id="reportPreviewContainer">
-                    
-                    <!-- Empty State -->
-                    <div id="emptyState" class="text-center p-5 text-muted align-self-center">
-                        <i class="bi bi-file-earmark-bar-graph display-1 mb-3 d-block text-secondary"></i>
-                        <h4 class="fw-bold">No Report Selected</h4>
-                        <p>Select a report from the library and configure parameters to generate a preview.</p>
-                    </div>
-
-                    <!-- The actual A4 size report page (Hidden initially) -->
-                    <div id="reportPage" class="bg-white p-5 shadow d-none" style="width: 21cm; min-height: 29.7cm;">
+                    <!-- The actual A4 size report page -->
+                    <div id="reportPage" class="bg-white p-5 shadow" style="width: 21cm; min-height: 29.7cm;">
                         <div class="text-center mb-4 border-bottom pb-4">
-                            <h3 class="fw-bold text-uppercase" id="reportTitleHeader">Daily Revenue Report</h3>
+                            <h3 class="fw-bold text-uppercase" id="reportTitleHeader">Collection Report</h3>
                             <h5 class="text-muted">iSmart Office Dental Clinic</h5>
-                            <p class="mb-0 text-muted">Period: 01 Jul 2026 - 31 Jul 2026</p>
+                            <p class="mb-0 text-muted">Period: @Model.FromDate.ToString("dd MMM yyyy") - @Model.ToDate.ToString("dd MMM yyyy")</p>
                         </div>
                         
                         <div class="table-responsive">
@@ -128,37 +87,48 @@
                                 <thead class="table-light">
                                     <tr>
                                         <th>Date</th>
+                                        <th>Receipt</th>
                                         <th>Patient</th>
-                                        <th>Provider</th>
-                                        <th class="text-end">Amount Paid</th>
+                                        <th>Invoice</th>
+                                        <th>Payment Method</th>
+                                        <th class="text-end">Amount</th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <tr>
-                                        <td>31/07/2026</td>
-                                        <td>John Smith</td>
-                                        <td>Dr. Emily Chen</td>
-                                        <td class="text-end">$450.00</td>
-                                    </tr>
-                                    <tr>
-                                        <td>25/07/2026</td>
-                                        <td>Jane Smith</td>
-                                        <td>Dr. Alan</td>
-                                        <td class="text-end">$120.00</td>
-                                    </tr>
+                                    @if (!Model.Payments.Any())
+                                    {
+                                        <tr>
+                                            <td colspan="6" class="text-center py-4 text-muted">
+                                                No payment transactions found for the selected date range.
+                                            </td>
+                                        </tr>
+                                    }
+                                    else
+                                    {
+                                        foreach(var payment in Model.Payments)
+                                        {
+                                            <tr>
+                                                <td>@payment.PaymentDate.ToString("dd/MM/yyyy")</td>
+                                                <td>@payment.ReceiptNumber</td>
+                                                <td>@(payment.Invoice?.Appointment?.Patient?.FullName)</td>
+                                                <td>@payment.Invoice?.InvoiceNumber</td>
+                                                <td>@payment.PaymentMethod</td>
+                                                <td class="text-end">@ViewData[$"FormattedAmount_{payment.Id}"]</td>
+                                            </tr>
+                                        }
+                                    }
                                 </tbody>
                                 <tfoot>
                                     <tr class="fw-bold table-active">
-                                        <td colspan="3" class="text-end">Total Revenue:</td>
-                                        <td class="text-end">$570.00</td>
+                                        <td colspan="5" class="text-end">Total Collection:</td>
+                                        <td class="text-end">@Model.FormattedTotalCollection</td>
                                     </tr>
                                 </tfoot>
                             </table>
                         </div>
                         
                         <div class="mt-5 text-end text-muted small">
-                            <p>Generated on: 31 Jul 2026 10:20 AM</p>
-                            <p>Page 1 of 1</p>
+                            <p>Generated on: @DateTime.Now.ToString("dd MMM yyyy hh:mm tt")</p>
                         </div>
                     </div>
                 </div>
@@ -166,51 +136,3 @@
         </div>
     </div>
 </div>
-
-<script>
-    let currentReport = null;
-
-    // Wait for DOM
-    document.addEventListener('DOMContentLoaded', function() {
-        // Initialize Empty State
-        document.getElementById('reportPage').classList.add('d-none');
-        document.getElementById('emptyState').classList.remove('d-none');
-        document.getElementById('parameterPanel').style.opacity = '0.5';
-        document.getElementById('parameterPanel').style.pointerEvents = 'none';
-        
-        // Unset active class from all links
-        document.querySelectorAll('.list-group-item').forEach(el => el.classList.remove('active'));
-    });
-
-    function selectReport(reportName) {
-        currentReport = reportName;
-        
-        // Manage UI State
-        document.querySelectorAll('.list-group-item').forEach(el => el.classList.remove('active'));
-        // Find the link by text content
-        Array.from(document.querySelectorAll('.list-group-item')).forEach(el => {
-            if(el.textContent.includes(reportName) && !el.classList.contains('fw-bold')) {
-                el.classList.add('active');
-            }
-        });
-
-        // Enable Parameters
-        document.getElementById('parameterPanel').style.opacity = '1';
-        document.getElementById('parameterPanel').style.pointerEvents = 'auto';
-        
-        // Show empty state, wait for generation
-        document.getElementById('reportPage').classList.add('d-none');
-        document.getElementById('emptyState').classList.remove('d-none');
-        document.querySelector('#emptyState h4').innerText = "Report Configured";
-        document.querySelector('#emptyState p').innerText = "Click 'Generate Preview' to view the report.";
-    }
-
-    function generateReport() {
-        if(!currentReport) return;
-        
-        // Show loading state simulation
-        document.getElementById('emptyState').classList.add('d-none');
-        document.getElementById('reportPage').classList.remove('d-none');
-        document.getElementById('reportTitleHeader').innerText = currentReport + " Report";
-    }
-</script>

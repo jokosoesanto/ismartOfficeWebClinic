@@ -3,6 +3,7 @@ using System;
 using Clinic.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -10,9 +11,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Clinic.Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260913060745_AddTreatmentStatus")]
+    partial class AddTreatmentStatus
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "10.0.10");
@@ -2083,34 +2086,6 @@ namespace Clinic.Infrastructure.Migrations
                     b.ToTable("Payments");
                 });
 
-            modelBuilder.Entity("Clinic.Domain.Entities.Operations.TreatmentConsent", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("TEXT");
-
-                    b.Property<Guid>("AppointmentTreatmentId")
-                        .HasColumnType("TEXT");
-
-                    b.Property<DateTime>("ConsentedAt")
-                        .HasColumnType("TEXT");
-
-                    b.Property<Guid>("ConsentedByUserId")
-                        .HasColumnType("TEXT");
-
-                    b.Property<bool>("IsConsentGiven")
-                        .HasColumnType("INTEGER");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("AppointmentTreatmentId")
-                        .IsUnique();
-
-                    b.HasIndex("ConsentedByUserId");
-
-                    b.ToTable("TreatmentConsents", (string)null);
-                });
-
             modelBuilder.Entity("Clinic.Domain.Entities.System.FileMetadata", b =>
                 {
                     b.Property<Guid>("Id")
@@ -2756,25 +2731,6 @@ namespace Clinic.Infrastructure.Migrations
                     b.Navigation("Invoice");
                 });
 
-            modelBuilder.Entity("Clinic.Domain.Entities.Operations.TreatmentConsent", b =>
-                {
-                    b.HasOne("Clinic.Domain.Entities.Operations.AppointmentTreatment", "AppointmentTreatment")
-                        .WithOne("Consent")
-                        .HasForeignKey("Clinic.Domain.Entities.Operations.TreatmentConsent", "AppointmentTreatmentId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("Clinic.Domain.Entities.Auth.User", "ConsentedByUser")
-                        .WithMany()
-                        .HasForeignKey("ConsentedByUserId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("AppointmentTreatment");
-
-                    b.Navigation("ConsentedByUser");
-                });
-
             modelBuilder.Entity("Clinic.Domain.Entities.System.MasterReference", b =>
                 {
                     b.HasOne("Clinic.Domain.Entities.System.MasterReference", "Parent")
@@ -2845,11 +2801,6 @@ namespace Clinic.Infrastructure.Migrations
                     b.Navigation("Diagnoses");
 
                     b.Navigation("VitalSign");
-                });
-
-            modelBuilder.Entity("Clinic.Domain.Entities.Operations.AppointmentTreatment", b =>
-                {
-                    b.Navigation("Consent");
                 });
 
             modelBuilder.Entity("Clinic.Domain.Entities.Operations.DoctorLeaveRequest", b =>

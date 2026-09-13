@@ -60,7 +60,9 @@ namespace Clinic.Application.UseCases.Operations
 
             // 3. Get billable source: AppointmentTreatments
             // We use GetByAppointmentIdsAsync from the repository which returns all treatments for the given appointments
-            var treatments = (await _appointmentTreatmentRepository.GetByAppointmentIdsAsync(new[] { appointmentId })).ToList();
+            var treatments = (await _appointmentTreatmentRepository.GetByAppointmentIdsAsync(new[] { appointmentId }))
+                .Where(t => t.Status == Clinic.Domain.Enums.TreatmentStatus.Executed)
+                .ToList();
             
             if (!treatments.Any())
             {

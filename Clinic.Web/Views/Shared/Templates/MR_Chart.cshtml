@@ -143,6 +143,8 @@
                                                 <th>Tooth</th>
                                                 <th>Surface</th>
                                                 <th>Price</th>
+                                                <th>Status</th>
+                                                <th>Consent</th>
                                                 <th>Remarks</th>
                                                 <th class="text-end">Action</th>
                                             </tr>
@@ -156,16 +158,68 @@
                                                     <td>@t.SiteNumber</td>
                                                     <td>@t.SiteDetail</td>
                                                     <td>$@t.ActualPrice.ToString("F2")</td>
+                                                    <td>
+                                                        @if (t.Status == Clinic.Domain.Enums.TreatmentStatus.Planned) { <span class="badge bg-warning text-dark">Planned</span> }
+                                                        else if (t.Status == Clinic.Domain.Enums.TreatmentStatus.Executed) { <span class="badge bg-success">Executed</span> }
+                                                        else if (t.Status == Clinic.Domain.Enums.TreatmentStatus.Cancelled) { <span class="badge bg-secondary">Cancelled</span> }
+                                                    </td>
+                                                    <td>
+                                                        @if (t.HasConsent)
+                                                        {
+                                                            <span class="badge bg-success">Recorded</span>
+                                                        }
+                                                        else
+                                                        {
+                                                            <span class="badge bg-secondary">Not Recorded</span>
+                                                        }
+                                                    </td>
                                                     <td class="text-muted small">@t.Remark</td>
                                                     <td class="text-end" onclick="event.stopPropagation();">
-                                                        <form asp-controller="MedicalRecord" asp-action="DeleteTreatment" method="post" class="d-inline" onsubmit="return confirm('Are you sure you want to remove this treatment (@t.TreatmentItemName on Tooth @t.SiteNumber)? This action cannot be undone.');">
-                                                            <input type="hidden" name="treatmentId" value="@t.Id" />
-                                                            <input type="hidden" name="patientId" value="@Model.Id" />
-                                                            <input type="hidden" name="appointmentId" value="@ViewBag.AppointmentId" />
-                                                            <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete Treatment">
-                                                                <i class="bi bi-trash"></i>
-                                                            </button>
-                                                        </form>
+                                                        @if (t.Status == Clinic.Domain.Enums.TreatmentStatus.Planned)
+                                                        {
+                                                            @if (!t.HasConsent)
+                                                            {
+                                                                <form asp-controller="MedicalRecord" asp-action="RecordConsent" method="post" class="d-inline" onsubmit="return confirm('Record patient consent for this treatment?');">
+                                                                    <input type="hidden" name="treatmentId" value="@t.Id" />
+                                                                    <input type="hidden" name="patientId" value="@Model.Id" />
+                                                                    <input type="hidden" name="appointmentId" value="@ViewBag.AppointmentId" />
+                                                                    <button type="submit" class="btn btn-sm btn-outline-primary" title="Record Consent">
+                                                                        <i class="bi bi-file-earmark-check"></i> Record Consent
+                                                                    </button>
+                                                                </form>
+                                                            }
+                                                            else
+                                                            {
+                                                                <form asp-controller="MedicalRecord" asp-action="ExecuteTreatment" method="post" class="d-inline" onsubmit="return confirm('Execute this treatment? It will become billable.');">
+                                                                    <input type="hidden" name="treatmentId" value="@t.Id" />
+                                                                    <input type="hidden" name="patientId" value="@Model.Id" />
+                                                                    <input type="hidden" name="appointmentId" value="@ViewBag.AppointmentId" />
+                                                                    <button type="submit" class="btn btn-sm btn-success" title="Execute Treatment">
+                                                                        <i class="bi bi-play-fill"></i> Execute
+                                                                    </button>
+                                                                </form>
+                                                            }
+                                                            <form asp-controller="MedicalRecord" asp-action="CancelTreatment" method="post" class="d-inline ms-1" onsubmit="return confirm('Cancel this proposed treatment?');">
+                                                                <input type="hidden" name="treatmentId" value="@t.Id" />
+                                                                <input type="hidden" name="patientId" value="@Model.Id" />
+                                                                <input type="hidden" name="appointmentId" value="@ViewBag.AppointmentId" />
+                                                                <button type="submit" class="btn btn-sm btn-secondary" title="Cancel Treatment">
+                                                                    <i class="bi bi-x-circle"></i> Cancel
+                                                                </button>
+                                                            </form>
+                                                        }
+                                                        else
+                                                        {
+                                                            <!-- Existing Delete for Executed (Preserve existing behavior) -->
+                                                            <form asp-controller="MedicalRecord" asp-action="DeleteTreatment" method="post" class="d-inline" onsubmit="return confirm('Are you sure you want to remove this treatment (@t.TreatmentItemName on Tooth @t.SiteNumber)? This action cannot be undone.');">
+                                                                <input type="hidden" name="treatmentId" value="@t.Id" />
+                                                                <input type="hidden" name="patientId" value="@Model.Id" />
+                                                                <input type="hidden" name="appointmentId" value="@ViewBag.AppointmentId" />
+                                                                <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete Treatment">
+                                                                    <i class="bi bi-trash"></i>
+                                                                </button>
+                                                            </form>
+                                                        }
                                                     </td>
                                                 </tr>
                                             }
@@ -259,6 +313,8 @@
                                                         <th>Treatment</th>
                                                         <th>Tooth</th>
                                                         <th>Surface</th>
+                                                        <th>Status</th>
+                                                        <th>Consent</th>
                                                         <th>Remarks</th>
                                                     </tr>
                                                 </thead>
@@ -269,6 +325,21 @@
                                                             <td class="fw-semibold">@t.TreatmentItemName</td>
                                                             <td>@(string.IsNullOrEmpty(t.SiteNumber) ? "-" : t.SiteNumber)</td>
                                                             <td>@(string.IsNullOrEmpty(t.SiteDetail) ? "-" : t.SiteDetail)</td>
+                                                            <td>
+                                                                @if (t.Status == Clinic.Domain.Enums.TreatmentStatus.Planned) { <span class="badge bg-warning text-dark">Planned</span> }
+                                                                else if (t.Status == Clinic.Domain.Enums.TreatmentStatus.Executed) { <span class="badge bg-success">Executed</span> }
+                                                                else if (t.Status == Clinic.Domain.Enums.TreatmentStatus.Cancelled) { <span class="badge bg-secondary">Cancelled</span> }
+                                                            </td>
+                                                            <td>
+                                                                @if (t.HasConsent)
+                                                                {
+                                                                    <span class="badge bg-success">Recorded</span>
+                                                                }
+                                                                else
+                                                                {
+                                                                    <span class="badge bg-secondary">Not Recorded</span>
+                                                                }
+                                                            </td>
                                                             <td class="text-muted small">@t.Remark</td>
                                                         </tr>
                                                     }

@@ -20,6 +20,11 @@ namespace Clinic.Domain.Entities.Operations
         public decimal ActualPrice { get; set; }
         public string? Remark { get; set; }
 
+        public Clinic.Domain.Enums.TreatmentStatus Status { get; set; } = Clinic.Domain.Enums.TreatmentStatus.Executed;
+
+        // Consent
+        public TreatmentConsent? Consent { get; set; }
+
         // Audit fields (required by entity framework tracking standards for consistency)
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public Guid? CreatedBy { get; set; }

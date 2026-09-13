@@ -77,6 +77,7 @@ namespace Clinic.Web.Controllers
             }
 
             var treatments = await _appointmentTreatmentService.GetTreatmentsByAppointmentIdAsync(appointmentId);
+            treatments = treatments.Where(t => t.Status == Clinic.Domain.Enums.TreatmentStatus.Executed).ToList();
             
             ViewBag.Appointment = appointment;
             ViewBag.Treatments = treatments;

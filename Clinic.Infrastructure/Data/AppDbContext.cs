@@ -42,6 +42,7 @@ namespace Clinic.Infrastructure.Data
         public DbSet<Clinic.Domain.Entities.Operations.DoctorLeaveRequest> DoctorLeaveRequests { get; set; } = null!;
         public DbSet<Clinic.Domain.Entities.Operations.DoctorLeaveDate> DoctorLeaveDates { get; set; } = null!;
         public DbSet<Clinic.Domain.Entities.Operations.AppointmentTreatment> AppointmentTreatments { get; set; } = null!;
+        public DbSet<Clinic.Domain.Entities.Operations.TreatmentConsent> TreatmentConsents { get; set; } = null!;
         public DbSet<Clinic.Domain.Entities.Operations.AppointmentDiagnosis> AppointmentDiagnoses { get; set; } = null!;
         public DbSet<Clinic.Domain.Entities.MasterData.PatientAllergy> PatientAllergies { get; set; } = null!;
         public DbSet<Clinic.Domain.Entities.MasterData.PatientMedicalHistory> PatientSystemicDiseases { get; set; } = null!;
@@ -68,6 +69,7 @@ namespace Clinic.Infrastructure.Data
             modelBuilder.ApplyConfiguration(new Configurations.DoctorLeaveRequestConfiguration());
             modelBuilder.ApplyConfiguration(new Configurations.DoctorLeaveDateConfiguration());
             modelBuilder.ApplyConfiguration(new Configurations.AppointmentTreatmentConfiguration());
+            modelBuilder.ApplyConfiguration(new Configurations.TreatmentConsentConfiguration());
             modelBuilder.ApplyConfiguration(new Configurations.PatientAllergyConfiguration());
             modelBuilder.ApplyConfiguration(new Configurations.PatientMedicalHistoryConfiguration());
             modelBuilder.ApplyConfiguration(new Configurations.AppointmentChiefComplaintConfiguration());

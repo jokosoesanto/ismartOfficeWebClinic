@@ -34,6 +34,11 @@ namespace Clinic.Infrastructure.Data.Configurations
                 .WithMany()
                 .HasForeignKey(e => e.TreatmentItemId)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            builder.HasOne(e => e.Consent)
+                .WithOne(c => c.AppointmentTreatment)
+                .HasForeignKey<TreatmentConsent>(c => c.AppointmentTreatmentId)
+                .OnDelete(DeleteBehavior.Cascade);
         }
     }
 }

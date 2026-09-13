@@ -22,6 +22,7 @@ namespace Clinic.Infrastructure.Repositories.Operations
         {
             return await _context.AppointmentTreatments
                 .Include(t => t.TreatmentItem)
+                .Include(t => t.Consent)
                 .FirstOrDefaultAsync(t => t.Id == id);
         }
 
@@ -29,6 +30,7 @@ namespace Clinic.Infrastructure.Repositories.Operations
         {
             return await _context.AppointmentTreatments
                 .Include(t => t.TreatmentItem)
+                .Include(t => t.Consent)
                 .Where(t => t.AppointmentId == appointmentId)
                 .OrderByDescending(t => t.CreatedAt)
                 .ToListAsync();
@@ -40,6 +42,7 @@ namespace Clinic.Infrastructure.Repositories.Operations
 
             return await _context.AppointmentTreatments
                 .Include(t => t.TreatmentItem)
+                .Include(t => t.Consent)
                 .Where(t => appointmentIds.Contains(t.AppointmentId))
                 .OrderByDescending(t => t.CreatedAt)
                 .ToListAsync();

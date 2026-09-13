@@ -23,9 +23,9 @@ namespace Clinic.Application.DTOs.Operations
         [Required]
         [Range(0, 999999999.99, ErrorMessage = "Price must be a positive value")]
         public decimal ActualPrice { get; set; }
-        
         public string? Remark { get; set; }
-        
+        public Clinic.Domain.Enums.TreatmentStatus Status { get; set; }
+        public bool HasConsent { get; set; }
         public DateTime CreatedAt { get; set; }
     }
 }
