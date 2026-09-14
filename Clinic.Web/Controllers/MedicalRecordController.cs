@@ -25,6 +25,8 @@ namespace Clinic.Web.Controllers
         private readonly Clinic.Application.Interfaces.IConditionMasterService _conditionMasterService;
         private readonly Clinic.Infrastructure.Data.AppDbContext _dbContext;
         private readonly Clinic.Application.Interfaces.Storage.IFileStorageService _storageService;
+        private readonly IPrescriptionService _prescriptionService;
+        private readonly Clinic.Application.Interfaces.Repositories.Operations.IPrescriptionRepository _prescriptionRepository;
 
         public MedicalRecordController(
             IAppointmentTreatmentService treatmentService,
@@ -35,7 +37,9 @@ namespace Clinic.Web.Controllers
             IPatientService patientService,
             Clinic.Application.Interfaces.IConditionMasterService conditionMasterService,
             Clinic.Infrastructure.Data.AppDbContext dbContext,
-            Clinic.Application.Interfaces.Storage.IFileStorageService storageService)
+            Clinic.Application.Interfaces.Storage.IFileStorageService storageService,
+            IPrescriptionService prescriptionService,
+            Clinic.Application.Interfaces.Repositories.Operations.IPrescriptionRepository prescriptionRepository)
         {
             _treatmentService = treatmentService;
             _appointmentService = appointmentService;
@@ -46,6 +50,8 @@ namespace Clinic.Web.Controllers
             _conditionMasterService = conditionMasterService;
             _dbContext = dbContext;
             _storageService = storageService;
+            _prescriptionService = prescriptionService;
+            _prescriptionRepository = prescriptionRepository;
         }
         [HttpGet]
         public async Task<IActionResult> Index()
@@ -134,10 +140,14 @@ namespace Clinic.Web.Controllers
                     .OrderByDescending(f => f.CreatedAt)
                     .ToListAsync();
                 ViewBag.Attachments = attachments;
+
+                var prescriptions = await _prescriptionRepository.GetByAppointmentIdAsync(appointmentId.Value);
+                ViewBag.Prescriptions = prescriptions;
             }
             else
             {
                 ViewBag.Attachments = new List<Clinic.Domain.Entities.System.FileMetadata>();
+                ViewBag.Prescriptions = new List<Clinic.Domain.Entities.Operations.Prescription>();
             }
 
             return View("Templates/MR_Chart", patient);
@@ -791,6 +801,44 @@ namespace Clinic.Web.Controllers
                 TempData["ErrorMessage"] = "Failed to cancel treatment: " + result.Message;
             }
             return RedirectToAction("Chart", new { patientId = patientId, appointmentId = appointmentId });
+        }
+        [HttpPost("CreatePrescription")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> CreatePrescription([FromForm] Clinic.Web.Models.MedicalRecord.PrescriptionViewModel model)
+        {
+            if (!ModelState.IsValid)
+            {
+                TempData["ErrorMessage"] = "Validation failed for prescription.";
+                return RedirectToAction("Chart", new { patientId = model.PatientId, appointmentId = model.AppointmentId });
+            }
+
+            var userIdClaim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var prescriberId))
+            {
+                TempData["ErrorMessage"] = "Failed to identify prescriber.";
+                return RedirectToAction("Chart", new { patientId = model.PatientId, appointmentId = model.AppointmentId });
+            }
+
+            var dtoItems = model.Items.Select(i => new Clinic.Application.Interfaces.Operations.PrescriptionItemDto
+            {
+                MedicationName = i.MedicationName,
+                Dosage = i.Dosage,
+                Frequency = i.Frequency,
+                Instruction = i.Instruction
+            }).ToList();
+
+            var result = await _prescriptionService.CreatePrescriptionAsync(model.AppointmentId, model.PatientId, prescriberId, dtoItems);
+            
+            if (result.Success)
+            {
+                TempData["SuccessMessage"] = result.Message;
+            }
+            else
+            {
+                TempData["ErrorMessage"] = result.Message;
+            }
+
+            return RedirectToAction("Chart", new { patientId = model.PatientId, appointmentId = model.AppointmentId });
         }
     }
 }

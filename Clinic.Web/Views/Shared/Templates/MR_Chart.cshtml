@@ -770,6 +770,59 @@
 
                 <div class="col-12 mt-2">
                     <div class="card shadow-sm border-0">
+                        <div class="card-header bg-primary text-white pt-3 pb-2 d-flex justify-content-between align-items-center">
+                            <h6 class="fw-bold text-uppercase mb-0"><i class="bi bi-prescription2 me-2"></i>Prescriptions (Current Visit)</h6>
+                            @if (ViewBag.Appointment != null && ViewBag.Appointment.Status != Clinic.Domain.Enums.AppointmentStatus.Completed && ViewBag.Appointment.Status != Clinic.Domain.Enums.AppointmentStatus.Failed && ViewBag.Appointment.Status != Clinic.Domain.Enums.AppointmentStatus.Reschedule && !ViewBag.Appointment.IsDeleted)
+                            {
+                                <button type="button" class="btn btn-sm btn-light text-primary fw-bold" data-bs-toggle="modal" data-bs-target="#prescriptionModal">
+                                    <i class="bi bi-plus-circle me-1"></i> Add Prescription
+                                </button>
+                            }
+                        </div>
+                        <div class="card-body">
+                            @if (ViewBag.Prescriptions != null && ((IEnumerable<Clinic.Domain.Entities.Operations.Prescription>)ViewBag.Prescriptions).Any())
+                            {
+                                @foreach (var prescription in (IEnumerable<Clinic.Domain.Entities.Operations.Prescription>)ViewBag.Prescriptions)
+                                {
+                                    <div class="border rounded p-3 mb-3 bg-light">
+                                        <div class="d-flex justify-content-between border-bottom pb-2 mb-2">
+                                            <span class="fw-bold text-dark"><i class="bi bi-file-medical"></i> Prescription #@prescription.Id.ToString().Substring(0, 8)</span>
+                                            <span class="text-muted small">Issued: @prescription.CreatedAt.ToString("dd MMM yyyy HH:mm")</span>
+                                        </div>
+                                        <table class="table table-sm table-borderless mb-0">
+                                            <thead>
+                                                <tr class="text-muted small border-bottom">
+                                                    <th>Medication</th>
+                                                    <th>Dosage</th>
+                                                    <th>Frequency</th>
+                                                    <th>Instructions</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                @foreach (var item in prescription.Items)
+                                                {
+                                                    <tr>
+                                                        <td class="fw-bold">@item.MedicationName</td>
+                                                        <td>@item.Dosage</td>
+                                                        <td>@item.Frequency</td>
+                                                        <td>@item.Instruction</td>
+                                                    </tr>
+                                                }
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                }
+                            }
+                            else
+                            {
+                                <div class="alert alert-secondary py-2 mb-0"><i class="bi bi-info-circle me-2"></i>No prescriptions issued for this visit.</div>
+                            }
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-12 mt-2">
+                    <div class="card shadow-sm border-0">
                         <div class="card-header bg-secondary text-white pt-3 pb-2">
                             <h6 class="fw-bold text-uppercase mb-0"><i class="bi bi-capsule me-2"></i>Medication History</h6>
                         </div>
@@ -941,6 +994,53 @@
     </div>
 </div>
 
+<!-- Prescription Modal -->
+<div class="modal fade" id="prescriptionModal" tabindex="-1" aria-labelledby="prescriptionModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title" id="prescriptionModalLabel"><i class="bi bi-prescription2 me-2"></i>Issue New Prescription</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form action="/MedicalRecord/CreatePrescription" method="post" id="prescriptionForm">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="patientId" value="@Model.Id" />
+                <input type="hidden" name="appointmentId" value="@ViewBag.AppointmentId" />
+                
+                <div class="modal-body">
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-sm" id="prescriptionItemsTable">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Medication Name <span class="text-danger">*</span></th>
+                                    <th>Dosage <span class="text-danger">*</span></th>
+                                    <th>Frequency <span class="text-danger">*</span></th>
+                                    <th>Instructions</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><input type="text" name="Items[0].MedicationName" class="form-control form-control-sm" required placeholder="e.g. Amoxicillin" /></td>
+                                    <td><input type="text" name="Items[0].Dosage" class="form-control form-control-sm" required placeholder="e.g. 500mg" /></td>
+                                    <td><input type="text" name="Items[0].Frequency" class="form-control form-control-sm" required placeholder="e.g. 3x/day" /></td>
+                                    <td><input type="text" name="Items[0].Instruction" class="form-control form-control-sm" placeholder="e.g. After meals" /></td>
+                                    <td class="text-center align-middle"><button type="button" class="btn btn-sm btn-outline-danger remove-prescription-item" disabled><i class="bi bi-trash"></i></button></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <button type="button" class="btn btn-sm btn-outline-secondary mt-1" id="btnAddPrescriptionItem"><i class="bi bi-plus"></i> Add Another Medication</button>
+                </div>
+                <div class="modal-footer border-0 pt-0 mt-3">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary"><i class="bi bi-save me-1"></i> Save Prescription</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
 <partial name="Templates/_OdontogramScripts" />
 <form id="applyTreatmentForm" method="post" action="/MedicalRecord/Chart/@Model.Id/ApplyTreatment" style="display:none;">
     @Html.AntiForgeryToken()
@@ -1005,6 +1105,55 @@
             var tab = new bootstrap.Tab(tabTrigger);
             tab.show();
             history.replaceState(null, null, hash);
+        }
+
+        // Prescription Modal logic
+        var btnAddPrescriptionItem = document.getElementById('btnAddPrescriptionItem');
+        var prescriptionItemsTable = document.getElementById('prescriptionItemsTable');
+        if (btnAddPrescriptionItem && prescriptionItemsTable) {
+            var itemIndex = 1;
+            btnAddPrescriptionItem.addEventListener('click', function() {
+                var tbody = prescriptionItemsTable.querySelector('tbody');
+                var row = document.createElement('tr');
+                row.innerHTML = '<td><input type="text" name="Items[' + itemIndex + '].MedicationName" class="form-control form-control-sm" required /></td>' +
+                                '<td><input type="text" name="Items[' + itemIndex + '].Dosage" class="form-control form-control-sm" required /></td>' +
+                                '<td><input type="text" name="Items[' + itemIndex + '].Frequency" class="form-control form-control-sm" required /></td>' +
+                                '<td><input type="text" name="Items[' + itemIndex + '].Instruction" class="form-control form-control-sm" /></td>' +
+                                '<td class="text-center align-middle"><button type="button" class="btn btn-sm btn-outline-danger remove-prescription-item"><i class="bi bi-trash"></i></button></td>';
+                tbody.appendChild(row);
+                itemIndex++;
+                updateRemoveButtons();
+            });
+
+            prescriptionItemsTable.addEventListener('click', function(e) {
+                var btn = e.target.closest('.remove-prescription-item');
+                if (btn) {
+                    var row = btn.closest('tr');
+                    var tbody = prescriptionItemsTable.querySelector('tbody');
+                    if (tbody.children.length > 1) {
+                        row.remove();
+                        // Re-index names to prevent binding gaps
+                        Array.from(tbody.children).forEach(function(tr, index) {
+                            tr.querySelectorAll('input').forEach(function(input) {
+                                var name = input.getAttribute('name');
+                                if (name) {
+                                    input.setAttribute('name', name.replace(/Items\[\d+\]/, 'Items[' + index + ']'));
+                                }
+                            });
+                        });
+                        itemIndex = tbody.children.length;
+                        updateRemoveButtons();
+                    }
+                }
+            });
+
+            function updateRemoveButtons() {
+                var tbody = prescriptionItemsTable.querySelector('tbody');
+                var buttons = tbody.querySelectorAll('.remove-prescription-item');
+                buttons.forEach(function(btn) {
+                    btn.disabled = tbody.children.length === 1;
+                });
+            }
         }
 
         // Update hash when a tab is clicked

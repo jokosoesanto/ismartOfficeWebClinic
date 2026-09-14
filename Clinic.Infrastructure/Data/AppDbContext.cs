@@ -53,11 +53,15 @@ namespace Clinic.Infrastructure.Data
         public DbSet<Clinic.Domain.Entities.Operations.InvoiceLine> InvoiceLines { get; set; } = null!;
         public DbSet<Clinic.Domain.Entities.Operations.Payment> Payments { get; set; } = null!;
 
+        public DbSet<Clinic.Domain.Entities.Operations.Prescription> Prescriptions { get; set; } = null!;
+        public DbSet<Clinic.Domain.Entities.Operations.PrescriptionItem> PrescriptionItems { get; set; } = null!;
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.ApplyConfiguration(new Configurations.FileMetadataConfiguration());
             modelBuilder.ApplyConfiguration(new Configurations.NumberSequenceConfiguration());
+            modelBuilder.ApplyConfiguration(new Configurations.PrescriptionConfiguration());
+            modelBuilder.ApplyConfiguration(new Configurations.PrescriptionItemConfiguration());
             modelBuilder.ApplyConfiguration(new Configurations.MasterReferenceConfiguration());
             modelBuilder.ApplyConfiguration(new Configurations.TreatmentCategoryConfiguration());
             modelBuilder.ApplyConfiguration(new Configurations.TreatmentSubCategoryConfiguration());
