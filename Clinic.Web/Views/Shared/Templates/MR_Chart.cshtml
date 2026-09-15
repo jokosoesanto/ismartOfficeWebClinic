@@ -432,6 +432,116 @@
                         </form>
                     </div>
                 </div>
+
+                <!-- POST-TREATMENT INSTRUCTIONS -->
+                <div class="card shadow-sm border-0 mt-4">
+                    <div class="card-header bg-info text-dark pt-3 pb-2 d-flex justify-content-between align-items-center">
+                        <h6 class="fw-bold text-uppercase mb-0"><i class="bi bi-person-lines-fill me-2"></i>Post-Treatment Instructions & Patient Education</h6>
+                    </div>
+                    <div class="card-body">
+                        @{
+                            var hasExecutedTreatments = ViewBag.ExistingTreatments != null && ((IEnumerable<Clinic.Application.DTOs.Operations.AppointmentTreatmentDto>)ViewBag.ExistingTreatments).Any(t => t.Status == Clinic.Domain.Enums.TreatmentStatus.Executed);
+                            var ptInstruction = ViewBag.PostTreatmentInstruction as Clinic.Domain.Entities.Operations.PostTreatmentInstruction;
+                        }
+
+                        @if (!hasExecutedTreatments && ptInstruction == null)
+                        {
+                            <div class="alert alert-warning py-2 mb-0">
+                                <i class="bi bi-exclamation-triangle-fill me-2"></i>Post-Treatment instructions can only be recorded after at least one treatment has been executed.
+                            </div>
+                        }
+                        else
+                        {
+                            <form action="/MedicalRecord/SavePostTreatmentInstruction" method="post">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="patientId" value="@Model.Id" />
+                                <input type="hidden" name="appointmentId" value="@ViewBag.AppointmentId" />
+
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold text-info">Instructions</label>
+                                    <textarea name="instructionText" class="form-control" rows="4" @(isLocked ? "readonly" : "") placeholder="Dietary restrictions, oral hygiene instructions, what to expect, etc.">@ptInstruction?.InstructionText</textarea>
+                                    <div class="form-text">Provide detailed post-treatment care instructions for the patient.</div>
+                                </div>
+
+                                @if (!isLocked)
+                                {
+                                    <div class="text-end">
+                                        <button type="submit" class="btn btn-info">
+                                            <i class="bi bi-save me-1"></i> @(ptInstruction == null ? "Save Instructions" : "Update Instructions")
+                                        </button>
+                                    </div>
+                                }
+                            </form>
+                        }
+                    </div>
+                </div>
+
+                <!-- FOLLOW-UP / NEXT CONTROL -->
+                <div class="card shadow-sm border-0 mt-4">
+                    <div class="card-header bg-secondary text-white pt-3 pb-2 d-flex justify-content-between align-items-center">
+                        <h6 class="fw-bold text-uppercase mb-0"><i class="bi bi-calendar-event me-2"></i>Follow-up / Next Control</h6>
+                    </div>
+                    <div class="card-body">
+                        @{
+                            var followUp = ViewBag.AppointmentFollowUp as Clinic.Domain.Entities.Operations.AppointmentFollowUp;
+                            var isFollowUpRequired = followUp?.IsFollowUpRequired ?? false;
+                        }
+                        <form action="/MedicalRecord/SaveFollowUp" method="post">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="patientId" value="@Model.Id" />
+                            <input type="hidden" name="appointmentId" value="@ViewBag.AppointmentId" />
+
+                            <div class="row">
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label fw-bold">Follow-up Required?</label>
+                                    <select name="isFollowUpRequired" class="form-select" @(isLocked ? "disabled" : "") onchange="toggleFollowUpDate(this)">
+                                        @if (isFollowUpRequired)
+                                        {
+                                            <option value="true" selected>Yes</option>
+                                            <option value="false">No</option>
+                                        }
+                                        else
+                                        {
+                                            <option value="true">Yes</option>
+                                            <option value="false" selected>No</option>
+                                        }
+                                    </select>
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label fw-bold">Recommended Date/Time</label>
+                                    <input type="datetime-local" id="recommendedDate" name="recommendedDate" class="form-control" @(isLocked ? "readonly" : "") @(!isFollowUpRequired ? "disabled" : "") value="@(followUp?.RecommendedDate?.ToString("yyyy-MM-ddTHH:mm"))" />
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Reason / Purpose</label>
+                                <textarea name="reason" class="form-control" rows="2" @(isLocked ? "readonly" : "") placeholder="e.g. Suture removal, check healing progress, scaling...">@followUp?.Reason</textarea>
+                            </div>
+
+                            @if (!isLocked)
+                            {
+                                <div class="text-end">
+                                    <button type="submit" class="btn btn-secondary">
+                                        <i class="bi bi-save me-1"></i> @(followUp == null ? "Save Follow-up" : "Update Follow-up")
+                                    </button>
+                                </div>
+                            }
+                        </form>
+                    </div>
+                </div>
+
+                <script>
+                    function toggleFollowUpDate(selectElement) {
+                        const dateInput = document.getElementById('recommendedDate');
+                        if (selectElement.value === 'true') {
+                            dateInput.disabled = false;
+                            dateInput.required = true;
+                        } else {
+                            dateInput.disabled = true;
+                            dateInput.required = false;
+                            dateInput.value = '';
+                        }
+                    }
+                </script>
             }
             else
             {
@@ -705,7 +815,7 @@
                 <div class="col-12 mt-2">
                     <div class="card shadow-sm border-0">
                         <div class="card-header bg-warning text-dark pt-3 pb-2 d-flex justify-content-between align-items-center">
-                            <h6 class="fw-bold text-uppercase mb-0"><i class="bi bi-clipboard-pulse me-2"></i>Systemic Diseases & Medical History</h6>
+                            <h6 class="fw-bold text-uppercase mb-0"><i class="bi bi-clipboard-pulse me-2"></i>Medical & Dental History</h6>
                             <form action="/MedicalRecord/UpdateMedicalHistoryStatus" method="post" class="m-0 p-0">
                                 @Html.AntiForgeryToken()
                                 <input type="hidden" name="patientId" value="@Model.Id" />

@@ -54,6 +54,7 @@ namespace Clinic.Web.Extensions
             services.AddScoped<Clinic.Application.Interfaces.Operations.IInvoiceService, Clinic.Application.UseCases.Operations.InvoiceService>();
             services.AddScoped<Clinic.Application.Interfaces.Operations.IPaymentService, Clinic.Application.UseCases.Operations.PaymentService>();
             services.AddScoped<Clinic.Application.Interfaces.Operations.IPrescriptionService, Clinic.Application.UseCases.Operations.PrescriptionService>();
+            services.AddScoped<Clinic.Application.Interfaces.Operations.IPostTreatmentInstructionService, Clinic.Application.UseCases.Operations.PostTreatmentInstructionService>();
 
             return services;
         }
@@ -94,6 +95,7 @@ namespace Clinic.Web.Extensions
             services.AddScoped<Clinic.Application.Interfaces.Operations.IInvoiceRepository, Clinic.Infrastructure.Repositories.Operations.InvoiceRepository>();
             services.AddScoped<Clinic.Application.Interfaces.Operations.IPaymentRepository, Clinic.Infrastructure.Repositories.Operations.PaymentRepository>();
             services.AddScoped<Clinic.Application.Interfaces.Repositories.Operations.IPrescriptionRepository, Clinic.Infrastructure.Repositories.Operations.PrescriptionRepository>();
+            services.AddScoped<Clinic.Application.Interfaces.Repositories.Operations.IPostTreatmentInstructionRepository, Clinic.Infrastructure.Repositories.Operations.PostTreatmentInstructionRepository>();
             // System/Config Repositories
             services.AddScoped<INumberSequenceRepository, NumberSequenceRepository>();
             services.AddScoped<IAppConfigurationRepository, AppConfigurationRepository>();

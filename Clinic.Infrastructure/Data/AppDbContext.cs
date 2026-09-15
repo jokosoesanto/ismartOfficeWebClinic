@@ -55,6 +55,8 @@ namespace Clinic.Infrastructure.Data
 
         public DbSet<Clinic.Domain.Entities.Operations.Prescription> Prescriptions { get; set; } = null!;
         public DbSet<Clinic.Domain.Entities.Operations.PrescriptionItem> PrescriptionItems { get; set; } = null!;
+        public DbSet<Clinic.Domain.Entities.Operations.PostTreatmentInstruction> PostTreatmentInstructions { get; set; } = null!;
+        public DbSet<Clinic.Domain.Entities.Operations.AppointmentFollowUp> AppointmentFollowUps { get; set; } = null!;
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -62,6 +64,8 @@ namespace Clinic.Infrastructure.Data
             modelBuilder.ApplyConfiguration(new Configurations.NumberSequenceConfiguration());
             modelBuilder.ApplyConfiguration(new Configurations.PrescriptionConfiguration());
             modelBuilder.ApplyConfiguration(new Configurations.PrescriptionItemConfiguration());
+            modelBuilder.ApplyConfiguration(new Configurations.PostTreatmentInstructionConfiguration());
+            modelBuilder.ApplyConfiguration(new Configurations.AppointmentFollowUpConfiguration());
             modelBuilder.ApplyConfiguration(new Configurations.MasterReferenceConfiguration());
             modelBuilder.ApplyConfiguration(new Configurations.TreatmentCategoryConfiguration());
             modelBuilder.ApplyConfiguration(new Configurations.TreatmentSubCategoryConfiguration());

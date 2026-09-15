@@ -143,6 +143,14 @@ namespace Clinic.Web.Controllers
 
                 var prescriptions = await _prescriptionRepository.GetByAppointmentIdAsync(appointmentId.Value);
                 ViewBag.Prescriptions = prescriptions;
+
+                var postTreatmentInstruction = await _dbContext.PostTreatmentInstructions
+                    .FirstOrDefaultAsync(x => x.PatientId == patientId && x.AppointmentId == appointmentId);
+                ViewBag.PostTreatmentInstruction = postTreatmentInstruction;
+
+                var appointmentFollowUp = await _dbContext.AppointmentFollowUps
+                    .FirstOrDefaultAsync(x => x.PatientId == patientId && x.AppointmentId == appointmentId);
+                ViewBag.AppointmentFollowUp = appointmentFollowUp;
             }
             else
             {
@@ -839,6 +847,80 @@ namespace Clinic.Web.Controllers
             }
 
             return RedirectToAction("Chart", new { patientId = model.PatientId, appointmentId = model.AppointmentId });
+        }
+
+        [HttpPost("SavePostTreatmentInstruction")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> SavePostTreatmentInstruction([FromForm] Guid patientId, [FromForm] Guid appointmentId, [FromForm] string instructionText, [FromServices] IPostTreatmentInstructionService _instructionService)
+        {
+            var userIdStr = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            Guid.TryParse(userIdStr, out var userId);
+
+            try
+            {
+                await _instructionService.AddInstructionAsync(appointmentId, patientId, userId, instructionText);
+                TempData["SuccessMessage"] = "Post-Treatment Instructions saved successfully.";
+            }
+            catch (Exception ex)
+            {
+                TempData["ErrorMessage"] = ex.Message;
+            }
+
+            return RedirectToAction("Chart", new { id = patientId, activeTab = "clinicalnotes", appointmentId = appointmentId });
+        }
+
+        [HttpPost("SaveFollowUp")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> SaveFollowUp([FromForm] Guid patientId, [FromForm] Guid appointmentId, [FromForm] bool isFollowUpRequired, [FromForm] DateTime? recommendedDate, [FromForm] string reason)
+        {
+            if (isFollowUpRequired && !recommendedDate.HasValue)
+            {
+                TempData["ErrorMessage"] = "Recommended Date/Time is required when Follow-up is required.";
+                return RedirectToAction("Chart", new { id = patientId, activeTab = "clinicalnotes", appointmentId = appointmentId });
+            }
+
+            var userIdStr = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            Guid.TryParse(userIdStr, out var userId);
+
+            try
+            {
+                var existingFollowUp = await _dbContext.AppointmentFollowUps
+                    .FirstOrDefaultAsync(x => x.PatientId == patientId && x.AppointmentId == appointmentId);
+
+                if (existingFollowUp == null)
+                {
+                    existingFollowUp = new Clinic.Domain.Entities.Operations.AppointmentFollowUp
+                    {
+                        Id = Guid.NewGuid(),
+                        PatientId = patientId,
+                        AppointmentId = appointmentId,
+                        IsFollowUpRequired = isFollowUpRequired,
+                        RecommendedDate = isFollowUpRequired ? recommendedDate : null,
+                        Reason = reason,
+                        CreatedBy = userId,
+                        CreatedAt = DateTime.UtcNow
+                    };
+                    _dbContext.AppointmentFollowUps.Add(existingFollowUp);
+                }
+                else
+                {
+                    existingFollowUp.IsFollowUpRequired = isFollowUpRequired;
+                    existingFollowUp.RecommendedDate = isFollowUpRequired ? recommendedDate : null;
+                    existingFollowUp.Reason = reason;
+                    existingFollowUp.UpdatedBy = userId;
+                    existingFollowUp.UpdatedAt = DateTime.UtcNow;
+                    _dbContext.AppointmentFollowUps.Update(existingFollowUp);
+                }
+
+                await _dbContext.SaveChangesAsync();
+                TempData["SuccessMessage"] = "Follow-up / Next Control saved successfully.";
+            }
+            catch (Exception ex)
+            {
+                TempData["ErrorMessage"] = "Failed to save Follow-up: " + ex.Message;
+            }
+
+            return RedirectToAction("Chart", new { id = patientId, activeTab = "clinicalnotes", appointmentId = appointmentId });
         }
     }
 }
