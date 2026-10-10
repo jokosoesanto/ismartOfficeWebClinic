@@ -26,7 +26,7 @@ namespace Clinic.Infrastructure.Repositories.Operations
                 {
                     ScheduleId = s.Id,
                     DoctorId = s.DoctorId,
-                    DoctorName = s.Doctor.Title != null ? (s.Doctor.Title + " " + s.Doctor.FullName) : s.Doctor.FullName,
+                    DoctorName = (s.Doctor.Title != null && s.Doctor.Title != "") ? (s.Doctor.Title + " " + s.Doctor.FullName) : ("Dr " + s.Doctor.FullName),
                     Specialty = s.Doctor.Specialty.Name,
                     DoctorColor = s.Doctor.Color,
                     LocationId = s.LocationId,
@@ -114,6 +114,7 @@ namespace Clinic.Infrastructure.Repositories.Operations
                     .Include(a => a.Doctor).ThenInclude(d => d.Specialty)
                     .Include(a => a.Location)
                     .Include(a => a.Chair)
+                    .Include(a => a.AppointmentType)
                     .Where(a => !a.IsDeleted && a.Date == specificDate.Value);
 
                 if (locationId.HasValue && locationId.Value != Guid.Empty)
@@ -133,7 +134,7 @@ namespace Clinic.Infrastructure.Repositories.Operations
                     {
                         ScheduleId = a.Id, 
                         DoctorId = a.DoctorId,
-                        DoctorName = a.Doctor.Title != null ? (a.Doctor.Title + " " + a.Doctor.FullName) : a.Doctor.FullName,
+                        DoctorName = (a.Doctor.Title != null && a.Doctor.Title != "") ? (a.Doctor.Title + " " + a.Doctor.FullName) : ("Dr " + a.Doctor.FullName),
                         Specialty = a.Doctor.Specialty?.Name,
                         DoctorColor = a.Doctor.Color,
                         LocationId = a.LocationId,
@@ -149,7 +150,8 @@ namespace Clinic.Infrastructure.Repositories.Operations
                         Status = "Appointment", 
                         IsAppointment = true,
                         PatientName = a.Patient!.FullName,
-                        AppointmentStatus = a.Status.ToString()
+                        AppointmentStatus = a.Status.ToString(),
+                        AppointmentTypeName = a.AppointmentType != null ? (a.AppointmentType.DisplayName ?? a.AppointmentType.Name) : null
                     });
                 }
 
@@ -205,7 +207,7 @@ namespace Clinic.Infrastructure.Repositories.Operations
                 {
                     var lowerSearch = searchKeyword.ToLower();
                     unscheduledQuery = unscheduledQuery.Where(d => 
-                        (d.Title != null ? (d.Title + " " + d.FullName) : d.FullName).ToLower().Contains(lowerSearch) ||
+                        ((d.Title != null && d.Title != "") ? (d.Title + " " + d.FullName) : ("Dr " + d.FullName)).ToLower().Contains(lowerSearch) ||
                         (d.Specialty != null && d.Specialty.Name.ToLower().Contains(lowerSearch)) ||
                         (d.PrimaryLocation != null && d.PrimaryLocation.ClinicName.ToLower().Contains(lowerSearch)));
                 }
@@ -224,7 +226,7 @@ namespace Clinic.Infrastructure.Repositories.Operations
                     {
                         ScheduleId = Guid.NewGuid(), // Placeholder
                         DoctorId = d.Id,
-                        DoctorName = d.Title != null ? (d.Title + " " + d.FullName) : d.FullName,
+                        DoctorName = (d.Title != null && d.Title != "") ? (d.Title + " " + d.FullName) : ("Dr " + d.FullName),
                         Specialty = d.Specialty?.Name,
                         DoctorColor = d.Color,
                         LocationId = d.PrimaryLocationId ?? Guid.Empty,
@@ -253,7 +255,7 @@ namespace Clinic.Infrastructure.Repositories.Operations
                     {
                         ScheduleId = l.DoctorLeaveRequestId,
                         DoctorId = l.DoctorLeaveRequest.DoctorId,
-                        DoctorName = l.DoctorLeaveRequest.Doctor.Title != null ? (l.DoctorLeaveRequest.Doctor.Title + " " + l.DoctorLeaveRequest.Doctor.FullName) : l.DoctorLeaveRequest.Doctor.FullName,
+                        DoctorName = (l.DoctorLeaveRequest.Doctor.Title != null && l.DoctorLeaveRequest.Doctor.Title != "") ? (l.DoctorLeaveRequest.Doctor.Title + " " + l.DoctorLeaveRequest.Doctor.FullName) : ("Dr " + l.DoctorLeaveRequest.Doctor.FullName),
                         Specialty = l.DoctorLeaveRequest.Doctor.Specialty?.Name,
                         DoctorColor = l.DoctorLeaveRequest.Doctor.Color,
                         LocationId = l.DoctorLeaveRequest.Doctor.PrimaryLocationId ?? Guid.Empty,

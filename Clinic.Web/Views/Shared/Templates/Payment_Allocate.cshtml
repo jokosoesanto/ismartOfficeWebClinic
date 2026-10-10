@@ -1,0 +1,490 @@
+@model Clinic.Application.DTOs.Operations.PaymentAllocationDetailsDto
+@inject Clinic.Application.Interfaces.Configuration.ICurrencyService CurrencyService
+@using System.Globalization
+@{
+    var metadata = ViewBag.Metadata as Clinic.Application.UI.UIMetadata;
+    ViewData["Title"] = "Payment Allocation";
+    if (metadata != null)
+    {
+        ViewData["ModuleName"] = metadata.ModuleName;
+    }
+
+    // Inline error near the allocation context. Removed from TempData so the global
+    // modal notification does not duplicate it (display concern only).
+    var allocationError = TempData["ErrorMessage"] as string;
+    TempData.Remove("ErrorMessage");
+
+    var inv = CultureInfo.InvariantCulture;
+    var receiptNumber = ViewBag.PaymentReceipt as string;
+    var invoiceNumber = ViewBag.InvoiceNumber as string;
+    var paymentDateText = ViewBag.PaymentDate is DateTime pd ? pd.ToString("dd MMM yyyy, HH:mm") : "—";
+    decimal? invoiceTotal = ViewBag.InvoiceTotal is decimal it ? it : (decimal?)null;
+
+    var isPaymentSettled = Model.RemainingToAllocate <= 0;
+    var openLines = Model.InvoiceLines.Count(l => l.RemainingToAllocate > 0);
+    var hasActionableLines = !isPaymentSettled && openLines > 0;
+
+    // Display-only progress (never used as a source of truth).
+    var progress = Model.PaymentAmount > 0
+        ? Math.Min(100m, Math.Max(0m, Math.Round(Model.TotalAllocated / Model.PaymentAmount * 100m, 1)))
+        : 0m;
+
+    var fmtPayment = await CurrencyService.FormatAmountAsync(Model.PaymentAmount);
+    var fmtAllocated = await CurrencyService.FormatAmountAsync(Model.TotalAllocated);
+    var fmtRemaining = await CurrencyService.FormatAmountAsync(Math.Max(0m, Model.RemainingToAllocate));
+    var fmtInvoiceTotal = invoiceTotal.HasValue ? await CurrencyService.FormatAmountAsync(invoiceTotal.Value) : "—";
+    var fmtSumLine = await CurrencyService.FormatAmountAsync(Model.InvoiceLines.Sum(l => l.LineTotal));
+    var fmtSumLineAllocated = await CurrencyService.FormatAmountAsync(Model.InvoiceLines.Sum(l => l.AlreadyAllocated));
+    var fmtSumLineRemaining = await CurrencyService.FormatAmountAsync(Model.InvoiceLines.Sum(l => Math.Max(0m, l.RemainingToAllocate)));
+    var fmtZero = await CurrencyService.FormatAmountAsync(0m);
+    var fmtProbe = await CurrencyService.FormatAmountAsync(1000m);
+}
+
+@section Styles {
+<style>
+    .pa-page { --pa-tint: rgba(15, 138, 202, 0.06); --pa-tint-strong: rgba(15, 138, 202, 0.12); --pa-ok-tint: rgba(25, 135, 84, 0.07); --pa-muted: var(--color-text-secondary, #7A7A7A); --pa-line: rgba(0,0,0,0.06); }
+    .pa-page .pa-num { font-variant-numeric: tabular-nums; white-space: nowrap; }
+    .pa-label { display: block; font-size: 0.7rem; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--pa-muted); margin-bottom: 0.25rem; }
+
+    /* Header */
+    .pa-back { display: inline-flex; align-items: center; gap: 0.375rem; font-size: 0.875rem; font-weight: 500; color: var(--pa-muted); text-decoration: none; margin-bottom: 0.5rem; transition: color var(--transition-fast); }
+    .pa-back:hover, .pa-back:focus-visible { color: var(--color-primary); }
+    .pa-subtitle { color: var(--pa-muted); margin: 0.25rem 0 0; font-size: 0.95rem; }
+    .pa-status { display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.375rem 0.875rem; border-radius: var(--radius-pill); font-size: 0.8125rem; font-weight: 600; border: 1px solid transparent; white-space: nowrap; }
+    .pa-status::before { content: ""; width: 0.5rem; height: 0.5rem; border-radius: 50%; background: currentColor; }
+    .pa-status--open { color: #9a6700; background: #fff8e6; border-color: #f5e2a8; }
+    .pa-status--done { color: var(--color-success); background: var(--pa-ok-tint); border-color: rgba(25,135,84,0.25); }
+
+    /* Inline error */
+    .pa-alert { display: flex; gap: 0.875rem; align-items: flex-start; padding: 0.875rem 1rem; border-radius: var(--radius-md); border: 1px solid rgba(220,53,69,0.3); border-left: 4px solid var(--color-danger); background: #fff5f5; color: #842029; margin-bottom: 1.25rem; }
+    .pa-alert i { font-size: 1.15rem; line-height: 1.3; }
+    .pa-alert strong { display: block; color: #6b1a22; }
+
+    /* Payment panel */
+    .pa-panel { overflow: hidden; margin-bottom: 1.5rem; }
+    .pa-context { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1rem 2rem; padding: 1rem 1.5rem; background: #f8fafd; border-bottom: 1px solid var(--pa-line); }
+    .pa-context dd { margin: 0; font-weight: 600; color: var(--color-text-primary); overflow-wrap: anywhere; }
+
+    .pa-summary { display: grid; grid-template-columns: minmax(0,1fr) auto minmax(0,1fr) auto minmax(0,1.35fr); align-items: stretch; gap: 0.75rem; padding: 1.5rem; }
+    .pa-figure { padding: 0.75rem 0; display: flex; flex-direction: column; justify-content: center; }
+    .pa-figure__value { font-size: 1.35rem; font-weight: 600; color: var(--color-text-primary); }
+    .pa-op { display: flex; align-items: center; justify-content: center; color: #b5bcc6; font-size: 1.25rem; font-weight: 300; padding: 0 0.25rem; }
+    .pa-focal { border-radius: var(--radius-md); background: var(--pa-tint); border: 1px solid var(--pa-tint-strong); border-left: 4px solid var(--color-primary); padding: 1rem 1.25rem; }
+    .pa-focal .pa-label { color: var(--color-primary-dark); }
+    .pa-focal__value { font-size: 2rem; line-height: 1.15; font-weight: 700; color: var(--color-primary-dark); }
+    .pa-focal__hint { font-size: 0.8125rem; color: var(--pa-muted); margin-top: 0.25rem; }
+    .pa-focal--done { background: var(--pa-ok-tint); border-color: rgba(25,135,84,0.2); border-left-color: var(--color-success); }
+    .pa-focal--done .pa-label, .pa-focal--done .pa-focal__value { color: #146c43; }
+
+    .pa-progress { padding: 0 1.5rem 1.25rem; }
+    .pa-progress__text { display: flex; justify-content: space-between; gap: 1rem; font-size: 0.8125rem; color: var(--pa-muted); margin-bottom: 0.5rem; }
+    .pa-progress__text strong { color: var(--color-text-primary); font-weight: 600; }
+    .pa-track { height: 6px; border-radius: var(--radius-pill); background: #e9eef5; overflow: hidden; }
+    .pa-track__fill { height: 100%; border-radius: inherit; background: var(--color-primary); transition: width 0.4s ease; }
+    .pa-track__fill--done { background: var(--color-success); }
+
+    /* Invoice lines */
+    .pa-lines-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-end; gap: 1rem; padding: 1.25rem 1.5rem 1rem; border-bottom: 1px solid var(--pa-line); }
+    .pa-lines-head h2 { font-size: 1.05rem; font-weight: 700; margin: 0; }
+    .pa-lines-head__meta { font-size: 0.8125rem; color: var(--pa-muted); margin-top: 0.125rem; }
+    .pa-invoice-total { text-align: right; }
+    .pa-invoice-total__value { font-size: 1.1rem; font-weight: 600; }
+
+    .pa-grid { width: 100%; min-width: 760px; border-collapse: separate; border-spacing: 0; }
+    .pa-grid thead th { font-size: 0.7rem; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--pa-muted); background: #f8fafd; padding: 0.75rem 1rem; border-bottom: 1px solid var(--pa-line); white-space: nowrap; }
+    .pa-grid tbody td { padding: 0.875rem 1rem; border-bottom: 1px solid var(--pa-line); vertical-align: middle; }
+    .pa-grid th:first-child, .pa-grid td:first-child { padding-left: 1.5rem; }
+    .pa-grid th:last-child, .pa-grid td:last-child { padding-right: 1.5rem; }
+    .pa-grid .pa-col-apply { width: 260px; }
+    .pa-grid tbody tr { transition: background-color var(--transition-fast), box-shadow var(--transition-fast); }
+    .pa-grid tbody tr.is-open:hover { background: #fbfcfe; }
+    .pa-grid tbody tr.is-applying { background: var(--pa-tint); box-shadow: inset 3px 0 0 var(--color-primary); }
+    .pa-desc { font-weight: 600; color: var(--color-text-primary); }
+    .pa-idx { display: inline-block; min-width: 1.5rem; font-size: 0.75rem; color: #a3abb6; font-variant-numeric: tabular-nums; }
+    .pa-amt-orig { color: var(--pa-muted); }
+    .pa-amt-alloc { color: var(--color-text-primary); }
+    .pa-amt-rem { font-weight: 700; color: var(--color-text-primary); }
+
+    tr.is-settled td { background: #fafbfc; }
+    tr.is-settled .pa-desc, tr.is-settled .pa-amt-alloc, tr.is-settled .pa-amt-rem { color: var(--pa-muted); font-weight: 500; }
+    .pa-settled-tag { display: inline-flex; align-items: center; gap: 0.375rem; font-size: 0.8125rem; font-weight: 600; color: #146c43; }
+
+    /* Financial input */
+    .pa-input { display: flex; align-items: stretch; border: 1px solid #cfd8e3; border-radius: var(--radius-md); background: #fff; transition: border-color var(--transition-fast), box-shadow var(--transition-fast); }
+    .pa-input:focus-within { border-color: var(--color-primary); box-shadow: 0 0 0 4px rgba(15,138,202,0.15); }
+    .pa-input input { flex: 1 1 auto; min-width: 0; border: 0; background: transparent; text-align: right; font-size: 1rem; font-weight: 600; padding: 0.5rem 0.75rem; font-variant-numeric: tabular-nums; color: var(--color-text-primary); outline: none; -moz-appearance: textfield; }
+    .pa-input input::-webkit-outer-spin-button, .pa-input input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+    .pa-input__max { border: 0; border-left: 1px solid #e3e8ef; background: #f6f8fb; color: var(--color-primary-dark); font-size: 0.75rem; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; padding: 0 0.75rem; border-radius: 0 var(--radius-md) var(--radius-md) 0; transition: background-color var(--transition-fast); }
+    .pa-input__max:hover { background: var(--pa-tint-strong); }
+    .pa-input__max:focus-visible { outline: 2px solid var(--color-primary); outline-offset: -2px; }
+    .pa-input.is-invalid { border-color: var(--color-danger); background: #fffafa; }
+    .pa-input.is-invalid:focus-within { box-shadow: 0 0 0 4px rgba(220,53,69,0.15); }
+    .pa-help { font-size: 0.75rem; color: var(--pa-muted); text-align: right; margin-top: 0.3rem; }
+    .pa-help.is-invalid { color: #b02a37; font-weight: 600; }
+
+    .pa-grid tfoot td { padding: 0.875rem 1rem; background: #f8fafd; font-weight: 600; border-top: 1px solid var(--pa-line); }
+    .pa-grid tfoot td:first-child { padding-left: 1.5rem; }
+    .pa-grid tfoot td:last-child { padding-right: 1.5rem; }
+
+    /* Action bar */
+    .pa-actionbar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 1rem; padding: 1rem 1.5rem; border-top: 1px solid var(--pa-line); background: #fff; }
+    .pa-preview { display: flex; flex-wrap: wrap; gap: 0.25rem 1.5rem; font-size: 0.875rem; color: var(--pa-muted); }
+    .pa-preview strong { color: var(--color-text-primary); font-weight: 700; }
+    .pa-preview .is-invalid, .pa-preview .is-invalid strong { color: #b02a37; }
+    .pa-actions { display: flex; gap: 0.5rem; margin-left: auto; }
+    .pa-actions .btn-primary[disabled] { opacity: 0.55; }
+    .pa-note { font-size: 0.875rem; color: var(--pa-muted); display: flex; align-items: center; gap: 0.5rem; }
+
+    /* Completion */
+    .pa-complete { display: flex; flex-wrap: wrap; align-items: center; gap: 1.25rem; padding: 1.5rem; }
+    .pa-complete__icon { width: 3rem; height: 3rem; flex: 0 0 3rem; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: var(--pa-ok-tint); color: var(--color-success); font-size: 1.5rem; }
+    .pa-complete__body { flex: 1 1 260px; }
+    .pa-complete__body h2 { font-size: 1.1rem; font-weight: 700; margin: 0 0 0.25rem; }
+    .pa-complete__body p { margin: 0; color: var(--pa-muted); font-size: 0.9rem; }
+
+    @@media (max-width: 991.98px) {
+        .pa-summary { grid-template-columns: minmax(0,1fr) auto minmax(0,1fr); }
+        .pa-summary .pa-op--eq { display: none; }
+        .pa-focal { grid-column: 1 / -1; }
+    }
+    @@media (max-width: 575.98px) {
+        .pa-context { grid-template-columns: minmax(0,1fr); gap: 0.75rem; padding: 1rem; }
+        .pa-summary { grid-template-columns: minmax(0,1fr) minmax(0,1fr); padding: 1rem; }
+        .pa-summary .pa-op { display: none; }
+        .pa-progress { padding: 0 1rem 1rem; }
+        .pa-lines-head, .pa-actionbar, .pa-complete { padding-left: 1rem; padding-right: 1rem; }
+        .pa-invoice-total { text-align: left; }
+        .pa-actions { width: 100%; }
+        .pa-actions > * { flex: 1 1 0; }
+    }
+    @@media (prefers-reduced-motion: reduce) { .pa-page * { transition: none !important; } }
+</style>
+}
+
+<div class="container-fluid py-4 pa-page">
+
+    <!-- Header -->
+    <header class="d-flex flex-wrap justify-content-between align-items-end gap-3 mb-4">
+        <div>
+            <a href="/Billing/History" class="pa-back" id="paBackLink">
+                <i class="bi bi-arrow-left" aria-hidden="true"></i> Payment History
+            </a>
+            <h1 class="h2 mb-0 fw-bold">Payment Allocation</h1>
+            <p class="pa-subtitle">
+                @(isPaymentSettled ? "This payment has been fully applied to its invoice." : "Apply this payment to the invoice lines below.")
+            </p>
+        </div>
+        @if (isPaymentSettled)
+        {
+            <span class="pa-status pa-status--done" role="status">Fully allocated</span>
+        }
+        else
+        {
+            <span class="pa-status pa-status--open" role="status">Awaiting allocation</span>
+        }
+    </header>
+
+    @if (!string.IsNullOrWhiteSpace(allocationError))
+    {
+        <div class="pa-alert" role="alert" id="paAllocationError">
+            <i class="bi bi-exclamation-octagon" aria-hidden="true"></i>
+            <div>
+                <strong>Allocation was not saved</strong>
+                <span>@allocationError</span>
+                <div class="small mt-1">No amounts were changed by the failed attempt. Review the amounts below and try again.</div>
+            </div>
+        </div>
+    }
+
+    <!-- Payment context + financial summary -->
+    <section class="card pa-panel" aria-labelledby="paSummaryHeading">
+        <h2 id="paSummaryHeading" class="visually-hidden">Payment summary</h2>
+        <dl class="pa-context mb-0">
+            <div>
+                <dt class="pa-label">Receipt No.</dt>
+                <dd>@(string.IsNullOrWhiteSpace(receiptNumber) ? "—" : receiptNumber)</dd>
+            </div>
+            <div>
+                <dt class="pa-label">Payment Date</dt>
+                <dd>@paymentDateText</dd>
+            </div>
+            <div>
+                <dt class="pa-label">Applied To Invoice</dt>
+                <dd>@(string.IsNullOrWhiteSpace(invoiceNumber) ? "—" : invoiceNumber)</dd>
+            </div>
+        </dl>
+
+        <div class="pa-summary">
+            <div class="pa-figure">
+                <span class="pa-label">Payment Amount</span>
+                <span class="pa-figure__value pa-num">@fmtPayment</span>
+            </div>
+            <div class="pa-op" aria-hidden="true">&minus;</div>
+            <div class="pa-figure">
+                <span class="pa-label">Already Allocated</span>
+                <span class="pa-figure__value pa-num">@fmtAllocated</span>
+            </div>
+            <div class="pa-op pa-op--eq" aria-hidden="true">=</div>
+            <div class="pa-focal @(isPaymentSettled ? "pa-focal--done" : "")" id="paRemainingPanel">
+                <span class="pa-label">Remaining To Allocate</span>
+                <div class="pa-focal__value pa-num">@fmtRemaining</div>
+                <div class="pa-focal__hint">
+                    @(isPaymentSettled ? "Nothing left to allocate." : "Available to apply to the invoice lines below.")
+                </div>
+            </div>
+        </div>
+
+        <div class="pa-progress">
+            <div class="pa-progress__text">
+                <span><strong class="pa-num">@fmtAllocated</strong> of <span class="pa-num">@fmtPayment</span> allocated</span>
+                <span class="pa-num">@progress.ToString("0.#", inv)%</span>
+            </div>
+            <div class="pa-track" role="progressbar" aria-label="Allocation progress"
+                 aria-valuenow="@progress.ToString("0.#", inv)" aria-valuemin="0" aria-valuemax="100">
+                <div class="pa-track__fill @(isPaymentSettled ? "pa-track__fill--done" : "")" style="width: @progress.ToString("0.##", inv)%;"></div>
+            </div>
+        </div>
+    </section>
+
+    @if (isPaymentSettled)
+    {
+        <!-- Completion state -->
+        <section class="card pa-panel" aria-labelledby="paCompleteHeading">
+            <div class="pa-complete">
+                <div class="pa-complete__icon" aria-hidden="true"><i class="bi bi-check2"></i></div>
+                <div class="pa-complete__body">
+                    <h2 id="paCompleteHeading">Payment fully allocated</h2>
+                    <p>
+                        <span class="pa-num">@fmtAllocated</span> allocated to invoice
+                        <strong>@(string.IsNullOrWhiteSpace(invoiceNumber) ? "—" : invoiceNumber)</strong>.
+                        Remaining <span class="pa-num">@fmtZero</span>. No further action is required.
+                    </p>
+                </div>
+                <a href="/Billing/History" class="btn btn-primary px-4" id="paCompleteBack">Back to Payment History</a>
+            </div>
+        </section>
+    }
+    else
+    {
+        <!-- Invoice lines -->
+        <section class="card pa-panel" aria-labelledby="paLinesHeading">
+            <div class="pa-lines-head">
+                <div>
+                    <h2 id="paLinesHeading">Invoice Lines</h2>
+                    <div class="pa-lines-head__meta">
+                        Invoice <strong>@(string.IsNullOrWhiteSpace(invoiceNumber) ? "—" : invoiceNumber)</strong>
+                        &middot; @Model.InvoiceLines.Count @(Model.InvoiceLines.Count == 1 ? "line" : "lines")
+                        &middot; @openLines open for allocation
+                    </div>
+                </div>
+                <div class="pa-invoice-total">
+                    <span class="pa-label">Invoice Total</span>
+                    <span class="pa-invoice-total__value pa-num">@fmtInvoiceTotal</span>
+                </div>
+            </div>
+
+            <form method="post" asp-controller="Billing" asp-action="AllocatePaymentPost" asp-route-paymentId="@Model.PaymentId"
+                  id="paAllocationForm" novalidate
+                  data-payment-remaining="@Model.RemainingToAllocate.ToString(inv)"
+                  data-currency-probe="@fmtProbe">
+                <input type="hidden" name="PaymentId" value="@Model.PaymentId" />
+                <input type="hidden" name="InvoiceId" value="@Model.InvoiceId" />
+
+                <div class="table-responsive">
+                    <table class="pa-grid" aria-describedby="paLinesHeading">
+                        <thead>
+                            <tr>
+                                <th scope="col" class="text-start">Treatment / Service</th>
+                                <th scope="col" class="text-end">Line Amount</th>
+                                <th scope="col" class="text-end">Allocated</th>
+                                <th scope="col" class="text-end">Remaining</th>
+                                <th scope="col" class="text-end pa-col-apply">Apply Now</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @for (int i = 0; i < Model.InvoiceLines.Count; i++)
+                            {
+                                var line = Model.InvoiceLines[i];
+                                var isOpen = line.RemainingToAllocate > 0;
+                                var fmtLineTotal = await CurrencyService.FormatAmountAsync(line.LineTotal);
+                                var fmtLineAllocated = await CurrencyService.FormatAmountAsync(line.AlreadyAllocated);
+                                var fmtLineRemaining = await CurrencyService.FormatAmountAsync(Math.Max(0m, line.RemainingToAllocate));
+                                <tr class="@(isOpen ? "is-open" : "is-settled")">
+                                    <td>
+                                        <input type="hidden" name="InvoiceLines[@i].InvoiceLineId" value="@line.InvoiceLineId" />
+                                        <input type="hidden" name="InvoiceLines[@i].Description" value="@line.Description" />
+                                        <input type="hidden" name="InvoiceLines[@i].LineTotal" value="@line.LineTotal" />
+                                        <input type="hidden" name="InvoiceLines[@i].AlreadyAllocated" value="@line.AlreadyAllocated" />
+                                        <span class="pa-idx">@(i + 1)</span>
+                                        <span class="pa-desc">@line.Description</span>
+                                    </td>
+                                    <td class="text-end pa-num pa-amt-orig">@fmtLineTotal</td>
+                                    <td class="text-end pa-num pa-amt-alloc">@fmtLineAllocated</td>
+                                    <td class="text-end pa-num pa-amt-rem">@fmtLineRemaining</td>
+                                    <td class="text-end pa-col-apply">
+                                        @if (isOpen)
+                                        {
+                                            var maxAllowable = Math.Min(line.RemainingToAllocate, Model.RemainingToAllocate);
+                                            var fmtMax = await CurrencyService.FormatAmountAsync(maxAllowable);
+                                            <div class="pa-input" data-pa-control>
+                                                <input type="number" step="0.01" min="0" max="@maxAllowable.ToString(inv)" inputmode="decimal"
+                                                       id="@("paApply_" + i)"
+                                                       name="InvoiceLines[@i].CurrentAllocation"
+                                                       value="0"
+                                                       data-pa-apply
+                                                       data-line-max="@maxAllowable.ToString(inv)"
+                                                       aria-label="Apply amount for @line.Description"
+                                                       aria-describedby="@("paHelp_" + i)" />
+                                                <button type="button" class="pa-input__max" data-pa-max
+                                                        aria-label="Apply maximum available amount for @line.Description">Max</button>
+                                            </div>
+                                            <div class="pa-help pa-num" id="@("paHelp_" + i)" data-pa-help data-default-text="Up to @fmtMax">Up to @fmtMax</div>
+                                        }
+                                        else
+                                        {
+                                            <span class="pa-settled-tag"><i class="bi bi-check2-circle" aria-hidden="true"></i> Fully allocated</span>
+                                            <input type="hidden" name="InvoiceLines[@i].CurrentAllocation" value="0" />
+                                        }
+                                    </td>
+                                </tr>
+                            }
+                            @if (!Model.InvoiceLines.Any())
+                            {
+                                <tr>
+                                    <td colspan="5" class="text-center text-muted py-5">This invoice has no billable lines.</td>
+                                </tr>
+                            }
+                        </tbody>
+                        @if (Model.InvoiceLines.Any())
+                        {
+                            <tfoot>
+                                <tr>
+                                    <td>Total</td>
+                                    <td class="text-end pa-num pa-amt-orig">@fmtSumLine</td>
+                                    <td class="text-end pa-num">@fmtSumLineAllocated</td>
+                                    <td class="text-end pa-num">@fmtSumLineRemaining</td>
+                                    <td class="text-end pa-num" id="paApplyTotalCell">@fmtZero</td>
+                                </tr>
+                            </tfoot>
+                        }
+                    </table>
+                </div>
+
+                <div class="pa-actionbar">
+                    @if (hasActionableLines)
+                    {
+                        <div class="pa-preview" aria-live="polite" id="paPreview">
+                            <span>Applying now <strong class="pa-num" id="paApplyTotal">@fmtZero</strong></span>
+                            <span id="paAfterWrap">Payment remaining after save <strong class="pa-num" id="paAfterSave">@fmtRemaining</strong></span>
+                        </div>
+                        <div class="pa-actions">
+                            <a href="/Billing/History" class="btn btn-light border px-4" id="paCancel">Back to Payment History</a>
+                            <button type="submit" class="btn btn-primary px-4" id="paSave" disabled>
+                                <i class="bi bi-check2 me-1" aria-hidden="true"></i><span>Save Allocation</span>
+                            </button>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="pa-note">
+                            <i class="bi bi-info-circle" aria-hidden="true"></i>
+                            All lines on this invoice are fully allocated. The remaining <strong class="pa-num">@fmtRemaining</strong> cannot be applied to this invoice.
+                        </div>
+                        <div class="pa-actions">
+                            <a href="/Billing/History" class="btn btn-primary px-4" id="paCancel">Back to Payment History</a>
+                        </div>
+                    }
+                </div>
+            </form>
+        </section>
+    }
+</div>
+
+@section Scripts {
+<script>
+    (function () {
+        var form = document.getElementById('paAllocationForm');
+        if (!form || !document.getElementById('paSave')) return;
+
+        // Mirror the server currency format (CurrencyService) using a server-formatted probe of 1000.
+        var probe = form.getAttribute('data-currency-probe') || '';
+        var m = probe.match(/^(.*?)1([^0-9]?)000(?:([^0-9])([0-9]+))?(.*)$/);
+        var fmt = m ? { pre: m[1], grp: m[2] || '', dec: m[3] || '', digits: m[4] ? m[4].length : 0, suf: m[5] } : null;
+        function money(n) {
+            n = Math.max(0, Number(n) || 0);
+            if (!fmt) return n.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            var parts = n.toFixed(fmt.digits).split('.');
+            var intPart = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, fmt.grp);
+            return fmt.pre + intPart + (fmt.digits ? fmt.dec + parts[1] : '') + fmt.suf;
+        }
+        function round2(n) { return Math.round(n * 100) / 100; }
+
+        var paymentRemaining = parseFloat(form.getAttribute('data-payment-remaining')) || 0;
+        var inputs = Array.prototype.slice.call(form.querySelectorAll('[data-pa-apply]'));
+        var save = document.getElementById('paSave');
+        var totalEl = document.getElementById('paApplyTotal');
+        var totalCell = document.getElementById('paApplyTotalCell');
+        var afterEl = document.getElementById('paAfterSave');
+        var afterWrap = document.getElementById('paAfterWrap');
+
+        function val(input) { var v = input.valueAsNumber; return isNaN(v) ? 0 : v; }
+
+        // Display-only preview; the server remains the source of truth for all validation.
+        function refresh() {
+            var total = 0, anyInvalid = false;
+            inputs.forEach(function (input) {
+                var v = val(input), max = parseFloat(input.getAttribute('data-line-max')) || 0;
+                var control = input.closest('[data-pa-control]');
+                var help = control.parentElement.querySelector('[data-pa-help]');
+                var row = input.closest('tr');
+                var invalid = v < 0 || round2(v) > round2(max) || (input.value !== '' && isNaN(input.valueAsNumber));
+                anyInvalid = anyInvalid || invalid;
+                control.classList.toggle('is-invalid', invalid);
+                input.setAttribute('aria-invalid', invalid ? 'true' : 'false');
+                help.classList.toggle('is-invalid', invalid);
+                help.textContent = invalid
+                    ? (v < 0 ? 'Amount cannot be negative' : 'Exceeds available ' + money(max))
+                    : help.getAttribute('data-default-text');
+                row.classList.toggle('is-applying', v > 0 && !invalid);
+                total += v > 0 ? v : 0;
+            });
+            total = round2(total);
+            var over = total > round2(paymentRemaining);
+            var after = round2(paymentRemaining - total);
+            totalEl.textContent = money(total);
+            if (totalCell) totalCell.textContent = money(total);
+            afterWrap.classList.toggle('is-invalid', over);
+            afterEl.textContent = over ? 'Exceeds by ' + money(total - paymentRemaining) : money(after);
+            save.disabled = anyInvalid || over || total <= 0;
+        }
+
+        inputs.forEach(function (input) {
+            input.addEventListener('input', refresh);
+            input.addEventListener('focus', function () { if (val(input) === 0) input.select(); });
+            input.addEventListener('blur', function () { if (input.value === '') { input.value = '0'; refresh(); } });
+        });
+
+        // "Max" fills the smaller of the line's available amount and the payment amount still unassigned.
+        form.querySelectorAll('[data-pa-max]').forEach(function (btn) {
+            btn.addEventListener('click', function () {
+                var input = btn.parentElement.querySelector('[data-pa-apply]');
+                var others = inputs.reduce(function (s, x) { return x === input ? s : s + Math.max(0, val(x)); }, 0);
+                var lineMax = parseFloat(input.getAttribute('data-line-max')) || 0;
+                var fill = round2(Math.max(0, Math.min(lineMax, paymentRemaining - others)));
+                input.value = String(fill);
+                refresh();
+                input.focus();
+            });
+        });
+
+        // Prevent double submission (double click) while the request is in flight.
+        form.addEventListener('submit', function (e) {
+            if (save.disabled) { e.preventDefault(); return; }
+            save.disabled = true;
+            save.querySelector('span').textContent = 'Saving…';
+        });
+
+        refresh();
+    })();
+</script>
+}

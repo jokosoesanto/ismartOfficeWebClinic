@@ -24,5 +24,6 @@ namespace Clinic.Web.Models.Patient
         public IEnumerable<SelectListItem> Categories { get; set; } = Enumerable.Empty<SelectListItem>();
         public IEnumerable<SelectListItem> Statuses { get; set; } = Enumerable.Empty<SelectListItem>();
         public IEnumerable<SelectListItem> PreferredCommunications { get; set; } = Enumerable.Empty<SelectListItem>();
+        public IEnumerable<SelectListItem> AvailableInsurances { get; set; } = Enumerable.Empty<SelectListItem>();
     }
 }

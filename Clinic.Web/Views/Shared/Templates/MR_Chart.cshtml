@@ -1,4 +1,5 @@
 @model Clinic.Domain.Entities.MasterData.Patient
+@inject Clinic.Application.Interfaces.Configuration.ICurrencyService CurrencyService
 @{
     var metadata = ViewBag.Metadata as Clinic.Application.UI.UIMetadata;
     var initials = string.IsNullOrWhiteSpace(Model.FullName) ? "" : string.Join("", Model.FullName.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries).Take(2).Select(s => s[0])).ToUpper();
@@ -86,6 +87,12 @@
         </li>
         <li class="nav-item" role="presentation">
             <button class="nav-link" id="medhistory-tab" data-bs-toggle="tab" data-bs-target="#medhistory" type="button" role="tab"><i class="bi bi-clipboard2-pulse me-2"></i>Medical History & Vitals</button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="timeline-tab" data-bs-toggle="tab" data-bs-target="#timeline" type="button" role="tab"><i class="bi bi-clock me-2"></i>Timeline</button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="ledger-tab" data-bs-toggle="tab" data-bs-target="#ledger" type="button" role="tab"><i class="bi bi-piggy-bank me-2"></i>Account / Ledger</button>
         </li>
     </ul>
 
@@ -1054,6 +1061,242 @@
                             }
                         </div>
                     </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- TIMELINE TAB -->
+        <div class="tab-pane fade" id="timeline" role="tabpanel">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-white border-bottom-0 pt-4 pb-0">
+                    <h5 class="fw-bold text-uppercase text-primary mb-0"><i class="bi bi-clock-history me-2"></i>Patient Timeline</h5>
+                </div>
+                <div class="card-body">
+                    @if (ViewBag.Timeline != null && ((IEnumerable<Clinic.Application.DTOs.Operations.PatientTimelineItemDto>)ViewBag.Timeline).Any())
+                    {
+                        <div class="timeline mt-3 position-relative" style="border-left: 2px solid #e9ecef; padding-left: 1.5rem; margin-left: 1rem;">
+                            @foreach (var item in (IEnumerable<Clinic.Application.DTOs.Operations.PatientTimelineItemDto>)ViewBag.Timeline)
+                            {
+                                <div class="timeline-item mb-4 position-relative">
+                                    <!-- Marker -->
+                                    <div class="position-absolute bg-primary text-white rounded-circle d-flex align-items-center justify-content-center" 
+                                         style="width: 32px; height: 32px; left: -2.6rem; top: 0;">
+                                        <i class="bi @(item.Icon ?? "bi-circle")"></i>
+                                    </div>
+                                    <!-- Content -->
+                                    <div class="card border-0 shadow-sm">
+                                        <div class="card-body py-2 px-3">
+                                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                                <h6 class="fw-bold mb-0 text-dark">@item.Title</h6>
+                                                <small class="text-muted fw-bold">@item.EventDate.ToString("dd MMM yyyy, HH:mm")</small>
+                                            </div>
+                                            <div class="mb-1">
+                                                <span class="badge bg-secondary">@item.EventType</span>
+                                            </div>
+                                            <p class="mb-0 text-muted small">@item.Summary</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="alert alert-secondary"><i class="bi bi-info-circle me-2"></i>No timeline events found for this patient.</div>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <!-- LEDGER TAB -->
+        <div class="tab-pane fade" id="ledger" role="tabpanel">
+            
+            <!-- B5 PATIENT CREDIT / PREPAYMENT MVP -->
+            <div class="card shadow-sm border-0 mb-4 bg-light border border-success">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h5 class="fw-bold text-success mb-1"><i class="bi bi-wallet2 me-2"></i>Patient Prepayment / Available Credit</h5>
+                            <p class="text-muted small mb-0">Unallocated funds available for future invoices.</p>
+                        </div>
+                        <div class="text-end">
+                            <h3 class="fw-bold text-success mb-1">
+                                @if(ViewBag.AvailableCredit != null && (decimal)ViewBag.AvailableCredit > 0)
+                                {
+                                    @await CurrencyService.FormatAmountAsync((decimal)ViewBag.AvailableCredit)
+                                }
+                                else
+                                {
+                                    @await CurrencyService.FormatAmountAsync(0m)
+                                }
+                            </h3>
+                            <button type="button" class="btn btn-sm btn-success" data-bs-toggle="modal" data-bs-target="#addCreditModal">
+                                <i class="bi bi-plus-circle"></i> Add Credit
+                            </button>
+                        </div>
+                    </div>
+                    @if (ViewBag.PatientCredits != null && ((IEnumerable<Clinic.Domain.Entities.Operations.PatientCredit>)ViewBag.PatientCredits).Any())
+                    {
+                        <hr class="text-success mt-4" />
+                        <h6 class="fw-bold text-success mb-3">Credit History</h6>
+                        <div class="table-responsive">
+                            <table class="table table-sm table-hover align-middle">
+                                <thead>
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>Reason</th>
+                                        <th class="text-end">Amount</th>
+                                        <th class="text-end">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var cred in (IEnumerable<Clinic.Domain.Entities.Operations.PatientCredit>)ViewBag.PatientCredits)
+                                    {
+                                        <tr>
+                                            <td>@cred.CreditDate.ToString("dd MMM yyyy, HH:mm")</td>
+                                            <td><small class="text-muted">@(string.IsNullOrEmpty(cred.Reason) ? "-" : cred.Reason)</small></td>
+                                            <td class="text-end fw-bold text-success">@await CurrencyService.FormatAmountAsync(cred.Amount)</td>
+                                            <td class="text-end">
+                                                <form action="/MedicalRecord/PatientCredit/Delete" method="post" style="display:inline;">
+                                                    @Html.AntiForgeryToken()
+                                                    <input type="hidden" name="id" value="@cred.Id" />
+                                                    <input type="hidden" name="patientId" value="@Model.Id" />
+                                                    <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('Are you sure you want to void this credit?');" title="Void Credit">
+                                                        <i class="bi bi-trash"></i> Void
+                                                    </button>
+                                                </form>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-white border-bottom-0 pt-4 pb-0 d-flex justify-content-between align-items-center">
+                    <h5 class="fw-bold text-uppercase text-primary mb-0"><i class="bi bi-piggy-bank me-2"></i>Patient Financial Ledger</h5>
+                    <div class="d-flex align-items-center">
+                        @if (ViewBag.PatientLedger != null && ((Clinic.Application.DTOs.Operations.PatientLedgerDto)ViewBag.PatientLedger).Transactions.Any())
+                        {
+                            var ledger = (Clinic.Application.DTOs.Operations.PatientLedgerDto)ViewBag.PatientLedger;
+                            var balanceClass = ledger.CurrentBalance > 0 ? "text-danger" : (ledger.CurrentBalance < 0 ? "text-success" : "text-dark");
+                            <h5 class="mb-0 fw-bold me-3">Current Balance: <span class="@balanceClass">@await CurrencyService.FormatAmountAsync(ledger.CurrentBalance)</span></h5>
+                        }
+                        <a href="/MedicalRecord/Chart/@Model.Id/Statement" class="btn btn-sm btn-outline-primary shadow-sm"><i class="bi bi-file-earmark-spreadsheet me-1"></i> Patient Statement</a>
+                    </div>
+                </div>
+                <div class="card-body">
+                    @if (ViewBag.PatientLedger != null && ((Clinic.Application.DTOs.Operations.PatientLedgerDto)ViewBag.PatientLedger).Transactions.Any())
+                    {
+                        var ledger = (Clinic.Application.DTOs.Operations.PatientLedgerDto)ViewBag.PatientLedger;
+                        <div class="table-responsive mt-3">
+                            <table class="table table-hover table-striped align-middle">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>Type</th>
+                                        <th>Reference</th>
+                                        <th>Description</th>
+                                        <th class="text-end text-danger">Debit (Charge)</th>
+                                        <th class="text-end text-success">Credit (Payment)</th>
+                                        <th class="text-end">Running Balance</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var t in ledger.Transactions)
+                                    {
+                                        <tr>
+                                            <td>@t.TransactionDate.ToString("dd MMM yyyy, HH:mm")</td>
+                                            <td>
+                                                @if (t.TransactionType == "Invoice")
+                                                {
+                                                    <span class="badge bg-secondary"><i class="bi bi-receipt me-1"></i> Invoice</span>
+                                                }
+                                                else if (t.TransactionType == "Payment")
+                                                {
+                                                    <span class="badge bg-success"><i class="bi bi-cash me-1"></i> Payment</span>
+                                                }
+                                                else if (t.TransactionType == "Patient Credit")
+                                                {
+                                                    <span class="badge bg-info text-dark"><i class="bi bi-wallet2 me-1"></i> Credit</span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="badge bg-dark">@t.TransactionType</span>
+                                                }
+                                            </td>
+                                            <td>@t.ReferenceNumber</td>
+                                            <td><small class="text-muted">@t.Description</small></td>
+                                            <td class="text-end fw-bold text-danger">
+                                                @(t.Debit > 0 ? await CurrencyService.FormatAmountAsync(t.Debit) : "-")
+                                            </td>
+                                            <td class="text-end fw-bold text-success">
+                                                @(t.Credit > 0 ? await CurrencyService.FormatAmountAsync(t.Credit) : "-")
+                                            </td>
+                                            <td class="text-end fw-bold">
+                                                @await CurrencyService.FormatAmountAsync(t.RunningBalance)
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                                <tfoot class="table-light fw-bold">
+                                    <tr>
+                                        <td colspan="4" class="text-end">Total:</td>
+                                        <td class="text-end text-danger">@await CurrencyService.FormatAmountAsync(ledger.TotalDebit)</td>
+                                        <td class="text-end text-success">@await CurrencyService.FormatAmountAsync(ledger.TotalCredit)</td>
+                                        <td class="text-end">@await CurrencyService.FormatAmountAsync(ledger.CurrentBalance)</td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="alert alert-secondary d-flex flex-column align-items-center justify-content-center py-5">
+                            <i class="bi bi-piggy-bank display-4 text-muted mb-3"></i>
+                            <h5>No financial transactions found for this patient.</h5>
+                            <p class="text-muted mb-0">Invoices and payments will appear here once recorded.</p>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <!-- Add Credit Modal (B5 MVP) -->
+        <div class="modal fade" id="addCreditModal" tabindex="-1" aria-labelledby="addCreditModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header bg-success text-white">
+                        <h5 class="modal-title" id="addCreditModalLabel"><i class="bi bi-wallet2 me-2"></i>Add Patient Credit / Prepayment</h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <form action="/MedicalRecord/PatientCredit/Create" method="post">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="patientId" value="@Model.Id" />
+                        <div class="modal-body">
+                            <div class="alert alert-info py-2">
+                                <i class="bi bi-info-circle me-1"></i> Patient Credit is unallocated funds available for future invoices.
+                            </div>
+                            <div class="mb-3">
+                                <label for="amount" class="form-label fw-bold">Amount received</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">@await CurrencyService.GetCurrencySymbolAsync()</span>
+                                    <input type="number" class="form-control" id="amount" name="amount" step="0.01" min="0.01" required>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label for="reason" class="form-label fw-bold">Reason (Optional)</label>
+                                <textarea class="form-control" id="reason" name="reason" rows="2" placeholder="e.g. Prepayment for upcoming treatment"></textarea>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                            <button type="submit" class="btn btn-success"><i class="bi bi-check-circle me-1"></i>Save Credit</button>
+                        </div>
+                    </form>
                 </div>
             </div>
         </div>

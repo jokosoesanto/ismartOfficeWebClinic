@@ -21,6 +21,8 @@ namespace Clinic.Domain.Entities.Operations
         
         public string? Notes { get; set; }
         
+        public ICollection<PaymentRefund> Refunds { get; set; } = new List<PaymentRefund>();
+        
         // Audit fields
         public bool IsDeleted { get; set; }
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;

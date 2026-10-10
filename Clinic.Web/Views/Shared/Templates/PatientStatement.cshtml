@@ -1,0 +1,192 @@
+@inject Clinic.Application.Interfaces.Configuration.ICurrencyService CurrencyService
+@{
+    ViewData["Title"] = "Patient Statement";
+    var patient = ViewBag.Patient as Clinic.Domain.Entities.MasterData.Patient;
+    var startDate = (DateTime)ViewBag.StartDate;
+    var endDate = (DateTime)ViewBag.EndDate;
+    var openingBalance = (decimal)ViewBag.OpeningBalance;
+    var closingBalance = (decimal)ViewBag.ClosingBalance;
+    var periodTransactions = ViewBag.PeriodTransactions as List<Clinic.Application.DTOs.Operations.PatientLedgerTransactionDto>;
+    var periodDebit = (decimal)ViewBag.PeriodDebit;
+    var periodCredit = (decimal)ViewBag.PeriodCredit;
+}
+
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4 d-print-none">
+        <div>
+            <h2 class="mb-0 fw-bold"><i class="bi bi-file-earmark-spreadsheet me-2"></i>Patient Statement</h2>
+        </div>
+        <div>
+            <button type="button" class="btn btn-outline-primary shadow-sm" onclick="window.print();"><i class="bi bi-printer me-1"></i> Print</button>
+            <a href="/MedicalRecord/Chart/@patient?.Id#ledger" class="btn btn-outline-secondary shadow-sm ms-2"><i class="bi bi-arrow-left me-1"></i> Back to Ledger</a>
+        </div>
+    </div>
+
+    <!-- Statement Form (Hidden in print) -->
+    <div class="card shadow-sm border-0 mb-4 d-print-none">
+        <div class="card-body">
+            <form method="get" class="row g-3 align-items-end">
+                <div class="col-md-4">
+                    <label class="form-label fw-bold">Start Date</label>
+                    <input type="date" name="startDate" class="form-control" value="@startDate.ToString("yyyy-MM-dd")" required />
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label fw-bold">End Date</label>
+                    <input type="date" name="endDate" class="form-control" value="@endDate.ToString("yyyy-MM-dd")" required />
+                </div>
+                <div class="col-md-4">
+                    <button type="submit" class="btn btn-primary"><i class="bi bi-funnel me-1"></i> Filter Statement</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Printable Area -->
+    <div class="card shadow-sm border-0 border-top border-primary border-5" id="printableArea">
+        <div class="card-body p-5">
+            <!-- Header -->
+            <div class="row border-bottom pb-4 mb-4">
+                <div class="col-sm-6">
+                    <h3 class="fw-bold text-primary mb-1">PATIENT STATEMENT</h3>
+                    <p class="text-muted mb-0">Statement Period: <strong>@startDate.ToString("dd MMM yyyy")</strong> to <strong>@endDate.ToString("dd MMM yyyy")</strong></p>
+                </div>
+                <div class="col-sm-6 text-sm-end mt-3 mt-sm-0">
+                    <h5 class="fw-bold text-dark mb-1">@patient?.FullName</h5>
+                    <p class="text-muted mb-1">MRN: @patient?.MRN</p>
+                    <p class="text-muted mb-0">DOB: @(patient?.BirthDate?.ToString("dd MMM yyyy") ?? "-")</p>
+                </div>
+            </div>
+
+            <!-- Summary -->
+            <div class="row mb-5">
+                <div class="col-md-4 col-sm-6 mb-3">
+                    <div class="p-3 bg-light rounded text-center border">
+                        <span class="d-block text-muted small fw-bold text-uppercase mb-1">Opening Balance</span>
+                        <h4 class="mb-0 @(openingBalance > 0 ? "text-danger" : (openingBalance < 0 ? "text-success" : "text-dark"))">
+                            @await CurrencyService.FormatAmountAsync(openingBalance)
+                        </h4>
+                    </div>
+                </div>
+                <div class="col-md-4 col-sm-6 mb-3">
+                    <div class="p-3 bg-light rounded text-center border">
+                        <span class="d-block text-muted small fw-bold text-uppercase mb-1">New Charges (Debit)</span>
+                        <h4 class="mb-0 text-danger">
+                            @await CurrencyService.FormatAmountAsync(periodDebit)
+                        </h4>
+                    </div>
+                </div>
+                <div class="col-md-4 col-sm-12 mb-3">
+                    <div class="p-3 bg-light rounded text-center border">
+                        <span class="d-block text-muted small fw-bold text-uppercase mb-1">Payments & Credits</span>
+                        <h4 class="mb-0 text-success">
+                            @await CurrencyService.FormatAmountAsync(periodCredit)
+                        </h4>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Transactions -->
+            <h5 class="fw-bold text-dark mb-3">Account Activity</h5>
+            <div class="table-responsive">
+                <table class="table table-striped table-hover align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th style="width: 15%">Date</th>
+                            <th style="width: 15%">Type</th>
+                            <th style="width: 15%">Reference</th>
+                            <th style="width: 25%">Description</th>
+                            <th class="text-end" style="width: 10%">Debit</th>
+                            <th class="text-end" style="width: 10%">Credit</th>
+                            <th class="text-end" style="width: 10%">Balance</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Opening Balance Row -->
+                        <tr class="table-secondary fw-bold text-muted">
+                            <td colspan="6" class="text-end">Opening Balance on @startDate.ToString("dd MMM yyyy")</td>
+                            <td class="text-end @(openingBalance > 0 ? "text-danger" : (openingBalance < 0 ? "text-success" : "text-dark"))">
+                                @await CurrencyService.FormatAmountAsync(openingBalance)
+                            </td>
+                        </tr>
+
+                        @if (periodTransactions != null && periodTransactions.Any())
+                        {
+                            foreach (var t in periodTransactions)
+                            {
+                                <tr>
+                                    <td>@t.TransactionDate.ToString("dd MMM yyyy")</td>
+                                    <td>
+                                        @if (t.TransactionType == "Invoice") { <span>Invoice</span> }
+                                        else if (t.TransactionType == "Payment") { <span>Payment</span> }
+                                        else if (t.TransactionType == "Patient Credit") { <span>Credit</span> }
+                                        else if (t.TransactionType == "Refund") { <span>Refund</span> }
+                                        else if (t.TransactionType == "Adjustment") { <span>Adjustment</span> }
+                                        else { <span>@t.TransactionType</span> }
+                                    </td>
+                                    <td>@t.ReferenceNumber</td>
+                                    <td><small class="text-muted">@t.Description</small></td>
+                                    <td class="text-end text-danger">@(t.Debit > 0 ? await CurrencyService.FormatAmountAsync(t.Debit) : "")</td>
+                                    <td class="text-end text-success">@(t.Credit > 0 ? await CurrencyService.FormatAmountAsync(t.Credit) : "")</td>
+                                    <td class="text-end fw-bold">@await CurrencyService.FormatAmountAsync(t.RunningBalance)</td>
+                                </tr>
+                            }
+                        }
+                        else
+                        {
+                            <tr>
+                                <td colspan="7" class="text-center text-muted py-4">
+                                    No financial activity during this period.
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                    <tfoot class="table-dark">
+                        <tr>
+                            <td colspan="6" class="text-end fw-bold">Closing Balance on @endDate.ToString("dd MMM yyyy"):</td>
+                            <td class="text-end fw-bold @(closingBalance > 0 ? "text-danger" : (closingBalance < 0 ? "text-success" : "text-white"))">
+                                @await CurrencyService.FormatAmountAsync(closingBalance)
+                            </td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+            
+            <div class="mt-5 text-center text-muted small">
+                <p>Please refer to this statement for your records. If you have any questions regarding this statement, please contact the clinic administration.</p>
+                <p>Generated on: @DateTime.Now.ToString("dd MMM yyyy HH:mm")</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    @@media print {
+        body {
+            background-color: white !important;
+        }
+        .d-print-none {
+            display: none !important;
+        }
+        .card {
+            border: none !important;
+            box-shadow: none !important;
+        }
+        .card-body {
+            padding: 0 !important;
+        }
+        .table-dark {
+            color: black !important;
+            background-color: #f8f9fa !important;
+            border-color: #dee2e6 !important;
+        }
+        .table-dark td, .table-dark th {
+            border-color: #dee2e6 !important;
+        }
+        .text-white {
+            color: black !important;
+        }
+        .table-secondary {
+            background-color: #f8f9fa !important;
+        }
+    }
+</style>

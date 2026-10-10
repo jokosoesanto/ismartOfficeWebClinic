@@ -9,6 +9,12 @@ namespace Clinic.Domain.Entities.Operations
         public Guid Id { get; set; } = Guid.NewGuid();
 
         // Foreign Keys
+        public Guid AppointmentTypeId { get; set; }
+        public AppointmentType? AppointmentType { get; set; }
+
+        public Guid? TreatmentItemId { get; set; }
+        public TreatmentCatalog? TreatmentItem { get; set; }
+
         public Guid PatientId { get; set; }
         public Patient? Patient { get; set; }
 
@@ -21,10 +27,13 @@ namespace Clinic.Domain.Entities.Operations
         public Guid ChairId { get; set; }
         public Chair? Chair { get; set; }
 
+        public Guid? AssistantId { get; set; }
+        public Clinic.Domain.Entities.Auth.User? Assistant { get; set; }
+
         // Date and Time
         public DateTime Date { get; set; }
         public TimeSpan StartTime { get; set; }
-        public TimeSpan EndTime { get; set; }
+        public TimeSpan? EndTime { get; set; }
 
         // Status (persisted as string in EF Core)
         public AppointmentStatus Status { get; set; } = AppointmentStatus.Schedule;

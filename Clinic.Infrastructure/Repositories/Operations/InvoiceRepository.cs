@@ -23,6 +23,8 @@ namespace Clinic.Infrastructure.Repositories.Operations
                 .Include(i => i.Appointment)
                 .ThenInclude(a => a.Patient)
                 .Include(i => i.Payments)
+                .ThenInclude(p => p.Refunds)
+                .Include(i => i.Adjustments)
                 .Where(i => !i.IsDeleted)
                 .OrderByDescending(i => i.InvoiceDate)
                 .ToListAsync(cancellationToken);
@@ -53,6 +55,25 @@ namespace Clinic.Infrastructure.Repositories.Operations
         public void Update(Invoice invoice)
         {
             _context.Invoices.Update(invoice);
+        }
+
+        public async Task<InvoiceLine?> GetInvoiceLineByIdAsync(Guid invoiceLineId, CancellationToken cancellationToken = default)
+        {
+            return await _context.InvoiceLines
+                .FirstOrDefaultAsync(il => il.Id == invoiceLineId && !il.IsDeleted, cancellationToken);
+        }
+
+        public async Task AddAdjustmentAsync(InvoiceAdjustment adjustment, CancellationToken cancellationToken = default)
+        {
+            await _context.InvoiceAdjustments.AddAsync(adjustment, cancellationToken);
+        }
+
+        public async Task<System.Collections.Generic.IEnumerable<InvoiceAdjustment>> GetAdjustmentsByInvoiceIdAsync(Guid invoiceId, CancellationToken cancellationToken = default)
+        {
+            return await _context.InvoiceAdjustments
+                .Where(a => a.InvoiceId == invoiceId && !a.IsDeleted)
+                .OrderByDescending(a => a.AdjustmentDate)
+                .ToListAsync(cancellationToken);
         }
     }
 }

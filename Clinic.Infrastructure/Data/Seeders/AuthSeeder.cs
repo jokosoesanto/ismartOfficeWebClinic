@@ -16,14 +16,13 @@ namespace Clinic.Infrastructure.Data.Seeders
             var hasher = new PasswordHasher<User>();
             var now = DateTime.UtcNow;
 
-            // 1. Create Permissions
             var permissions = new List<Permission>
             {
-                new() { Id = Guid.NewGuid(), Name = "Patient.View", Description = "View patient records" },
-                new() { Id = Guid.NewGuid(), Name = "Patient.Create", Description = "Create new patient" },
-                new() { Id = Guid.NewGuid(), Name = "Appointment.Edit", Description = "Edit appointments" },
-                new() { Id = Guid.NewGuid(), Name = "Billing.Process", Description = "Process billing" },
-                new() { Id = Guid.NewGuid(), Name = "Administration.Users", Description = "Manage users" },
+                new() { Id = Guid.NewGuid(), Code = "Patient.View", Name = "Patient.View", DisplayName = "View patient records", Description = "View patient records" },
+                new() { Id = Guid.NewGuid(), Code = "Patient.Create", Name = "Patient.Create", DisplayName = "Create new patient", Description = "Create new patient" },
+                new() { Id = Guid.NewGuid(), Code = "Appointment.Edit", Name = "Appointment.Edit", DisplayName = "Edit appointments", Description = "Edit appointments" },
+                new() { Id = Guid.NewGuid(), Code = "Billing.Process", Name = "Billing.Process", DisplayName = "Process billing", Description = "Process billing" },
+                new() { Id = Guid.NewGuid(), Code = "Administration.Users", Name = "Administration.Users", DisplayName = "Manage users", Description = "Manage users" },
             };
 
             context.Permissions.AddRange(permissions);

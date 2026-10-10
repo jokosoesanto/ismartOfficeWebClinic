@@ -78,7 +78,7 @@
                                 </td>
                                 <td><span class="fw-semibold">@appt.Date.ToString("dd MMM yyyy")</span></td>
                                 <td>
-                                    <div class="fw-semibold text-primary">@appt.StartTime.ToString(@"hh\:mm") - @appt.EndTime.ToString(@"hh\:mm")</div>
+                                    <div class="fw-semibold text-primary">@appt.StartTime.ToString(@"hh\:mm") - @(appt.EndTime?.ToString(@"hh\:mm") ?? "-")</div>
                                 </td>
                                 <td>
                                     <div class="fw-semibold">@appt.PatientName</div>

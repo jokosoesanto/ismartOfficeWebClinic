@@ -1,0 +1,107 @@
+@model List<Clinic.Application.DTOs.MasterData.SupplierDto>
+
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="mb-0 fw-bold">Supplier Master</h2>
+        <div>
+            <a href="/Supplier/Create" class="btn btn-primary shadow-sm"><i class="bi bi-plus-lg me-1"></i> Add Supplier</a>
+        </div>
+    </div>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="bi bi-check-circle-fill me-2"></i>@TempData["Success"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    <div class="card shadow-sm border-0">
+        <div class="card-header bg-white border-bottom-0 pt-4 pb-0 d-flex justify-content-between align-items-center">
+            <h6 class="fw-bold text-muted text-uppercase mb-0">Supplier List</h6>
+            <div class="input-group" style="width: 250px;">
+                <input type="text" class="form-control form-control-sm" id="supplierSearch" placeholder="Search supplier...">
+                <button class="btn btn-outline-secondary btn-sm" type="button"><i class="bi bi-search"></i></button>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle" id="supplierTable">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Code</th>
+                            <th>Name</th>
+                            <th>Contact Person</th>
+                            <th>Phone</th>
+                            <th>Email</th>
+                            <th>Status</th>
+                            <th class="text-center">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (!Model.Any())
+                        {
+                            <tr>
+                                <td colspan="7" class="text-center text-muted py-4">No suppliers found.</td>
+                            </tr>
+                        }
+                        @foreach (var item in Model)
+                        {
+                            <tr>
+                                <td class="fw-bold">@item.Code</td>
+                                <td>@item.Name</td>
+                                <td>@(string.IsNullOrEmpty(item.ContactPerson) ? "-" : item.ContactPerson)</td>
+                                <td>@(string.IsNullOrEmpty(item.Phone) ? "-" : item.Phone)</td>
+                                <td>@(string.IsNullOrEmpty(item.Email) ? "-" : item.Email)</td>
+                                <td>
+                                    @if (item.IsActive)
+                                    {
+                                        <span class="badge bg-success-subtle text-success border border-success-subtle">Active</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle">Inactive</span>
+                                    }
+                                </td>
+                                <td class="text-center">
+                                    <div class="d-flex justify-content-center gap-2">
+                                        <a href="/Supplier/Edit/@item.Id" class="btn btn-sm btn-outline-secondary" title="Edit" aria-label="Edit Supplier">
+                                            <i class="bi bi-pencil"></i>
+                                        </a>
+                                        <form method="post" action="/Supplier/ToggleStatus/@item.Id" class="m-0">
+                                            @Html.AntiForgeryToken()
+                                            <button type="submit" class="btn btn-sm @(item.IsActive ? "btn-outline-danger" : "btn-outline-success")" 
+                                                    title="@(item.IsActive ? "Deactivate" : "Activate")" 
+                                                    aria-label="@(item.IsActive ? "Deactivate Supplier" : "Activate Supplier")">
+                                                <i class="bi @(item.IsActive ? "bi-toggle-off" : "bi-toggle-on")"></i>
+                                            </button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        var searchInput = document.getElementById('supplierSearch');
+        if(searchInput) {
+            searchInput.addEventListener('keyup', function() {
+                var searchVal = this.value.toLowerCase();
+                var rows = document.querySelectorAll('#supplierTable tbody tr');
+                
+                rows.forEach(function(row) {
+                    if (row.cells.length > 1) { // Skip "No suppliers found" row
+                        var text = row.textContent.toLowerCase();
+                        row.style.display = text.indexOf(searchVal) > -1 ? '' : 'none';
+                    }
+                });
+            });
+        }
+    });
+</script>

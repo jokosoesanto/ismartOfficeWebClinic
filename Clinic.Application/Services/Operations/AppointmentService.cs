@@ -18,6 +18,8 @@ namespace Clinic.Application.Services.Operations
         private readonly ILocationRepository _locationRepository;
         private readonly IChairRepository _chairRepository;
         private readonly IDoctorLeaveRequestRepository _doctorLeaveRequestRepository;
+        private readonly Clinic.Application.Interfaces.MasterData.ITreatmentCatalogRepository _treatmentCatalogRepository;
+        private readonly Clinic.Application.Interfaces.Auth.IUserRepository _userRepository;
         private readonly IUnitOfWork _unitOfWork;
 
         public AppointmentService(
@@ -27,6 +29,8 @@ namespace Clinic.Application.Services.Operations
             ILocationRepository locationRepository,
             IChairRepository chairRepository,
             IDoctorLeaveRequestRepository doctorLeaveRequestRepository,
+            Clinic.Application.Interfaces.MasterData.ITreatmentCatalogRepository treatmentCatalogRepository,
+            Clinic.Application.Interfaces.Auth.IUserRepository userRepository,
             IUnitOfWork unitOfWork)
         {
             _appointmentRepository = appointmentRepository;
@@ -35,6 +39,8 @@ namespace Clinic.Application.Services.Operations
             _locationRepository = locationRepository;
             _chairRepository = chairRepository;
             _doctorLeaveRequestRepository = doctorLeaveRequestRepository;
+            _treatmentCatalogRepository = treatmentCatalogRepository;
+            _userRepository = userRepository;
             _unitOfWork = unitOfWork;
         }
 
@@ -56,11 +62,53 @@ namespace Clinic.Application.Services.Operations
             if (chair == null) throw new InvalidOperationException("Invalid Chair");
             if (chair.LocationId != dto.LocationId) throw new InvalidOperationException("Selected Chair does not belong to the selected Location");
 
-            bool hasOverlap = await _appointmentRepository.HasOverlappingAppointmentAsync(dto.DoctorId, dto.Date, dto.StartTime, dto.EndTime);
-            if (hasOverlap)
+            var aptType = await _appointmentRepository.GetAppointmentTypeByIdAsync(dto.AppointmentTypeId);
+            if (aptType == null) throw new InvalidOperationException("Invalid Appointment Type");
+
+            if (dto.AssistantId.HasValue)
             {
-                throw new InvalidOperationException("Doctor is already booked for the selected time. Please choose another time.");
+                var assistant = await _userRepository.GetByIdAsync(dto.AssistantId.Value);
+                if (assistant == null || !assistant.IsActive) throw new InvalidOperationException("Selected Assistant is invalid or inactive.");
+                
+                var isNurse = assistant.UserRoles.Any(ur => ur.Role.Name == "Nurse");
+                if (!isNurse) throw new InvalidOperationException("Selected user is not eligible to be an Assistant.");
             }
+            
+            int effectiveDurationInMinutes;
+
+            if (aptType.Code == "TREATMENT" || aptType.Name.ToUpper().Contains("TREATMENT"))
+            {
+                if (!dto.TreatmentItemId.HasValue || dto.TreatmentItemId == Guid.Empty)
+                {
+                    throw new InvalidOperationException("Treatment selection is required for a TREATMENT appointment.");
+                }
+
+                var treatmentCatalog = await _treatmentCatalogRepository.GetByIdAsync(dto.TreatmentItemId.Value);
+                if (treatmentCatalog == null)
+                {
+                    throw new InvalidOperationException("Selected treatment catalog could not be found.");
+                }
+
+                effectiveDurationInMinutes = treatmentCatalog.DurationInMinutes;
+                dto.EndTime = dto.StartTime.Add(TimeSpan.FromMinutes(effectiveDurationInMinutes));
+            }
+            else
+            {
+                dto.TreatmentItemId = null;
+                dto.EndTime = TimeSpan.Zero;
+                effectiveDurationInMinutes = aptType.DurationInMinutes;
+            }
+
+            var effectiveEndTime = dto.StartTime.Add(TimeSpan.FromMinutes(effectiveDurationInMinutes));
+
+            bool hasPatientConflict = await _appointmentRepository.HasPatientConflictAsync(dto.PatientId, dto.Date, dto.StartTime, effectiveEndTime);
+            if (hasPatientConflict)
+            {
+                throw new InvalidOperationException("Patient already has an overlapping appointment.");
+            }
+
+            // Doctor overlap is explicitly allowed for parallel booking.
+            // Patient and Chair conflict validation above enforce the necessary limits.
 
             var conflictingLeaves = await _doctorLeaveRequestRepository.GetDuplicateDatesAsync(dto.DoctorId, new[] { dto.Date });
             if (conflictingLeaves.Any())
@@ -68,19 +116,23 @@ namespace Clinic.Application.Services.Operations
                 throw new InvalidOperationException("Doctor is on leave on the selected date. Please choose another date or doctor.");
             }
 
-            bool hasChairConflict = await _appointmentRepository.HasChairConflictAsync(dto.ChairId, dto.Date, dto.StartTime, dto.EndTime);
+            bool hasChairConflict = await _appointmentRepository.HasChairConflictAsync(dto.ChairId, dto.Date, dto.StartTime, effectiveEndTime);
             if (hasChairConflict)
             {
-                throw new InvalidOperationException("Chair is already booked for the selected time. Please choose another chair or time.");
+                throw new InvalidOperationException("Selected chair is already booked during this time.");
             }
+
 
             var appointment = new Appointment
             {
                 Id = Guid.NewGuid(),
                 PatientId = dto.PatientId,
+                AppointmentTypeId = dto.AppointmentTypeId,
                 DoctorId = dto.DoctorId,
                 LocationId = dto.LocationId,
                 ChairId = dto.ChairId,
+                TreatmentItemId = dto.TreatmentItemId,
+                AssistantId = dto.AssistantId,
                 Date = dto.Date,
                 StartTime = dto.StartTime,
                 EndTime = dto.EndTime,
@@ -121,11 +173,53 @@ namespace Clinic.Application.Services.Operations
             if (chair == null) throw new InvalidOperationException("Invalid Chair");
             if (chair.LocationId != dto.LocationId) throw new InvalidOperationException("Selected Chair does not belong to the selected Location");
 
-            bool hasOverlap = await _appointmentRepository.HasOverlappingAppointmentAsync(dto.DoctorId, dto.Date, dto.StartTime, dto.EndTime, dto.Id);
-            if (hasOverlap)
+            var aptType = await _appointmentRepository.GetAppointmentTypeByIdAsync(dto.AppointmentTypeId);
+            if (aptType == null) throw new InvalidOperationException("Invalid Appointment Type");
+
+            if (dto.AssistantId.HasValue)
             {
-                throw new InvalidOperationException("Doctor is already booked for the selected time. Please choose another time.");
+                var assistant = await _userRepository.GetByIdAsync(dto.AssistantId.Value);
+                if (assistant == null || !assistant.IsActive) throw new InvalidOperationException("Selected Assistant is invalid or inactive.");
+                
+                var isNurse = assistant.UserRoles.Any(ur => ur.Role.Name == "Nurse");
+                if (!isNurse) throw new InvalidOperationException("Selected user is not eligible to be an Assistant.");
             }
+            
+            int effectiveDurationInMinutes;
+
+            if (aptType.Code == "TREATMENT" || aptType.Name.ToUpper().Contains("TREATMENT"))
+            {
+                if (!dto.TreatmentItemId.HasValue || dto.TreatmentItemId == Guid.Empty)
+                {
+                    throw new InvalidOperationException("Treatment selection is required for a TREATMENT appointment.");
+                }
+
+                var treatmentCatalog = await _treatmentCatalogRepository.GetByIdAsync(dto.TreatmentItemId.Value);
+                if (treatmentCatalog == null)
+                {
+                    throw new InvalidOperationException("Selected treatment catalog could not be found.");
+                }
+
+                effectiveDurationInMinutes = treatmentCatalog.DurationInMinutes;
+                dto.EndTime = dto.StartTime.Add(TimeSpan.FromMinutes(effectiveDurationInMinutes));
+            }
+            else
+            {
+                dto.TreatmentItemId = null;
+                dto.EndTime = TimeSpan.Zero;
+                effectiveDurationInMinutes = aptType.DurationInMinutes;
+            }
+
+            var effectiveEndTime = dto.StartTime.Add(TimeSpan.FromMinutes(effectiveDurationInMinutes));
+
+            bool hasPatientConflict = await _appointmentRepository.HasPatientConflictAsync(appointment.PatientId, dto.Date, dto.StartTime, effectiveEndTime, dto.Id);
+            if (hasPatientConflict)
+            {
+                throw new InvalidOperationException("Patient already has an overlapping appointment.");
+            }
+
+            // Doctor overlap is explicitly allowed for parallel booking.
+            // Patient and Chair conflict validation above enforce the necessary limits.
 
             var conflictingLeaves = await _doctorLeaveRequestRepository.GetDuplicateDatesAsync(dto.DoctorId, new[] { dto.Date });
             if (conflictingLeaves.Any())
@@ -133,16 +227,19 @@ namespace Clinic.Application.Services.Operations
                 throw new InvalidOperationException("Doctor is on leave on the selected date. Please choose another date or doctor.");
             }
 
-            bool hasChairConflict = await _appointmentRepository.HasChairConflictAsync(dto.ChairId, dto.Date, dto.StartTime, dto.EndTime, dto.Id);
+            bool hasChairConflict = await _appointmentRepository.HasChairConflictAsync(dto.ChairId, dto.Date, dto.StartTime, effectiveEndTime, dto.Id);
             if (hasChairConflict)
             {
-                throw new InvalidOperationException("Chair is already booked for the selected time. Please choose another chair or time.");
+                throw new InvalidOperationException("Selected chair is already booked during this time.");
             }
 
             // appointment.PatientId is intentionally NOT updated to enforce immutability.
             appointment.DoctorId = dto.DoctorId;
             appointment.LocationId = dto.LocationId;
             appointment.ChairId = dto.ChairId;
+            appointment.AssistantId = dto.AssistantId;
+            appointment.AppointmentTypeId = dto.AppointmentTypeId;
+            appointment.TreatmentItemId = dto.TreatmentItemId;
             appointment.Date = dto.Date;
             appointment.StartTime = dto.StartTime;
             appointment.EndTime = dto.EndTime;
@@ -164,12 +261,19 @@ namespace Clinic.Application.Services.Operations
                 Id = a.Id,
                 PatientId = a.PatientId,
                 PatientName = a.Patient!.FullName,
+                AppointmentTypeId = a.AppointmentTypeId,
+                AppointmentTypeName = a.AppointmentType!.DisplayName,
+                AppointmentComplexity = a.AppointmentType.Complexity,
+                TreatmentItemId = a.TreatmentItemId,
+                TreatmentItemName = a.TreatmentItem?.TreatmentName,
                 DoctorId = a.DoctorId,
                 DoctorName = a.Doctor!.FullName,
                 LocationId = a.LocationId,
                 LocationName = a.Location!.ClinicName,
                 ChairId = a.ChairId,
                 ChairName = a.Chair!.Name,
+                AssistantId = a.AssistantId,
+                AssistantName = a.Assistant?.FullName,
                 Date = a.Date,
                 StartTime = a.StartTime,
                 EndTime = a.EndTime,
@@ -217,12 +321,19 @@ namespace Clinic.Application.Services.Operations
                 Id = a.Id,
                 PatientId = a.PatientId,
                 PatientName = a.Patient!.FullName,
+                AppointmentTypeId = a.AppointmentTypeId,
+                AppointmentTypeName = a.AppointmentType!.DisplayName,
+                AppointmentComplexity = a.AppointmentType.Complexity,
+                TreatmentItemId = a.TreatmentItemId,
+                TreatmentItemName = a.TreatmentItem?.TreatmentName,
                 DoctorId = a.DoctorId,
                 DoctorName = a.Doctor!.FullName,
                 LocationId = a.LocationId,
                 LocationName = a.Location!.ClinicName,
                 ChairId = a.ChairId,
                 ChairName = a.Chair!.Name,
+                AssistantId = a.AssistantId,
+                AssistantName = a.Assistant?.FullName,
                 Date = a.Date,
                 StartTime = a.StartTime,
                 EndTime = a.EndTime,
@@ -324,12 +435,17 @@ namespace Clinic.Application.Services.Operations
                 Id = a.Id,
                 PatientId = a.PatientId,
                 PatientName = a.Patient?.FullName,
+                AppointmentTypeId = a.AppointmentTypeId,
+                AppointmentTypeName = a.AppointmentType?.DisplayName,
+                AppointmentComplexity = a.AppointmentType?.Complexity,
                 DoctorId = a.DoctorId,
                 DoctorName = a.Doctor?.FullName,
                 LocationId = a.LocationId,
                 LocationName = a.Location?.ClinicName,
                 ChairId = a.ChairId,
                 ChairName = a.Chair?.Name,
+                AssistantId = a.AssistantId,
+                AssistantName = a.Assistant?.FullName,
                 Date = a.Date,
                 StartTime = a.StartTime,
                 EndTime = a.EndTime,
@@ -346,12 +462,17 @@ namespace Clinic.Application.Services.Operations
                 Id = a.Id,
                 PatientId = a.PatientId,
                 PatientName = a.Patient?.FullName,
+                AppointmentTypeId = a.AppointmentTypeId,
+                AppointmentTypeName = a.AppointmentType?.DisplayName,
+                AppointmentComplexity = a.AppointmentType?.Complexity,
                 DoctorId = a.DoctorId,
                 DoctorName = a.Doctor?.FullName,
                 LocationId = a.LocationId,
                 LocationName = a.Location?.ClinicName,
                 ChairId = a.ChairId,
                 ChairName = a.Chair?.Name,
+                AssistantId = a.AssistantId,
+                AssistantName = a.Assistant?.FullName,
                 Date = a.Date,
                 StartTime = a.StartTime,
                 EndTime = a.EndTime,
@@ -386,8 +507,8 @@ namespace Clinic.Application.Services.Operations
                 var leaves = await _doctorLeaveRequestRepository.GetDuplicateDatesAsync(docId, new[] { appointment.Date });
                 if (leaves.Any()) continue;
 
-                bool hasOverlap = await _appointmentRepository.HasOverlappingAppointmentAsync(docId, appointment.Date, appointment.StartTime, appointment.EndTime, appointmentId);
-                if (hasOverlap) continue;
+                // Doctor overlap is explicitly allowed. If the new doctor has an overlap, 
+                // the existing patient/chair constraint of this appointment remains safely intact.
 
                 eligibleIds.Add(docId);
             }

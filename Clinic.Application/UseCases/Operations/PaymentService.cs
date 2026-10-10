@@ -101,5 +101,96 @@ namespace Clinic.Application.UseCases.Operations
         {
             return await _paymentRepository.GetTotalPaidByInvoiceIdAsync(invoiceId, cancellationToken);
         }
+
+        public async Task<PaymentAllocation> AllocatePaymentAsync(Guid paymentId, Guid invoiceLineId, decimal amount, Guid userId, CancellationToken cancellationToken = default)
+        {
+            if (amount <= 0)
+                throw new InvalidOperationException("Allocation amount must be greater than zero.");
+
+            var payment = await _paymentRepository.GetByIdAsync(paymentId, cancellationToken);
+            if (payment == null)
+                throw new InvalidOperationException("Payment not found.");
+
+            var invoiceLine = await _invoiceRepository.GetInvoiceLineByIdAsync(invoiceLineId, cancellationToken);
+            if (invoiceLine == null)
+                throw new InvalidOperationException("Invoice line not found.");
+
+            if (invoiceLine.InvoiceId != payment.InvoiceId)
+                throw new InvalidOperationException("Payment can only be allocated to invoice lines belonging to the same invoice.");
+
+            // Check payment allocation limit
+            var paymentTotalAllocated = await _paymentRepository.GetTotalAllocatedByPaymentIdAsync(paymentId, cancellationToken);
+            var remainingPaymentAmount = payment.Amount - paymentTotalAllocated;
+            if (amount > remainingPaymentAmount)
+                throw new InvalidOperationException($"Allocation amount ({amount:C}) exceeds remaining payment amount ({remainingPaymentAmount:C}).");
+
+            // Check invoice line allocation limit
+            var lineTotalAllocated = await _paymentRepository.GetTotalAllocatedByInvoiceLineIdAsync(invoiceLineId, cancellationToken);
+            var remainingLineAmount = invoiceLine.LineTotal - lineTotalAllocated;
+            if (amount > remainingLineAmount)
+                throw new InvalidOperationException($"Allocation amount ({amount:C}) exceeds remaining invoice line amount ({remainingLineAmount:C}).");
+
+            var allocation = new PaymentAllocation
+            {
+                Id = Guid.NewGuid(),
+                PaymentId = paymentId,
+                InvoiceLineId = invoiceLineId,
+                AllocatedAmount = amount,
+                CreatedAt = DateTime.UtcNow,
+                CreatedBy = userId,
+                IsDeleted = false
+            };
+
+            await _paymentRepository.AddAllocationAsync(allocation, cancellationToken);
+            await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+            return allocation;
+        }
+
+        public async Task<IEnumerable<PaymentAllocation>> GetAllocationsByPaymentIdAsync(Guid paymentId, CancellationToken cancellationToken = default)
+        {
+            return await _paymentRepository.GetAllocationsByPaymentIdAsync(paymentId, cancellationToken);
+        }
+
+        public async Task<PaymentRefund> CreateRefundAsync(Guid paymentId, decimal amount, string? reason, Guid userId, CancellationToken cancellationToken = default)
+        {
+            if (amount <= 0)
+                throw new InvalidOperationException("Refund amount must be greater than zero.");
+
+            var payment = await _paymentRepository.GetByIdAsync(paymentId, cancellationToken);
+            if (payment == null)
+                throw new InvalidOperationException("Payment not found.");
+
+            var totalRefunded = 0m;
+            if (payment.Refunds != null)
+            {
+                foreach (var r in payment.Refunds)
+                {
+                    if (!r.IsDeleted)
+                        totalRefunded += r.Amount;
+                }
+            }
+
+            var refundableAmount = payment.Amount - totalRefunded;
+            if (amount > refundableAmount)
+                throw new InvalidOperationException($"Refund amount ({amount:C}) exceeds refundable amount ({refundableAmount:C}).");
+
+            var refund = new PaymentRefund
+            {
+                Id = Guid.NewGuid(),
+                PaymentId = paymentId,
+                Amount = amount,
+                Reason = reason,
+                RefundDate = DateTime.UtcNow,
+                CreatedAt = DateTime.UtcNow,
+                CreatedBy = userId,
+                IsDeleted = false
+            };
+
+            await _paymentRepository.AddRefundAsync(refund, cancellationToken);
+            await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+            return refund;
+        }
     }
 }

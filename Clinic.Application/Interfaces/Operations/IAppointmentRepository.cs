@@ -11,9 +11,11 @@ namespace Clinic.Application.Interfaces.Operations
         Task<IEnumerable<Appointment>> GetAllAsync(bool showCancelled = false);
         void Add(Appointment appointment);
         void Update(Appointment appointment);
-        Task<bool> HasOverlappingAppointmentAsync(Guid doctorId, DateTime date, TimeSpan startTime, TimeSpan endTime, Guid? excludeAppointmentId = null);
-        Task<bool> HasChairConflictAsync(Guid chairId, DateTime date, TimeSpan startTime, TimeSpan endTime, Guid? excludeAppointmentId = null);
+        Task<bool> HasOverlappingAppointmentAsync(Guid doctorId, DateTime date, TimeSpan startTime, TimeSpan? endTime, Guid? excludeAppointmentId = null);
+        Task<bool> HasChairConflictAsync(Guid chairId, DateTime date, TimeSpan startTime, TimeSpan? endTime, Guid? excludeAppointmentId = null);
+        Task<bool> HasPatientConflictAsync(Guid patientId, DateTime date, TimeSpan startTime, TimeSpan? endTime, Guid? excludeAppointmentId = null);
         Task<IEnumerable<Appointment>> GetAppointmentsByDoctorAndDatesAsync(Guid doctorId, IEnumerable<DateTime> dates);
         Task<IEnumerable<Appointment>> GetAppointmentsByPatientIdAsync(Guid patientId);
+        Task<Clinic.Domain.Entities.MasterData.AppointmentType?> GetAppointmentTypeByIdAsync(Guid id);
     }
 }

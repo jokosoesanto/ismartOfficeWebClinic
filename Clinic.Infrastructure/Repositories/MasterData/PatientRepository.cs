@@ -33,6 +33,8 @@ namespace Clinic.Infrastructure.Repositories.MasterData
                 .Include(p => p.PhotoFileMetadata)
                 .Include(p => p.Allergies)
                 .Include(p => p.SystemicDiseases)
+                .Include(p => p.Insurances).ThenInclude(i => i.Insurance)
+                .Include(p => p.Guarantors)
                 .FirstOrDefaultAsync(p => p.Id == id);
         }
 

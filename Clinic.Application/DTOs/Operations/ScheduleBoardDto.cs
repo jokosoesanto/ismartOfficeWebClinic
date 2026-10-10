@@ -35,5 +35,6 @@ namespace Clinic.Application.DTOs.Operations
         public bool IsAppointment { get; set; }
         public string? PatientName { get; set; }
         public string? AppointmentStatus { get; set; }
+        public string? AppointmentTypeName { get; set; }
     }
 }

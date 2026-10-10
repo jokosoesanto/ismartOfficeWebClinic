@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.EntityFrameworkCore;
 using Clinic.Application.Interfaces.Operations;
 using Clinic.Application.Interfaces.MasterData;
 using Clinic.Web.Extensions;
@@ -16,15 +17,18 @@ namespace Clinic.Web.Controllers
         private readonly IScheduleBoardRepository _scheduleBoardRepository;
         private readonly ILocationRepository _locationRepository;
         private readonly ISpecialtyRepository _specialtyRepository;
+        private readonly Clinic.Infrastructure.Data.AppDbContext _context;
 
         public ScheduleBoardController(
             IScheduleBoardRepository scheduleBoardRepository,
             ILocationRepository locationRepository,
-            ISpecialtyRepository specialtyRepository)
+            ISpecialtyRepository specialtyRepository,
+            Clinic.Infrastructure.Data.AppDbContext context)
         {
             _scheduleBoardRepository = scheduleBoardRepository;
             _locationRepository = locationRepository;
             _specialtyRepository = specialtyRepository;
+            _context = context;
         }
 
         [Authorize(Policy = "ScheduleBoard.View")]
@@ -120,6 +124,22 @@ namespace Clinic.Web.Controllers
             {
                 var schedules = await _scheduleBoardRepository.GetSchedulesAsync(locationId, null, specialtyId, null, d, null);
                 
+                // Fetch zero-duration appointment type durations to fix Calendar end time display
+                var zeroDurationApptIds = schedules
+                    .Where(x => x.IsAppointment && x.EndTime == TimeSpan.Zero)
+                    .Select(x => x.ScheduleId)
+                    .ToList();
+                    
+                var durations = new System.Collections.Generic.Dictionary<Guid, int>();
+                if (zeroDurationApptIds.Any())
+                {
+                    durations = _context.Appointments
+                        .Where(a => zeroDurationApptIds.Contains(a.Id))
+                        .Select(a => new { a.Id, a.AppointmentType.DurationInMinutes })
+                        .ToList()
+                        .ToDictionary(x => x.Id, x => x.DurationInMinutes);
+                }
+
                 if (!string.IsNullOrEmpty(availability))
                 {
                     if (availability.Equals("Leave", StringComparison.OrdinalIgnoreCase))
@@ -142,11 +162,22 @@ namespace Clinic.Web.Controllers
                     var endTimeSpan = s.EndTime.Value;
 
                     var eventStart = d.Add(startTimeSpan).ToString("yyyy-MM-ddTHH:mm:ss");
-                    var eventEnd = d.Add(endTimeSpan).ToString("yyyy-MM-ddTHH:mm:ss");
+                    string eventEnd;
+
+                    if (s.IsAppointment && endTimeSpan == TimeSpan.Zero && durations.TryGetValue(s.ScheduleId, out var dur))
+                    {
+                        var effectiveDur = dur > 0 ? dur : 1; // Fallback to 1 min to prevent FullCalendar from ignoring it
+                        eventEnd = d.Add(startTimeSpan).AddMinutes(effectiveDur).ToString("yyyy-MM-ddTHH:mm:ss");
+                    }
+                    else
+                    {
+                        eventEnd = d.Add(endTimeSpan).ToString("yyyy-MM-ddTHH:mm:ss");
+                    }
 
                     events.Add(new
                     {
                         id = s.ScheduleId,
+                        doctorId = s.DoctorId,
                         doctorName = s.DoctorName,
                         eventStart = eventStart,
                         eventEnd = eventEnd,
@@ -157,12 +188,31 @@ namespace Clinic.Web.Controllers
                         status = s.Status,
                         isAppointment = s.IsAppointment,
                         patientName = s.PatientName,
-                        appointmentStatus = s.AppointmentStatus
+                        appointmentStatus = s.AppointmentStatus,
+                        appointmentTypeName = s.AppointmentTypeName
                     });
                 }
             }
 
             return Json(events);
+        }
+
+        [Authorize(Policy = "ScheduleBoard.View")]
+        [HttpGet]
+        public async Task<IActionResult> GetLocationChairs(Guid? locationId)
+        {
+            var query = _context.Chairs.Include(c => c.Location).AsQueryable();
+            if (locationId.HasValue && locationId.Value != Guid.Empty)
+            {
+                query = query.Where(c => c.LocationId == locationId.Value);
+            }
+            
+            var chairs = await query
+                .OrderBy(c => c.Location.ClinicName).ThenBy(c => c.Name)
+                .Select(c => new { c.Id, c.Name, LocationName = c.Location.ClinicName })
+                .ToListAsync();
+                
+            return Json(chairs);
         }
     }
 }

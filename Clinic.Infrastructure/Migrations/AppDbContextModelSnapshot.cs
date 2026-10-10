@@ -411,6 +411,68 @@ namespace Clinic.Infrastructure.Migrations
                     b.ToTable("AppConfigurations", (string)null);
                 });
 
+            modelBuilder.Entity("Clinic.Domain.Entities.MasterData.AppointmentType", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Complexity")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("CreatedBy")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("DeletedBy")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(500)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("DisplayName")
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("DurationInMinutes")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("IsSystem")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("UpdatedBy")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("AppointmentTypes");
+                });
+
             modelBuilder.Entity("Clinic.Domain.Entities.MasterData.Chair", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1154,6 +1216,118 @@ namespace Clinic.Infrastructure.Migrations
                     b.ToTable("PatientAllergies", (string)null);
                 });
 
+            modelBuilder.Entity("Clinic.Domain.Entities.MasterData.PatientGuarantor", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Address")
+                        .HasMaxLength(500)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("CreatedBy")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("DeletedBy")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Email")
+                        .HasMaxLength(150)
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("IsPrimary")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("PatientId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Phone")
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Relationship")
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("UpdatedBy")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PatientId");
+
+                    b.ToTable("PatientGuarantors", (string)null);
+                });
+
+            modelBuilder.Entity("Clinic.Domain.Entities.MasterData.PatientInsurance", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("CreatedBy")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("DeletedBy")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("GroupId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("InsuranceId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("IsPrimary")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("MemberId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("PatientId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("UpdatedBy")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("InsuranceId");
+
+                    b.HasIndex("PatientId");
+
+                    b.ToTable("PatientInsurances");
+                });
+
             modelBuilder.Entity("Clinic.Domain.Entities.MasterData.PatientMedicalHistory", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1305,6 +1479,70 @@ namespace Clinic.Infrastructure.Migrations
                         .IsUnique();
 
                     b.ToTable("Specialties");
+                });
+
+            modelBuilder.Entity("Clinic.Domain.Entities.MasterData.Supplier", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Address")
+                        .HasMaxLength(500)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ContactPerson")
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("CreatedBy")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("DeletedBy")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Email")
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Phone")
+                        .HasMaxLength(50)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("UpdatedBy")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Code")
+                        .IsUnique();
+
+                    b.ToTable("Suppliers");
                 });
 
             modelBuilder.Entity("Clinic.Domain.Entities.MasterData.TreatmentCatalog", b =>
@@ -1521,6 +1759,12 @@ namespace Clinic.Infrastructure.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("TEXT");
 
+                    b.Property<Guid>("AppointmentTypeId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("AssistantId")
+                        .HasColumnType("TEXT");
+
                     b.Property<Guid>("ChairId")
                         .HasColumnType("TEXT");
 
@@ -1542,7 +1786,7 @@ namespace Clinic.Infrastructure.Migrations
                     b.Property<Guid>("DoctorId")
                         .HasColumnType("TEXT");
 
-                    b.Property<TimeSpan>("EndTime")
+                    b.Property<TimeSpan?>("EndTime")
                         .HasColumnType("TEXT");
 
                     b.Property<bool>("IsDeleted")
@@ -1566,6 +1810,9 @@ namespace Clinic.Infrastructure.Migrations
                         .HasMaxLength(20)
                         .HasColumnType("TEXT");
 
+                    b.Property<Guid?>("TreatmentItemId")
+                        .HasColumnType("TEXT");
+
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("TEXT");
 
@@ -1574,6 +1821,10 @@ namespace Clinic.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("AppointmentTypeId");
+
+                    b.HasIndex("AssistantId");
+
                     b.HasIndex("ChairId");
 
                     b.HasIndex("DoctorId");
@@ -1581,6 +1832,8 @@ namespace Clinic.Infrastructure.Migrations
                     b.HasIndex("LocationId");
 
                     b.HasIndex("PatientId");
+
+                    b.HasIndex("TreatmentItemId");
 
                     b.ToTable("Appointments", (string)null);
                 });
@@ -1960,6 +2213,158 @@ namespace Clinic.Infrastructure.Migrations
                     b.ToTable("DoctorLeaveRequests", (string)null);
                 });
 
+            modelBuilder.Entity("Clinic.Domain.Entities.Operations.InventoryBatch", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("BatchNumber")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("CreatedBy")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("DeletedBy")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("ExpiryDate")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("InventoryItemId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("UpdatedBy")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("InventoryItemId", "BatchNumber")
+                        .IsUnique();
+
+                    b.ToTable("InventoryBatches", (string)null);
+                });
+
+            modelBuilder.Entity("Clinic.Domain.Entities.Operations.InventoryItem", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Category")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("CreatedBy")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("DeletedBy")
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal>("ReorderLevel")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Unit")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("UpdatedBy")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("InventoryItems");
+                });
+
+            modelBuilder.Entity("Clinic.Domain.Entities.Operations.InventoryStockTransaction", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("CreatedBy")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("InventoryBatchId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("InventoryItemId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Notes")
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal>("Quantity")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("ReferenceId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ReferenceType")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("SupplierId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("TransactionDate")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("TransactionType")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("InventoryBatchId");
+
+                    b.HasIndex("InventoryItemId");
+
+                    b.HasIndex("SupplierId");
+
+                    b.ToTable("InventoryStockTransactions");
+                });
+
             modelBuilder.Entity("Clinic.Domain.Entities.Operations.Invoice", b =>
                 {
                     b.Property<Guid>("Id")
@@ -2016,6 +2421,58 @@ namespace Clinic.Infrastructure.Migrations
                     b.ToTable("Invoices");
                 });
 
+            modelBuilder.Entity("Clinic.Domain.Entities.Operations.InvoiceAdjustment", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("AdjustmentDate")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("AdjustmentType")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal>("Amount")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("CreatedBy")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("DeletedBy")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("InvoiceId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Reason")
+                        .HasMaxLength(500)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("UpdatedBy")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("InvoiceId");
+
+                    b.ToTable("InvoiceAdjustments");
+                });
+
             modelBuilder.Entity("Clinic.Domain.Entities.Operations.InvoiceLine", b =>
                 {
                     b.Property<Guid>("Id")
@@ -2069,6 +2526,53 @@ namespace Clinic.Infrastructure.Migrations
                     b.HasIndex("InvoiceId");
 
                     b.ToTable("InvoiceLines");
+                });
+
+            modelBuilder.Entity("Clinic.Domain.Entities.Operations.PatientCredit", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal>("Amount")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("CreatedBy")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CreditDate")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("DeletedBy")
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<Guid>("PatientId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Reason")
+                        .HasMaxLength(250)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("UpdatedBy")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PatientId");
+
+                    b.ToTable("PatientCredits", (string)null);
                 });
 
             modelBuilder.Entity("Clinic.Domain.Entities.Operations.Payment", b =>
@@ -2133,6 +2637,168 @@ namespace Clinic.Infrastructure.Migrations
                         .IsUnique();
 
                     b.ToTable("Payments");
+                });
+
+            modelBuilder.Entity("Clinic.Domain.Entities.Operations.PaymentAllocation", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal>("AllocatedAmount")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("CreatedBy")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("DeletedBy")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("InvoiceLineId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<Guid>("PaymentId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("UpdatedBy")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("InvoiceLineId");
+
+                    b.HasIndex("PaymentId");
+
+                    b.ToTable("PaymentAllocations", (string)null);
+                });
+
+            modelBuilder.Entity("Clinic.Domain.Entities.Operations.PaymentPlan", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("AgreementDate")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("CreatedBy")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("InvoiceId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal>("TotalPlannedAmount")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("UpdatedBy")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("InvoiceId");
+
+                    b.ToTable("PaymentPlans");
+                });
+
+            modelBuilder.Entity("Clinic.Domain.Entities.Operations.PaymentPlanInstallment", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal>("Amount")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("DueDate")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("PaymentPlanId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("SequenceNumber")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PaymentPlanId");
+
+                    b.ToTable("PaymentPlanInstallments");
+                });
+
+            modelBuilder.Entity("Clinic.Domain.Entities.Operations.PaymentRefund", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal>("Amount")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("CreatedBy")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("DeletedBy")
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<Guid>("PaymentId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Reason")
+                        .HasMaxLength(255)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("RefundDate")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("UpdatedBy")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PaymentId");
+
+                    b.ToTable("PaymentRefunds", (string)null);
                 });
 
             modelBuilder.Entity("Clinic.Domain.Entities.Operations.PostTreatmentInstruction", b =>
@@ -2737,6 +3403,36 @@ namespace Clinic.Infrastructure.Migrations
                     b.Navigation("Patient");
                 });
 
+            modelBuilder.Entity("Clinic.Domain.Entities.MasterData.PatientGuarantor", b =>
+                {
+                    b.HasOne("Clinic.Domain.Entities.MasterData.Patient", "Patient")
+                        .WithMany("Guarantors")
+                        .HasForeignKey("PatientId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Patient");
+                });
+
+            modelBuilder.Entity("Clinic.Domain.Entities.MasterData.PatientInsurance", b =>
+                {
+                    b.HasOne("Clinic.Domain.Entities.MasterData.Insurance", "Insurance")
+                        .WithMany()
+                        .HasForeignKey("InsuranceId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Clinic.Domain.Entities.MasterData.Patient", "Patient")
+                        .WithMany("Insurances")
+                        .HasForeignKey("PatientId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Insurance");
+
+                    b.Navigation("Patient");
+                });
+
             modelBuilder.Entity("Clinic.Domain.Entities.MasterData.PatientMedicalHistory", b =>
                 {
                     b.HasOne("Clinic.Domain.Entities.MasterData.Patient", "Patient")
@@ -2799,6 +3495,16 @@ namespace Clinic.Infrastructure.Migrations
 
             modelBuilder.Entity("Clinic.Domain.Entities.Operations.Appointment", b =>
                 {
+                    b.HasOne("Clinic.Domain.Entities.MasterData.AppointmentType", "AppointmentType")
+                        .WithMany("Appointments")
+                        .HasForeignKey("AppointmentTypeId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Clinic.Domain.Entities.Auth.User", "Assistant")
+                        .WithMany()
+                        .HasForeignKey("AssistantId");
+
                     b.HasOne("Clinic.Domain.Entities.MasterData.Chair", "Chair")
                         .WithMany()
                         .HasForeignKey("ChairId")
@@ -2823,6 +3529,15 @@ namespace Clinic.Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
+                    b.HasOne("Clinic.Domain.Entities.MasterData.TreatmentCatalog", "TreatmentItem")
+                        .WithMany()
+                        .HasForeignKey("TreatmentItemId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("AppointmentType");
+
+                    b.Navigation("Assistant");
+
                     b.Navigation("Chair");
 
                     b.Navigation("Doctor");
@@ -2830,6 +3545,8 @@ namespace Clinic.Infrastructure.Migrations
                     b.Navigation("Location");
 
                     b.Navigation("Patient");
+
+                    b.Navigation("TreatmentItem");
                 });
 
             modelBuilder.Entity("Clinic.Domain.Entities.Operations.AppointmentChiefComplaint", b =>
@@ -2944,6 +3661,40 @@ namespace Clinic.Infrastructure.Migrations
                     b.Navigation("Doctor");
                 });
 
+            modelBuilder.Entity("Clinic.Domain.Entities.Operations.InventoryBatch", b =>
+                {
+                    b.HasOne("Clinic.Domain.Entities.Operations.InventoryItem", "InventoryItem")
+                        .WithMany("InventoryBatches")
+                        .HasForeignKey("InventoryItemId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("InventoryItem");
+                });
+
+            modelBuilder.Entity("Clinic.Domain.Entities.Operations.InventoryStockTransaction", b =>
+                {
+                    b.HasOne("Clinic.Domain.Entities.Operations.InventoryBatch", "InventoryBatch")
+                        .WithMany("StockTransactions")
+                        .HasForeignKey("InventoryBatchId");
+
+                    b.HasOne("Clinic.Domain.Entities.Operations.InventoryItem", "InventoryItem")
+                        .WithMany("StockTransactions")
+                        .HasForeignKey("InventoryItemId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Clinic.Domain.Entities.MasterData.Supplier", "Supplier")
+                        .WithMany()
+                        .HasForeignKey("SupplierId");
+
+                    b.Navigation("InventoryBatch");
+
+                    b.Navigation("InventoryItem");
+
+                    b.Navigation("Supplier");
+                });
+
             modelBuilder.Entity("Clinic.Domain.Entities.Operations.Invoice", b =>
                 {
                     b.HasOne("Clinic.Domain.Entities.Operations.Appointment", "Appointment")
@@ -2953,6 +3704,17 @@ namespace Clinic.Infrastructure.Migrations
                         .IsRequired();
 
                     b.Navigation("Appointment");
+                });
+
+            modelBuilder.Entity("Clinic.Domain.Entities.Operations.InvoiceAdjustment", b =>
+                {
+                    b.HasOne("Clinic.Domain.Entities.Operations.Invoice", "Invoice")
+                        .WithMany("Adjustments")
+                        .HasForeignKey("InvoiceId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Invoice");
                 });
 
             modelBuilder.Entity("Clinic.Domain.Entities.Operations.InvoiceLine", b =>
@@ -2974,6 +3736,17 @@ namespace Clinic.Infrastructure.Migrations
                     b.Navigation("Invoice");
                 });
 
+            modelBuilder.Entity("Clinic.Domain.Entities.Operations.PatientCredit", b =>
+                {
+                    b.HasOne("Clinic.Domain.Entities.MasterData.Patient", "Patient")
+                        .WithMany()
+                        .HasForeignKey("PatientId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Patient");
+                });
+
             modelBuilder.Entity("Clinic.Domain.Entities.Operations.Payment", b =>
                 {
                     b.HasOne("Clinic.Domain.Entities.Operations.Invoice", "Invoice")
@@ -2983,6 +3756,58 @@ namespace Clinic.Infrastructure.Migrations
                         .IsRequired();
 
                     b.Navigation("Invoice");
+                });
+
+            modelBuilder.Entity("Clinic.Domain.Entities.Operations.PaymentAllocation", b =>
+                {
+                    b.HasOne("Clinic.Domain.Entities.Operations.InvoiceLine", "InvoiceLine")
+                        .WithMany()
+                        .HasForeignKey("InvoiceLineId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Clinic.Domain.Entities.Operations.Payment", "Payment")
+                        .WithMany()
+                        .HasForeignKey("PaymentId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("InvoiceLine");
+
+                    b.Navigation("Payment");
+                });
+
+            modelBuilder.Entity("Clinic.Domain.Entities.Operations.PaymentPlan", b =>
+                {
+                    b.HasOne("Clinic.Domain.Entities.Operations.Invoice", "Invoice")
+                        .WithMany()
+                        .HasForeignKey("InvoiceId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Invoice");
+                });
+
+            modelBuilder.Entity("Clinic.Domain.Entities.Operations.PaymentPlanInstallment", b =>
+                {
+                    b.HasOne("Clinic.Domain.Entities.Operations.PaymentPlan", "PaymentPlan")
+                        .WithMany("Installments")
+                        .HasForeignKey("PaymentPlanId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("PaymentPlan");
+                });
+
+            modelBuilder.Entity("Clinic.Domain.Entities.Operations.PaymentRefund", b =>
+                {
+                    b.HasOne("Clinic.Domain.Entities.Operations.Payment", "Payment")
+                        .WithMany("Refunds")
+                        .HasForeignKey("PaymentId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Payment");
                 });
 
             modelBuilder.Entity("Clinic.Domain.Entities.Operations.PostTreatmentInstruction", b =>
@@ -3092,6 +3917,11 @@ namespace Clinic.Infrastructure.Migrations
                     b.Navigation("UserRoles");
                 });
 
+            modelBuilder.Entity("Clinic.Domain.Entities.MasterData.AppointmentType", b =>
+                {
+                    b.Navigation("Appointments");
+                });
+
             modelBuilder.Entity("Clinic.Domain.Entities.MasterData.Doctor", b =>
                 {
                     b.Navigation("DoctorLocations");
@@ -3111,6 +3941,10 @@ namespace Clinic.Infrastructure.Migrations
             modelBuilder.Entity("Clinic.Domain.Entities.MasterData.Patient", b =>
                 {
                     b.Navigation("Allergies");
+
+                    b.Navigation("Guarantors");
+
+                    b.Navigation("Insurances");
 
                     b.Navigation("Medications");
 
@@ -3143,11 +3977,35 @@ namespace Clinic.Infrastructure.Migrations
                     b.Navigation("LeaveDates");
                 });
 
+            modelBuilder.Entity("Clinic.Domain.Entities.Operations.InventoryBatch", b =>
+                {
+                    b.Navigation("StockTransactions");
+                });
+
+            modelBuilder.Entity("Clinic.Domain.Entities.Operations.InventoryItem", b =>
+                {
+                    b.Navigation("InventoryBatches");
+
+                    b.Navigation("StockTransactions");
+                });
+
             modelBuilder.Entity("Clinic.Domain.Entities.Operations.Invoice", b =>
                 {
+                    b.Navigation("Adjustments");
+
                     b.Navigation("InvoiceLines");
 
                     b.Navigation("Payments");
+                });
+
+            modelBuilder.Entity("Clinic.Domain.Entities.Operations.Payment", b =>
+                {
+                    b.Navigation("Refunds");
+                });
+
+            modelBuilder.Entity("Clinic.Domain.Entities.Operations.PaymentPlan", b =>
+                {
+                    b.Navigation("Installments");
                 });
 
             modelBuilder.Entity("Clinic.Domain.Entities.Operations.Prescription", b =>

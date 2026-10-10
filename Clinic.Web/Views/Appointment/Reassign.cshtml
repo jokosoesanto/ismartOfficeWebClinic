@@ -58,7 +58,7 @@
                     <div class="col-md-4 mb-3 mb-md-0">
                         <label class="form-label fw-bold text-muted small mb-1">Time</label>
                         <div class="fw-semibold">
-                            <i class="bi bi-clock me-1"></i>@Model.StartTime.ToString(@"hh\:mm") - @Model.EndTime.ToString(@"hh\:mm")
+                            <i class="bi bi-clock me-1"></i>@Model.StartTime.ToString(@"hh\:mm") - @(Model.EndTime?.ToString(@"hh\:mm") ?? "-")
                         </div>
                     </div>
                 </div>

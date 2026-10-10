@@ -183,7 +183,13 @@ namespace Clinic.Web.Services
                 new { Code = "MasterData.Insurance.Create", Name = "Create Insurance", Module = "Insurance", Category = "Master Data" },
                 new { Code = "MasterData.Insurance.Edit", Name = "Edit Insurance", Module = "Insurance", Category = "Master Data" },
                 new { Code = "MasterData.Insurance.Delete", Name = "Delete Insurance", Module = "Insurance", Category = "Master Data" },
+                new { Code = "MasterData.AppointmentType.View", Name = "View Appointment Types", Module = "AppointmentType", Category = "Master Data" },
+                new { Code = "MasterData.AppointmentType.Create", Name = "Create Appointment Type", Module = "AppointmentType", Category = "Master Data" },
+                new { Code = "MasterData.AppointmentType.Edit", Name = "Edit Appointment Type", Module = "AppointmentType", Category = "Master Data" },
+                new { Code = "MasterData.AppointmentType.Delete", Name = "Delete Appointment Type", Module = "AppointmentType", Category = "Master Data" },
+
                 new { Code = "MasterData.DiagnosisMaster.View", Name = "View Diagnosis Master", Module = "DiagnosisMaster", Category = "Master Data" },
+
                 new { Code = "MasterData.DiagnosisMaster.Create", Name = "Create Diagnosis Master", Module = "DiagnosisMaster", Category = "Master Data" },
                 new { Code = "MasterData.DiagnosisMaster.Edit", Name = "Edit Diagnosis Master", Module = "DiagnosisMaster", Category = "Master Data" },
                 new { Code = "MasterData.DiagnosisMaster.Delete", Name = "Delete Diagnosis Master", Module = "DiagnosisMaster", Category = "Master Data" },

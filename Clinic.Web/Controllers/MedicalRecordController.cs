@@ -158,6 +158,278 @@ namespace Clinic.Web.Controllers
                 ViewBag.Prescriptions = new List<Clinic.Domain.Entities.Operations.Prescription>();
             }
 
+            var timeline = new List<Clinic.Application.DTOs.Operations.PatientTimelineItemDto>();
+
+            var timelineAppointments = await _dbContext.Appointments
+                .Include(a => a.Doctor)
+                .Include(a => a.AppointmentType)
+                .Where(a => a.PatientId == patientId && !a.IsDeleted)
+                .ToListAsync();
+
+            foreach(var a in timelineAppointments)
+            {
+                timeline.Add(new Clinic.Application.DTOs.Operations.PatientTimelineItemDto
+                {
+                    EventDate = a.Date.Add(a.StartTime),
+                    EventType = "Appointment",
+                    Title = $"Appointment with {(a.Doctor?.Title != null ? a.Doctor.Title + " " : "Dr ")}{a.Doctor?.FullName}",
+                    Summary = $"Status: {a.Status}, Type: {a.AppointmentType?.Name}",
+                    ReferenceId = a.Id,
+                    Icon = "bi-calendar-check"
+                });
+            }
+
+            var chiefComplaints = await _dbContext.Set<Clinic.Domain.Entities.Operations.AppointmentChiefComplaint>()
+                .Include(c => c.Appointment)
+                .Where(c => c.Appointment!.PatientId == patientId && !c.IsDeleted)
+                .ToListAsync();
+
+            foreach(var c in chiefComplaints)
+            {
+                timeline.Add(new Clinic.Application.DTOs.Operations.PatientTimelineItemDto
+                {
+                    EventDate = c.CreatedAt,
+                    EventType = "Chief Complaint",
+                    Title = "Chief Complaint",
+                    Summary = c.Complaint,
+                    ReferenceId = c.Id,
+                    Icon = "bi-person-exclamation"
+                });
+            }
+
+            var diagnosesTimeline = await _dbContext.AppointmentDiagnoses
+                .Include(d => d.Appointment)
+                .Include(d => d.DiagnosisMaster)
+                .Where(d => d.Appointment!.PatientId == patientId && !d.IsDeleted)
+                .ToListAsync();
+
+            foreach(var d in diagnosesTimeline)
+            {
+                timeline.Add(new Clinic.Application.DTOs.Operations.PatientTimelineItemDto
+                {
+                    EventDate = d.CreatedAt,
+                    EventType = "Diagnosis",
+                    Title = d.DiagnosisMaster?.DiagnosisCode + " - " + d.DiagnosisMaster?.DiagnosisName,
+                    Summary = d.Remark ?? "No additional notes",
+                    ReferenceId = d.Id,
+                    Icon = "bi-clipboard2-pulse"
+                });
+            }
+
+            var treatmentsTimeline = await _dbContext.AppointmentTreatments
+                .Include(t => t.Appointment)
+                .Include(t => t.TreatmentItem)
+                .Where(t => t.Appointment!.PatientId == patientId && !t.Appointment.IsDeleted)
+                .ToListAsync();
+
+            foreach(var t in treatmentsTimeline)
+            {
+                timeline.Add(new Clinic.Application.DTOs.Operations.PatientTimelineItemDto
+                {
+                    EventDate = t.CreatedAt,
+                    EventType = "Treatment",
+                    Title = t.TreatmentItem?.TreatmentName ?? "Treatment",
+                    Summary = $"Status: {t.Status}",
+                    ReferenceId = t.Id,
+                    Icon = "bi-bandaid"
+                });
+            }
+            
+            var clinicalNotes = await _dbContext.AppointmentClinicalNotes
+                .Include(n => n.Appointment)
+                .Where(n => n.Appointment!.PatientId == patientId && !n.IsDeleted)
+                .ToListAsync();
+
+            foreach(var n in clinicalNotes)
+            {
+                timeline.Add(new Clinic.Application.DTOs.Operations.PatientTimelineItemDto
+                {
+                    EventDate = n.CreatedAt,
+                    EventType = "Clinical Note",
+                    Title = "Clinical Note",
+                    Summary = $"Subj: {n.Subjective?.Substring(0, Math.Min(n.Subjective.Length, 30))}...",
+                    ReferenceId = n.Id,
+                    Icon = "bi-journal-text"
+                });
+            }
+
+            var prescriptionsTimeline = await _dbContext.Prescriptions
+                .Include(p => p.Appointment)
+                .Where(p => p.PatientId == patientId && !p.IsDeleted)
+                .ToListAsync();
+
+            foreach(var p in prescriptionsTimeline)
+            {
+                timeline.Add(new Clinic.Application.DTOs.Operations.PatientTimelineItemDto
+                {
+                    EventDate = p.PrescribedAt,
+                    EventType = "Prescription",
+                    Title = "Prescription Issued",
+                    Summary = $"Status: {p.Status}",
+                    ReferenceId = p.Id,
+                    Icon = "bi-capsule"
+                });
+            }
+
+            var paymentsTimeline = await _dbContext.Payments
+                .Include(p => p.Invoice)
+                .ThenInclude(i => i!.Appointment)
+                .Where(p => p.Invoice!.Appointment!.PatientId == patientId && !p.IsDeleted)
+                .ToListAsync();
+
+            foreach(var p in paymentsTimeline)
+            {
+                timeline.Add(new Clinic.Application.DTOs.Operations.PatientTimelineItemDto
+                {
+                    EventDate = p.PaymentDate,
+                    EventType = "Payment",
+                    Title = $"Payment Received",
+                    Summary = $"Amount: {p.Amount:C} via {p.PaymentMethod}",
+                    ReferenceId = p.Id,
+                    Icon = "bi-cash-coin"
+                });
+            }
+
+            ViewBag.Timeline = timeline.OrderByDescending(x => x.EventDate).ToList();
+
+            // B1 - Patient Financial Ledger MVP
+            var ledgerInvoices = await _dbContext.Invoices
+                .AsNoTracking()
+                .Include(i => i.Appointment)
+                .Where(i => i.Appointment!.PatientId == patientId && !i.IsDeleted)
+                .ToListAsync();
+
+            var ledgerPayments = await _dbContext.Payments
+                .AsNoTracking()
+                .Include(p => p.Invoice)
+                .ThenInclude(i => i!.Appointment)
+                .Include(p => p.Refunds)
+                .Where(p => p.Invoice!.Appointment!.PatientId == patientId && !p.IsDeleted)
+                .ToListAsync();
+
+            var ledgerAdjustments = await _dbContext.InvoiceAdjustments
+                .AsNoTracking()
+                .Include(a => a.Invoice)
+                .ThenInclude(i => i!.Appointment)
+                .Where(a => a.Invoice!.Appointment!.PatientId == patientId && !a.IsDeleted)
+                .ToListAsync();
+
+            var patientCredits = await _dbContext.PatientCredits
+                .AsNoTracking()
+                .Where(c => c.PatientId == patientId && !c.IsDeleted)
+                .ToListAsync();
+
+            var ledger = new PatientLedgerDto
+            {
+                PatientId = patientId,
+                PatientName = patient.FullName
+            };
+
+            foreach (var inv in ledgerInvoices)
+            {
+                ledger.Transactions.Add(new PatientLedgerTransactionDto
+                {
+                    TransactionDate = inv.InvoiceDate,
+                    TransactionType = "Invoice",
+                    ReferenceNumber = inv.InvoiceNumber,
+                    Description = "Charges for visit",
+                    Debit = inv.TotalAmount,
+                    Credit = 0,
+                    SortOrder = 1,
+                    SourceId = inv.Id
+                });
+                ledger.TotalDebit += inv.TotalAmount;
+            }
+
+            foreach (var pay in ledgerPayments)
+            {
+                ledger.Transactions.Add(new PatientLedgerTransactionDto
+                {
+                    TransactionDate = pay.PaymentDate,
+                    TransactionType = "Payment",
+                    ReferenceNumber = pay.ReceiptNumber,
+                    Description = pay.PaymentMethod + (string.IsNullOrEmpty(pay.ReferenceNumber) ? "" : $" ({pay.ReferenceNumber})"),
+                    Debit = 0,
+                    Credit = pay.Amount,
+                    SortOrder = 2,
+                    SourceId = pay.Id
+                });
+                ledger.TotalCredit += pay.Amount;
+                
+                if (pay.Refunds != null)
+                {
+                    foreach (var refund in pay.Refunds.Where(r => !r.IsDeleted))
+                    {
+                        ledger.Transactions.Add(new PatientLedgerTransactionDto
+                        {
+                            TransactionDate = refund.RefundDate,
+                            TransactionType = "Refund",
+                            ReferenceNumber = $"REF-{refund.Id.ToString().Substring(0, 8).ToUpper()}",
+                            Description = "Payment Refund" + (string.IsNullOrEmpty(refund.Reason) ? "" : $" ({refund.Reason})"),
+                            Debit = refund.Amount,
+                            Credit = 0,
+                            SortOrder = 4, // After adjustment
+                            SourceId = refund.Id
+                        });
+                        ledger.TotalDebit += refund.Amount;
+                    }
+                }
+            }
+
+            foreach (var adj in ledgerAdjustments)
+            {
+                ledger.Transactions.Add(new PatientLedgerTransactionDto
+                {
+                    TransactionDate = adj.AdjustmentDate,
+                    TransactionType = "Adjustment",
+                    ReferenceNumber = $"ADJ-{adj.Id.ToString().Substring(0,8).ToUpper()}",
+                    Description = adj.AdjustmentType + (string.IsNullOrEmpty(adj.Reason) ? "" : $" ({adj.Reason})"),
+                    Debit = 0,
+                    Credit = adj.Amount,
+                    SortOrder = 3,
+                    SourceId = adj.Id
+                });
+                ledger.TotalCredit += adj.Amount;
+            }
+
+            foreach (var cred in patientCredits)
+            {
+                ledger.Transactions.Add(new PatientLedgerTransactionDto
+                {
+                    TransactionDate = cred.CreditDate,
+                    TransactionType = "Patient Credit",
+                    ReferenceNumber = $"CRE-{cred.Id.ToString().Substring(0,8).ToUpper()}",
+                    Description = "Prepayment / Patient Credit" + (string.IsNullOrEmpty(cred.Reason) ? "" : $" ({cred.Reason})"),
+                    Debit = 0,
+                    Credit = cred.Amount,
+                    SortOrder = 1,
+                    SourceId = cred.Id
+                });
+                ledger.TotalCredit += cred.Amount;
+            }
+
+            ViewBag.AvailableCredit = patientCredits.Sum(c => c.Amount);
+            ViewBag.PatientCredits = patientCredits;
+
+            // Order by date ASC to calculate running balance mathematically
+            ledger.Transactions = ledger.Transactions
+                .OrderBy(t => t.TransactionDate)
+                .ThenBy(t => t.SortOrder)
+                .ThenBy(t => t.SourceId)
+                .ToList();
+
+            decimal runningBal = 0;
+            foreach (var t in ledger.Transactions)
+            {
+                runningBal = runningBal + t.Debit - t.Credit;
+                t.RunningBalance = runningBal;
+            }
+
+            // Reverse for UI display (Newest -> Oldest)
+            ledger.Transactions.Reverse();
+
+            ViewBag.PatientLedger = ledger;
+
             return View("Templates/MR_Chart", patient);
         }
 
@@ -921,6 +1193,167 @@ namespace Clinic.Web.Controllers
             }
 
             return RedirectToAction("Chart", new { id = patientId, activeTab = "clinicalnotes", appointmentId = appointmentId });
+        }
+        [HttpGet("Chart/{id}/Statement")]
+        public async Task<IActionResult> Statement(Guid id, [FromQuery] DateTime? startDate, [FromQuery] DateTime? endDate)
+        {
+            var patient = await _dbContext.Patients
+                .AsNoTracking()
+                .FirstOrDefaultAsync(p => p.Id == id && !p.IsDeleted);
+
+            if (patient == null) return NotFound("Patient not found");
+
+            // Default to current month if not provided
+            var sDate = startDate ?? new DateTime(DateTime.Now.Year, DateTime.Now.Month, 1);
+            var eDate = endDate ?? sDate.AddMonths(1).AddDays(-1);
+
+            // B1 - Patient Financial Ledger MVP
+            var ledgerInvoices = await _dbContext.Invoices
+                .AsNoTracking()
+                .Include(i => i.Appointment)
+                .Where(i => i.Appointment!.PatientId == id && !i.IsDeleted)
+                .ToListAsync();
+
+            var ledgerPayments = await _dbContext.Payments
+                .AsNoTracking()
+                .Include(p => p.Invoice)
+                .ThenInclude(i => i!.Appointment)
+                .Include(p => p.Refunds)
+                .Where(p => p.Invoice!.Appointment!.PatientId == id && !p.IsDeleted)
+                .ToListAsync();
+
+            var ledgerAdjustments = await _dbContext.InvoiceAdjustments
+                .AsNoTracking()
+                .Include(a => a.Invoice)
+                .ThenInclude(i => i!.Appointment)
+                .Where(a => a.Invoice!.Appointment!.PatientId == id && !a.IsDeleted)
+                .ToListAsync();
+
+            var patientCredits = await _dbContext.PatientCredits
+                .AsNoTracking()
+                .Where(c => c.PatientId == id && !c.IsDeleted)
+                .ToListAsync();
+
+            var allTransactions = new List<Clinic.Application.DTOs.Operations.PatientLedgerTransactionDto>();
+
+            foreach (var inv in ledgerInvoices)
+            {
+                allTransactions.Add(new Clinic.Application.DTOs.Operations.PatientLedgerTransactionDto
+                {
+                    TransactionDate = inv.InvoiceDate,
+                    TransactionType = "Invoice",
+                    ReferenceNumber = inv.InvoiceNumber,
+                    Description = "Charges for visit",
+                    Debit = inv.TotalAmount,
+                    Credit = 0,
+                    SortOrder = 1,
+                    SourceId = inv.Id
+                });
+            }
+
+            foreach (var pay in ledgerPayments)
+            {
+                allTransactions.Add(new Clinic.Application.DTOs.Operations.PatientLedgerTransactionDto
+                {
+                    TransactionDate = pay.PaymentDate,
+                    TransactionType = "Payment",
+                    ReferenceNumber = pay.ReceiptNumber,
+                    Description = pay.PaymentMethod + (string.IsNullOrEmpty(pay.ReferenceNumber) ? "" : $" ({pay.ReferenceNumber})"),
+                    Debit = 0,
+                    Credit = pay.Amount,
+                    SortOrder = 2,
+                    SourceId = pay.Id
+                });
+                
+                if (pay.Refunds != null)
+                {
+                    foreach (var refund in pay.Refunds.Where(r => !r.IsDeleted))
+                    {
+                        allTransactions.Add(new Clinic.Application.DTOs.Operations.PatientLedgerTransactionDto
+                        {
+                            TransactionDate = refund.RefundDate,
+                            TransactionType = "Refund",
+                            ReferenceNumber = $"REF-{refund.Id.ToString().Substring(0, 8).ToUpper()}",
+                            Description = "Payment Refund" + (string.IsNullOrEmpty(refund.Reason) ? "" : $" ({refund.Reason})"),
+                            Debit = refund.Amount,
+                            Credit = 0,
+                            SortOrder = 4,
+                            SourceId = refund.Id
+                        });
+                    }
+                }
+            }
+
+            foreach (var adj in ledgerAdjustments)
+            {
+                allTransactions.Add(new Clinic.Application.DTOs.Operations.PatientLedgerTransactionDto
+                {
+                    TransactionDate = adj.AdjustmentDate,
+                    TransactionType = "Adjustment",
+                    ReferenceNumber = $"ADJ-{adj.Id.ToString().Substring(0,8).ToUpper()}",
+                    Description = adj.AdjustmentType + (string.IsNullOrEmpty(adj.Reason) ? "" : $" ({adj.Reason})"),
+                    Debit = 0,
+                    Credit = adj.Amount,
+                    SortOrder = 3,
+                    SourceId = adj.Id
+                });
+            }
+
+            foreach (var cred in patientCredits)
+            {
+                allTransactions.Add(new Clinic.Application.DTOs.Operations.PatientLedgerTransactionDto
+                {
+                    TransactionDate = cred.CreditDate,
+                    TransactionType = "Patient Credit",
+                    ReferenceNumber = $"CRE-{cred.Id.ToString().Substring(0,8).ToUpper()}",
+                    Description = "Prepayment / Patient Credit" + (string.IsNullOrEmpty(cred.Reason) ? "" : $" ({cred.Reason})"),
+                    Debit = 0,
+                    Credit = cred.Amount,
+                    SortOrder = 1,
+                    SourceId = cred.Id
+                });
+            }
+
+            // Important: We must calculate balance from the beginning of time up to the end of the statement period.
+            // First, filter out transactions AFTER the period.
+            var transactionsUpToEnd = allTransactions
+                .Where(t => t.TransactionDate.Date <= eDate.Date)
+                .OrderBy(t => t.TransactionDate)
+                .ThenBy(t => t.SortOrder)
+                .ThenBy(t => t.SourceId)
+                .ToList();
+
+            decimal runningBal = 0;
+            decimal openingBalance = 0;
+            var periodTransactions = new List<Clinic.Application.DTOs.Operations.PatientLedgerTransactionDto>();
+
+            foreach (var t in transactionsUpToEnd)
+            {
+                runningBal = runningBal + t.Debit - t.Credit;
+                t.RunningBalance = runningBal;
+
+                if (t.TransactionDate.Date < sDate.Date)
+                {
+                    // This transaction is before the start date, it contributes to the opening balance
+                    openingBalance = runningBal;
+                }
+                else
+                {
+                    // This transaction is within the period
+                    periodTransactions.Add(t);
+                }
+            }
+
+            ViewBag.Patient = patient;
+            ViewBag.StartDate = sDate;
+            ViewBag.EndDate = eDate;
+            ViewBag.OpeningBalance = openingBalance;
+            ViewBag.ClosingBalance = runningBal;
+            ViewBag.PeriodTransactions = periodTransactions;
+            ViewBag.PeriodDebit = periodTransactions.Sum(t => t.Debit);
+            ViewBag.PeriodCredit = periodTransactions.Sum(t => t.Credit);
+
+            return View("Templates/PatientStatement");
         }
     }
 }

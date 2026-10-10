@@ -11,6 +11,7 @@ namespace Clinic.Infrastructure.Data.Seeders
         {
             SeedMasterReferences(context);
             SeedNumberSequences(context);
+            SeedAppointmentTypes(context);
             context.SaveChanges();
         }
 
@@ -96,6 +97,76 @@ namespace Clinic.Infrastructure.Data.Seeders
                     CurrentValue = 0,
                     CreatedAt = DateTime.UtcNow
                 });
+            }
+        }
+
+        private static void SeedAppointmentTypes(AppDbContext context)
+        {
+            var appointmentTypes = new List<Clinic.Domain.Entities.MasterData.AppointmentType>
+            {
+                new Clinic.Domain.Entities.MasterData.AppointmentType
+                {
+                    Id = Guid.Parse("10000000-0000-0000-0000-000000000001"),
+                    Code = "CONSULTATION",
+                    Name = "Consultation / Triage",
+                    DisplayName = "Consultation",
+                    Complexity = Clinic.Domain.Enums.AppointmentComplexity.Low,
+                    IsSystem = true,
+                    IsActive = true,
+                    CreatedAt = DateTime.UtcNow
+                },
+                new Clinic.Domain.Entities.MasterData.AppointmentType
+                {
+                    Id = Guid.Parse("10000000-0000-0000-0000-000000000002"),
+                    Code = "EMERGENCY",
+                    Name = "Emergency",
+                    DisplayName = "Emergency",
+                    Complexity = Clinic.Domain.Enums.AppointmentComplexity.High,
+                    IsSystem = true,
+                    IsActive = true,
+                    CreatedAt = DateTime.UtcNow
+                },
+                new Clinic.Domain.Entities.MasterData.AppointmentType
+                {
+                    Id = Guid.Parse("10000000-0000-0000-0000-000000000003"),
+                    Code = "TREATMENT",
+                    Name = "Treatment",
+                    DisplayName = "Treatment",
+                    Complexity = Clinic.Domain.Enums.AppointmentComplexity.Medium,
+                    IsSystem = true,
+                    IsActive = true,
+                    CreatedAt = DateTime.UtcNow
+                },
+                new Clinic.Domain.Entities.MasterData.AppointmentType
+                {
+                    Id = Guid.Parse("10000000-0000-0000-0000-000000000004"),
+                    Code = "FOLLOWUP",
+                    Name = "Follow-up",
+                    DisplayName = "Follow-up",
+                    Complexity = Clinic.Domain.Enums.AppointmentComplexity.Low,
+                    IsSystem = true,
+                    IsActive = true,
+                    CreatedAt = DateTime.UtcNow
+                },
+                new Clinic.Domain.Entities.MasterData.AppointmentType
+                {
+                    Id = Guid.Parse("10000000-0000-0000-0000-000000000005"),
+                    Code = "REFERRAL",
+                    Name = "Referral",
+                    DisplayName = "Referral",
+                    Complexity = Clinic.Domain.Enums.AppointmentComplexity.Medium,
+                    IsSystem = true,
+                    IsActive = true,
+                    CreatedAt = DateTime.UtcNow
+                }
+            };
+
+            foreach (var at in appointmentTypes)
+            {
+                if (!context.AppointmentTypes.Any(x => x.Code == at.Code && !x.IsDeleted))
+                {
+                    context.AppointmentTypes.Add(at);
+                }
             }
         }
     }

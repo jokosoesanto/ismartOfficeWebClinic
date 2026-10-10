@@ -9,6 +9,15 @@ namespace Clinic.Application.DTOs.Operations
     {
         public Guid Id { get; set; }
 
+        [Required(ErrorMessage = "Appointment Type is required")]
+        public Guid AppointmentTypeId { get; set; }
+        
+        public string? AppointmentTypeName { get; set; }
+        public Clinic.Domain.Enums.AppointmentComplexity? AppointmentComplexity { get; set; }
+
+        public Guid? TreatmentItemId { get; set; }
+        public string? TreatmentItemName { get; set; }
+
         [Required(ErrorMessage = "Patient is required")]
         public Guid PatientId { get; set; }
 
@@ -21,14 +30,15 @@ namespace Clinic.Application.DTOs.Operations
         [Required(ErrorMessage = "Chair is required")]
         public Guid ChairId { get; set; }
 
+        public Guid? AssistantId { get; set; }
+
         [Required(ErrorMessage = "Date is required")]
         public DateTime Date { get; set; }
 
         [Required(ErrorMessage = "Start Time is required")]
         public TimeSpan StartTime { get; set; }
 
-        [Required(ErrorMessage = "End Time is required")]
-        public TimeSpan EndTime { get; set; }
+        public TimeSpan? EndTime { get; set; }
 
         public AppointmentStatus Status { get; set; } = AppointmentStatus.Schedule;
 
@@ -39,6 +49,7 @@ namespace Clinic.Application.DTOs.Operations
         public string? DoctorName { get; set; }
         public string? LocationName { get; set; }
         public string? ChairName { get; set; }
+        public string? AssistantName { get; set; }
 
         public bool IsDeleted { get; set; }
         

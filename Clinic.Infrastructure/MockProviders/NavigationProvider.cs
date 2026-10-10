@@ -24,7 +24,13 @@ namespace Clinic.Infrastructure.MockProviders
                     }
                 },
                 new NavigationItem { Id = "inventory", Title = "Inventory", Icon = "bi-box-seam", Route = "/Inventory", BreadcrumbTitle = "Inventory", Description = "Stock Management", RequiredPermission = "Inventory.Index" },
-                new NavigationItem { Id = "report", Title = "Reports", Icon = "bi-bar-chart", Route = "/Report", BreadcrumbTitle = "Reports", Description = "Analytics and Reports", RequiredPermission = "Report.Index" },
+                new NavigationItem { Id = "report", Title = "Reports", Icon = "bi-bar-chart", BreadcrumbTitle = "Reports", Description = "Analytics and Reports", RequiredPermission = "Report.Index",
+                    Children = new List<NavigationItem>
+                    {
+                        new NavigationItem { Id = "report-collection", Title = "Collection Report", Icon = "bi-cash", Route = "/Report", BreadcrumbTitle = "Collection Report", RequiredPermission = "Report.Index" },
+                        new NavigationItem { Id = "report-aging", Title = "A/R Aging", Icon = "bi-clock-history", Route = "/Report/AgingReport", BreadcrumbTitle = "A/R Aging", RequiredPermission = "Report.Index" }
+                    }
+                },
                 new NavigationItem { Id = "operations", Title = "Operations", Icon = "bi-activity", Route = "/Operations", BreadcrumbTitle = "Operations", Description = "Operational Modules", RequiredPermission = "ScheduleBoard.View",
                     Children = new List<NavigationItem>
                     {
@@ -63,13 +69,16 @@ namespace Clinic.Infrastructure.MockProviders
                     Children = new List<NavigationItem>
                     {
                         new NavigationItem { Id = "master-reference", Title = "Master References", Icon = "bi-journal-text", Route = "/MasterReference", BreadcrumbTitle = "Master References", RequiredPermission = "MasterReference.Index" },
+                        new NavigationItem { Id = "master-appointment-type", Title = "Appointment Types", Icon = "bi-calendar-event", Route = "/AppointmentType", BreadcrumbTitle = "Appointment Types", RequiredPermission = "MasterData.AppointmentType.View" },
                         new NavigationItem { Id = "master-number-sequence", Title = "Number Sequences", Icon = "bi-123", Route = "/NumberSequence", BreadcrumbTitle = "Number Sequences", RequiredPermission = "NumberSequence.Index" },
+
                         new NavigationItem { Id = "master-locations", Title = "Locations", Icon = "bi-buildings", Route = "/Location", BreadcrumbTitle = "Locations", RequiredPermission = "Location.Index" },
                         new NavigationItem { Id = "master-chairs", Title = "Chairs", Icon = "bi-display", Route = "/Chair", BreadcrumbTitle = "Chairs", RequiredPermission = "Chair.Index" },
                         new NavigationItem { Id = "master-doctors", Title = "Doctors / Providers", Icon = "bi-person-badge", Route = "/Doctor", BreadcrumbTitle = "Doctors", RequiredPermission = "Doctor.Index" },
                         new NavigationItem { Id = "master-specialties", Title = "Specialties", Icon = "bi-award", Route = "/Specialty", BreadcrumbTitle = "Specialties", RequiredPermission = "Specialty.Index" },
                         new NavigationItem { Id = "master-insurance", Title = "Insurance", Icon = "bi-card-checklist", Route = "/Insurance", BreadcrumbTitle = "Insurance", RequiredPermission = "MasterData.Insurance.View" },
                         new NavigationItem { Id = "master-diagnosis", Title = "Diagnosis Master", Icon = "bi-file-medical", Route = "/DiagnosisMaster", BreadcrumbTitle = "Diagnosis Master", RequiredPermission = "MasterData.DiagnosisMaster.View" },
+                        new NavigationItem { Id = "master-suppliers", Title = "Suppliers", Icon = "bi-truck", Route = "/Supplier", BreadcrumbTitle = "Suppliers", RequiredPermission = "Supplier.Index" },
                         new NavigationItem {
                             Id = "system-treatment-management",
                             Title = "Treatment Management",

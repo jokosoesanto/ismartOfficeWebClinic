@@ -65,6 +65,9 @@ namespace Clinic.Domain.Entities.MasterData
 
         public ICollection<PatientMedication> Medications { get; set; } = new List<PatientMedication>();
 
+        public ICollection<PatientInsurance> Insurances { get; set; } = new List<PatientInsurance>();
+        public ICollection<PatientGuarantor> Guarantors { get; set; } = new List<PatientGuarantor>();
+
 
         // Audit & Soft Delete
         public bool IsDeleted { get; set; }

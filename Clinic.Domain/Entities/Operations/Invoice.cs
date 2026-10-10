@@ -22,6 +22,8 @@ namespace Clinic.Domain.Entities.Operations
         
         public ICollection<Payment> Payments { get; set; } = new List<Payment>();
         
+        public ICollection<InvoiceAdjustment> Adjustments { get; set; } = new List<InvoiceAdjustment>();
+        
         // Audit fields
         public bool IsDeleted { get; set; }
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;

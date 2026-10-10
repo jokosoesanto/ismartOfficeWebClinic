@@ -62,6 +62,9 @@ namespace Clinic.Application.DTOs.MasterData
         public string AllergyStatus { get; set; } = "NotRecorded";
         public List<PatientAllergyDto> Allergies { get; set; } = new();
 
+        public List<PatientInsuranceDto> Insurances { get; set; } = new();
+        public List<PatientGuarantorDto> Guarantors { get; set; } = new();
+
         public bool IsDeleted { get; set; }
 
         public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)

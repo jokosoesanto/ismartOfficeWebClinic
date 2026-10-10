@@ -317,6 +317,9 @@ namespace Clinic.Web.Controllers
             model.Provinces = (await _masterReferenceService.GetByCategoryAsync("Province")).ToSelectList(x => x.Code, x => x.Name, dto?.Province);
             model.PreferredCommunications = (await _masterReferenceService.GetByCategoryAsync("PreferredCommunication")).ToSelectList(x => x.Code, x => x.Name, dto?.PreferredCommunication);
 
+            var insurances = _context.Insurances.Where(i => !i.IsDeleted && i.IsActive).OrderBy(i => i.Name).ToList();
+            model.AvailableInsurances = insurances.Select(i => new SelectListItem { Value = i.Id.ToString(), Text = i.Name }).ToList();
+
             return model;
         }
 
@@ -398,8 +401,185 @@ namespace Clinic.Web.Controllers
                 PreferredCommunication = p.PreferredCommunication,
                 HomeClinicId = p.HomeClinicId,
                 RegistrationDate = p.RegistrationDate,
-                Notes = p.Notes
+                Notes = p.Notes,
+                Allergies = p.Allergies?.Where(a => !a.IsDeleted).Select(a => new PatientAllergyDto
+                {
+                    Id = a.Id,
+                    Allergen = a.Allergen,
+                    Severity = a.Severity,
+                    Notes = a.Notes
+                }).ToList() ?? new List<PatientAllergyDto>(),
+                Insurances = p.Insurances?.Where(i => !i.IsDeleted).Select(i => new PatientInsuranceDto
+                {
+                    Id = i.Id,
+                    PatientId = i.PatientId,
+                    InsuranceId = i.InsuranceId,
+                    InsuranceName = i.Insurance?.Name,
+                    MemberId = i.MemberId,
+                    GroupId = i.GroupId,
+                    IsPrimary = i.IsPrimary
+                }).ToList() ?? new List<PatientInsuranceDto>(),
+                Guarantors = p.Guarantors?.Where(g => !g.IsDeleted).Select(g => new PatientGuarantorDto
+                {
+                    Id = g.Id,
+                    Name = g.Name,
+                    Relationship = g.Relationship,
+                    Phone = g.Phone,
+                    Email = g.Email,
+                    Address = g.Address,
+                    IsPrimary = g.IsPrimary
+                }).ToList() ?? new List<PatientGuarantorDto>()
             };
+        }
+
+        [HttpPost("AddInsurance")]
+        [Authorize(Policy = "Patient.Edit")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> AddInsurance([FromForm] PatientInsuranceDto dto)
+        {
+            if (dto.PatientId == Guid.Empty || dto.InsuranceId == Guid.Empty)
+            {
+                TempData["ErrorMessage"] = "Invalid insurance data.";
+                return RedirectToAction("Edit", new { id = dto.PatientId });
+            }
+
+            try
+            {
+                await _patientService.AddInsuranceAsync(dto.PatientId, dto.InsuranceId, dto.MemberId, dto.GroupId, dto.IsPrimary, _currentUserService.UserId ?? Guid.Empty);
+                TempData["SuccessMessage"] = "Insurance added successfully.";
+            }
+            catch (Exception ex)
+            {
+                TempData["ErrorMessage"] = ex.Message;
+            }
+
+            return RedirectToAction("Edit", new { id = dto.PatientId });
+        }
+
+        [HttpPost("UpdateInsurance")]
+        [Authorize(Policy = "Patient.Edit")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> UpdateInsurance([FromForm] PatientInsuranceDto dto)
+        {
+            if (dto.PatientId == Guid.Empty || dto.Id == null || dto.Id == Guid.Empty)
+            {
+                TempData["ErrorMessage"] = "Invalid insurance data.";
+                return RedirectToAction("Edit", new { id = dto.PatientId });
+            }
+
+            try
+            {
+                await _patientService.UpdateInsuranceAsync(dto.PatientId, dto.Id.Value, dto.MemberId, dto.GroupId, dto.IsPrimary, _currentUserService.UserId ?? Guid.Empty);
+                TempData["SuccessMessage"] = "Insurance updated successfully.";
+            }
+            catch (Exception ex)
+            {
+                TempData["ErrorMessage"] = ex.Message;
+            }
+
+            return RedirectToAction("Edit", new { id = dto.PatientId });
+        }
+
+        [HttpPost("RemoveInsurance")]
+        [Authorize(Policy = "Patient.Edit")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> RemoveInsurance([FromForm] Guid patientId, [FromForm] Guid patientInsuranceId)
+        {
+            try
+            {
+                await _patientService.RemoveInsuranceAsync(patientId, patientInsuranceId, _currentUserService.UserId ?? Guid.Empty);
+                TempData["SuccessMessage"] = "Insurance removed successfully.";
+            }
+            catch (Exception ex)
+            {
+                TempData["ErrorMessage"] = ex.Message;
+            }
+
+            return RedirectToAction("Edit", new { id = patientId });
+        }
+        [HttpPost("AddGuarantor")]
+        [Authorize(Policy = "Patient.Edit")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> AddGuarantor([FromForm] PatientGuarantorDto dto, [FromForm] Guid patientId)
+        {
+            if (patientId == Guid.Empty)
+            {
+                TempData["ErrorMessage"] = "Invalid patient data.";
+                return RedirectToAction("Edit", new { id = patientId });
+            }
+
+            try
+            {
+                var guarantor = new Clinic.Domain.Entities.MasterData.PatientGuarantor
+                {
+                    Name = dto.Name,
+                    Relationship = dto.Relationship,
+                    Phone = dto.Phone,
+                    Email = dto.Email,
+                    Address = dto.Address,
+                    IsPrimary = dto.IsPrimary
+                };
+                await _patientService.AddGuarantorAsync(patientId, guarantor, _currentUserService.UserId ?? Guid.Empty);
+                TempData["SuccessMessage"] = "Guarantor added successfully.";
+            }
+            catch (Exception ex)
+            {
+                TempData["ErrorMessage"] = ex.Message;
+            }
+
+            return RedirectToAction("Edit", new { id = patientId });
+        }
+
+        [HttpPost("UpdateGuarantor")]
+        [Authorize(Policy = "Patient.Edit")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> UpdateGuarantor([FromForm] PatientGuarantorDto dto, [FromForm] Guid patientId)
+        {
+            if (patientId == Guid.Empty || dto.Id == Guid.Empty)
+            {
+                TempData["ErrorMessage"] = "Invalid guarantor data.";
+                return RedirectToAction("Edit", new { id = patientId });
+            }
+
+            try
+            {
+                var guarantor = new Clinic.Domain.Entities.MasterData.PatientGuarantor
+                {
+                    Id = dto.Id,
+                    Name = dto.Name,
+                    Relationship = dto.Relationship,
+                    Phone = dto.Phone,
+                    Email = dto.Email,
+                    Address = dto.Address,
+                    IsPrimary = dto.IsPrimary
+                };
+                await _patientService.UpdateGuarantorAsync(patientId, guarantor, _currentUserService.UserId ?? Guid.Empty);
+                TempData["SuccessMessage"] = "Guarantor updated successfully.";
+            }
+            catch (Exception ex)
+            {
+                TempData["ErrorMessage"] = ex.Message;
+            }
+
+            return RedirectToAction("Edit", new { id = patientId });
+        }
+
+        [HttpPost("RemoveGuarantor")]
+        [Authorize(Policy = "Patient.Edit")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> RemoveGuarantor([FromForm] Guid patientId, [FromForm] Guid guarantorId)
+        {
+            try
+            {
+                await _patientService.RemoveGuarantorAsync(patientId, guarantorId, _currentUserService.UserId ?? Guid.Empty);
+                TempData["SuccessMessage"] = "Guarantor removed successfully.";
+            }
+            catch (Exception ex)
+            {
+                TempData["ErrorMessage"] = ex.Message;
+            }
+
+            return RedirectToAction("Edit", new { id = patientId });
         }
     }
 }

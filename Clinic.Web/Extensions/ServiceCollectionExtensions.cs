@@ -47,12 +47,16 @@ namespace Clinic.Web.Extensions
             services.AddScoped<ITreatmentCatalogService, Clinic.Application.Services.MasterData.TreatmentCatalogService>();
             services.AddScoped<IConditionMasterService, Clinic.Application.Services.ConditionMasterService>();
             services.AddScoped<IDiagnosisMasterService, Clinic.Application.Services.MasterData.DiagnosisMasterService>();
+            services.AddScoped<IInsuranceService, Clinic.Application.Services.MasterData.InsuranceService>();
+            services.AddScoped<IAppointmentTypeService, Clinic.Application.Services.MasterData.AppointmentTypeService>();
+
             services.AddScoped<IAppointmentService, Clinic.Application.Services.Operations.AppointmentService>();
             services.AddScoped<IDoctorLeaveRequestService, Clinic.Application.Services.Operations.DoctorLeaveRequestService>();
             services.AddScoped<Clinic.Application.Interfaces.Operations.IAppointmentTreatmentService, Clinic.Application.UseCases.Operations.AppointmentTreatmentService>();
             services.AddScoped<Clinic.Application.Interfaces.Operations.IAppointmentDiagnosisService, Clinic.Application.UseCases.Operations.AppointmentDiagnosisService>();
             services.AddScoped<Clinic.Application.Interfaces.Operations.IInvoiceService, Clinic.Application.UseCases.Operations.InvoiceService>();
             services.AddScoped<Clinic.Application.Interfaces.Operations.IPaymentService, Clinic.Application.UseCases.Operations.PaymentService>();
+            services.AddScoped<Clinic.Application.Interfaces.Operations.IPatientCreditService, Clinic.Application.UseCases.Operations.PatientCreditService>();
             services.AddScoped<Clinic.Application.Interfaces.Operations.IPrescriptionService, Clinic.Application.UseCases.Operations.PrescriptionService>();
             services.AddScoped<Clinic.Application.Interfaces.Operations.IPostTreatmentInstructionService, Clinic.Application.UseCases.Operations.PostTreatmentInstructionService>();
 
@@ -76,14 +80,18 @@ namespace Clinic.Web.Extensions
             services.AddScoped<ILocationRepository, LocationRepository>();
             services.AddScoped<IChairRepository, ChairRepository>();
             services.AddScoped<ISpecialtyRepository, SpecialtyRepository>();
+            services.AddScoped<IInventoryRepository, InventoryRepository>();
             services.AddScoped<IDoctorRepository, DoctorRepository>();
             services.AddScoped<IPatientRepository, PatientRepository>();
             services.AddScoped<IMasterReferenceRepository, MasterReferenceRepository>();
+            services.AddScoped<ISupplierRepository, SupplierRepository>();
             services.AddScoped<ITreatmentCategoryRepository, TreatmentCategoryRepository>();
             services.AddScoped<ITreatmentSubCategoryRepository, TreatmentSubCategoryRepository>();
             services.AddScoped<ITreatmentCatalogRepository, TreatmentCatalogRepository>();
             services.AddScoped<IInsuranceRepository, Clinic.Infrastructure.Repositories.MasterData.InsuranceRepository>();
             services.AddScoped<Clinic.Application.Interfaces.MasterData.IDiagnosisMasterRepository, Clinic.Infrastructure.Repositories.MasterData.DiagnosisMasterRepository>();
+            services.AddScoped<Clinic.Application.Interfaces.Operations.IAppointmentTypeRepository, Clinic.Infrastructure.Data.Repositories.Operations.AppointmentTypeRepository>();
+
             services.AddScoped<Clinic.Application.Interfaces.MasterData.IConditionMasterRepository, Clinic.Infrastructure.Repositories.MasterData.ConditionMasterRepository>();
 
             // Operations Repositories
@@ -94,6 +102,7 @@ namespace Clinic.Web.Extensions
             services.AddScoped<Clinic.Application.Interfaces.Repositories.Operations.IAppointmentDiagnosisRepository, Clinic.Infrastructure.Repositories.Operations.AppointmentDiagnosisRepository>();
             services.AddScoped<Clinic.Application.Interfaces.Operations.IInvoiceRepository, Clinic.Infrastructure.Repositories.Operations.InvoiceRepository>();
             services.AddScoped<Clinic.Application.Interfaces.Operations.IPaymentRepository, Clinic.Infrastructure.Repositories.Operations.PaymentRepository>();
+            services.AddScoped<Clinic.Application.Interfaces.Operations.IPatientCreditRepository, Clinic.Infrastructure.Repositories.Operations.PatientCreditRepository>();
             services.AddScoped<Clinic.Application.Interfaces.Repositories.Operations.IPrescriptionRepository, Clinic.Infrastructure.Repositories.Operations.PrescriptionRepository>();
             services.AddScoped<Clinic.Application.Interfaces.Repositories.Operations.IPostTreatmentInstructionRepository, Clinic.Infrastructure.Repositories.Operations.PostTreatmentInstructionRepository>();
             // System/Config Repositories

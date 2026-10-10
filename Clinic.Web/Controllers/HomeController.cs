@@ -57,17 +57,21 @@ namespace Clinic.Web.Controllers
                 .Include(p => p.Invoice)
                 .ThenInclude(i => i!.Appointment)
                 .ThenInclude(a => a!.Patient)
+                .Include(p => p.Refunds)
                 .Where(p => p.PaymentDate >= today && p.PaymentDate < tomorrow && !p.IsDeleted)
                 .OrderByDescending(p => p.PaymentDate)
                 .ToListAsync();
 
-            var todaysCollection = todaysPayments.Sum(p => p.Amount);
+            var todaysCollection = todaysPayments.Sum(p => p.Amount - (p.Refunds?.Where(r => !r.IsDeleted).Sum(r => r.Amount) ?? 0m));
             var formattedCollection = await _currencyService.FormatAmountAsync(todaysCollection);
 
             // 4. Global Outstanding Receivables
             var outstandingReceivables = await _dbContext.Invoices
                 .Where(i => !i.IsDeleted && i.Status == "Finalized")
-                .Select(i => i.TotalAmount - i.Payments.Where(p => !p.IsDeleted).Sum(p => p.Amount))
+                .Select(i => i.TotalAmount 
+                             - i.Adjustments.Where(a => !a.IsDeleted).Sum(a => (decimal?)a.Amount ?? 0m) 
+                             - i.Payments.Where(p => !p.IsDeleted).Sum(p => (decimal?)p.Amount ?? 0m)
+                             + i.Payments.Where(p => !p.IsDeleted).SelectMany(p => p.Refunds).Where(r => !r.IsDeleted).Sum(r => (decimal?)r.Amount ?? 0m))
                 .Where(balance => balance > 0)
                 .SumAsync();
 

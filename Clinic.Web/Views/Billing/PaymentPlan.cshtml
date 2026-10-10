@@ -1,0 +1,165 @@
+@model Clinic.Domain.Entities.Operations.PaymentPlan
+@inject Clinic.Application.Interfaces.Configuration.ICurrencyService CurrencyService
+
+@{
+    var invoice = ViewBag.Invoice as Clinic.Domain.Entities.Operations.Invoice;
+    var outstanding = (decimal)(ViewBag.Outstanding ?? 0m);
+    ViewData["Title"] = "Payment Plan - Invoice " + invoice?.InvoiceNumber;
+    ViewData["ModuleName"] = "Billing";
+}
+
+<div class="card card-custom">
+    <div class="card-header border-0 pb-0">
+        <h3 class="card-title">
+            <span class="card-label font-weight-bolder text-dark">Payment Plan for Invoice: @invoice?.InvoiceNumber</span>
+        </h3>
+        <div class="card-toolbar">
+            @if (invoice?.Appointment != null)
+            {
+                <a href="/Billing/Appointment/@invoice.AppointmentId/Invoice" class="btn btn-secondary font-weight-bold">
+                    <i class="ki ki-long-arrow-back icon-sm"></i> Back to Invoice
+                </a>
+            }
+        </div>
+    </div>
+    
+    <div class="card-body">
+        @if (TempData["SuccessMessage"] != null)
+        {
+            <div class="alert alert-success">@TempData["SuccessMessage"]</div>
+        }
+        @if (TempData["ErrorMessage"] != null)
+        {
+            <div class="alert alert-danger">@TempData["ErrorMessage"]</div>
+        }
+
+        <div class="row mb-8">
+            <div class="col-md-6">
+                <h6 class="font-weight-bolder text-muted">Patient Details:</h6>
+                @if (invoice?.Appointment?.Patient != null)
+                {
+                    <div class="text-dark-75 font-weight-bolder font-size-lg">@invoice.Appointment.Patient.FullName</div>
+                    <div class="text-muted">MRN: @invoice.Appointment.Patient.MRN</div>
+                }
+            </div>
+            <div class="col-md-6 text-md-right">
+                <h6 class="font-weight-bolder text-muted">Financial Status:</h6>
+                <div class="text-dark-75 font-weight-bold">Invoice Total: @await CurrencyService.FormatAmountAsync(invoice?.TotalAmount ?? 0)</div>
+                <div class="text-dark-75 font-weight-bold">Outstanding Balance: <span class="text-danger">@await CurrencyService.FormatAmountAsync(outstanding)</span></div>
+            </div>
+        </div>
+
+        @if (Model == null)
+        {
+            @if (outstanding > 0)
+            {
+                <div class="alert alert-custom alert-light-primary fade show mb-5" role="alert">
+                    <div class="alert-icon"><i class="flaticon-info"></i></div>
+                    <div class="alert-text">No payment plan exists for this invoice. You can create a new installment schedule below.</div>
+                </div>
+
+                <form asp-action="CreatePaymentPlan" asp-route-invoiceId="@invoice?.Id" method="post" class="form">
+                    <div class="row form-group">
+                        <div class="col-md-4">
+                            <label class="font-weight-bold">Total Planned Amount</label>
+                            <div class="input-group">
+                                <input type="number" step="0.01" class="form-control" name="totalPlannedAmount" value="@outstanding" required min="0.01" />
+                            </div>
+                            <small class="form-text text-muted">Defaults to current outstanding balance.</small>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="font-weight-bold">Number of Installments (Months)</label>
+                            <input type="number" class="form-control" name="numberOfInstallments" value="3" required min="1" max="60" />
+                        </div>
+                        <div class="col-md-4">
+                            <label class="font-weight-bold">First Installment Date</label>
+                            <input type="date" class="form-control" name="startDate" value="@DateTime.Now.ToString("yyyy-MM-dd")" required />
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-12">
+                            <button type="submit" class="btn btn-primary font-weight-bold">
+                                <i class="flaticon2-check-mark"></i> Create Payment Plan
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            }
+            else
+            {
+                <div class="alert alert-custom alert-light-success fade show mb-5" role="alert">
+                    <div class="alert-icon"><i class="flaticon2-check-mark"></i></div>
+                    <div class="alert-text">This invoice is fully paid. A payment plan is not required.</div>
+                </div>
+            }
+        }
+        else
+        {
+            <!-- Display existing plan -->
+            <div class="mb-5">
+                <h5 class="font-weight-bolder text-dark mb-4">Agreed Payment Plan</h5>
+                <div class="row mb-5">
+                    <div class="col-md-3">
+                        <span class="text-muted font-weight-bold">Agreement Date:</span>
+                        <div class="font-weight-bolder">@Model.AgreementDate.ToString("dd MMM yyyy")</div>
+                    </div>
+                    <div class="col-md-3">
+                        <span class="text-muted font-weight-bold">Total Planned Amount:</span>
+                        <div class="font-weight-bolder text-primary">@await CurrencyService.FormatAmountAsync(Model.TotalPlannedAmount)</div>
+                    </div>
+                    <div class="col-md-3">
+                        <span class="text-muted font-weight-bold">Status:</span>
+                        <div class="font-weight-bolder">@Model.Status</div>
+                    </div>
+                    <div class="col-md-3">
+                        <span class="text-muted font-weight-bold">Difference to Outstanding:</span>
+                        @{
+                            var diff = outstanding - Model.TotalPlannedAmount;
+                        }
+                        <div class="font-weight-bolder @(diff != 0 ? "text-danger" : "text-success")">
+                            @await CurrencyService.FormatAmountAsync(diff)
+                            @if(diff > 0) { <small>(Under-planned)</small> } else if(diff < 0) { <small>(Over-planned)</small> }
+                        </div>
+                    </div>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table table-bordered table-striped">
+                        <thead class="thead-light">
+                            <tr>
+                                <th style="width:10%">Installment #</th>
+                                <th>Due Date</th>
+                                <th class="text-right">Amount</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var installment in Model.Installments.OrderBy(i => i.SequenceNumber))
+                            {
+                                <tr>
+                                    <td class="font-weight-bold">@installment.SequenceNumber</td>
+                                    <td>@installment.DueDate.ToString("dd MMM yyyy")</td>
+                                    <td class="text-right font-weight-bolder">@await CurrencyService.FormatAmountAsync(installment.Amount)</td>
+                                    <td>
+                                        <span class="label label-inline label-light-primary font-weight-bold">@installment.Status</span>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                        <tfoot>
+                            <tr>
+                                <th colspan="2" class="text-right font-weight-bolder">Total Planned:</th>
+                                <th class="text-right font-weight-bolder text-primary">@await CurrencyService.FormatAmountAsync(Model.TotalPlannedAmount)</th>
+                                <th></th>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+                
+                <div class="mt-4 text-muted small">
+                    <i class="flaticon-info text-muted mr-1"></i> Note: This payment plan is a mutual agreement schedule and does not automatically record payments or alter the patient's financial ledger until actual payments are made against the invoice.
+                </div>
+            </div>
+        }
+    </div>
+</div>

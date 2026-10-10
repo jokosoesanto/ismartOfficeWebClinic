@@ -1,0 +1,156 @@
+@model Clinic.Application.DTOs.Operations.InventoryItemDto
+@{
+    var meta = ViewBag.Meta as Clinic.Application.UI.UIMetadata;
+}
+
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="mb-0 fw-bold">@meta?.Title</h2>
+        <div>
+            <a href="/Inventory" class="btn btn-outline-secondary shadow-sm"><i class="bi bi-arrow-left me-1"></i> Back to Inventory</a>
+        </div>
+    </div>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="bi bi-check-circle me-2"></i>@TempData["Success"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="bi bi-exclamation-triangle me-2"></i>@TempData["Error"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    <div class="row">
+        <div class="col-md-4">
+            <div class="card shadow-sm border-0 mb-4">
+                <div class="card-header bg-white border-bottom-0 pt-4 pb-0">
+                    <h5 class="fw-bold mb-0">Create New Batch</h5>
+                </div>
+                <div class="card-body">
+                    <form method="post" action="/Inventory/CreateBatch">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="inventoryItemId" value="@Model.Id" />
+                        
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Batch Number <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" name="batchNumber" required placeholder="e.g. BATCH-2026-001" />
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Expiry Date</label>
+                            <input type="date" class="form-control" name="expiryDate" />
+                            <div class="form-text">Leave blank if no expiry date.</div>
+                        </div>
+
+                        <div class="d-grid mt-4">
+                            <button type="submit" class="btn btn-primary"><i class="bi bi-plus-circle me-1"></i> Add Batch</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            
+            <div class="card shadow-sm border-0 border-start border-primary border-4">
+                <div class="card-body">
+                    <h6 class="text-muted text-uppercase mb-1">Item Details</h6>
+                    <h4 class="fw-bold mb-0">@Model.Name</h4>
+                    <p class="text-muted mb-3">@Model.Code</p>
+                    
+                    <div class="d-flex justify-content-between mb-2">
+                        <span class="text-muted">Total Current Stock:</span>
+                        <span class="fw-bold fs-5">@Model.CurrentStock @Model.Unit</span>
+                    </div>
+                    <div class="d-flex justify-content-between">
+                        <span class="text-muted">Status:</span>
+                        @if (Model.StockStatus == "Low Stock")
+                        {
+                            <span class="badge bg-warning text-dark"><i class="bi bi-exclamation-triangle me-1"></i> Low Stock</span>
+                        }
+                        else if (Model.StockStatus == "Out of Stock")
+                        {
+                            <span class="badge bg-danger"><i class="bi bi-x-circle me-1"></i> Out of Stock</span>
+                        }
+                        else
+                        {
+                            <span class="badge bg-success"><i class="bi bi-check-circle me-1"></i> In Stock</span>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-8">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-white border-bottom-0 pt-4 pb-0">
+                    <h5 class="fw-bold text-muted text-uppercase mb-0"><i class="bi bi-boxes me-2"></i> Batch List</h5>
+                </div>
+                <div class="card-body">
+                    @if (Model.Batches != null && Model.Batches.Any())
+                    {
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Batch Number</th>
+                                        <th>Expiry Date</th>
+                                        <th class="text-center">Status</th>
+                                        <th class="text-end">Current Stock</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var batch in Model.Batches)
+                                    {
+                                        <tr>
+                                            <td class="fw-bold text-primary">@batch.BatchNumber</td>
+                                            <td>
+                                                @if (batch.ExpiryDate.HasValue)
+                                                {
+                                                    <span>@batch.ExpiryDate.Value.ToString("dd MMM yyyy")</span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="text-muted fst-italic">No Expiry</span>
+                                                }
+                                            </td>
+                                            <td class="text-center">
+                                                @if (batch.Status == "Expired")
+                                                {
+                                                    <span class="badge bg-danger">Expired</span>
+                                                }
+                                                else if (batch.Status == "No Expiry")
+                                                {
+                                                    <span class="badge bg-secondary">No Expiry</span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="badge bg-success">Active</span>
+                                                }
+                                            </td>
+                                            <td class="text-end fw-bold">
+                                                @batch.CurrentStock @Model.Unit
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="text-center py-5">
+                            <div class="display-4 text-muted mb-3"><i class="bi bi-inbox"></i></div>
+                            <h5 class="fw-bold">No Batches Found</h5>
+                            <p class="text-muted">This item does not have any batches recorded yet.</p>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

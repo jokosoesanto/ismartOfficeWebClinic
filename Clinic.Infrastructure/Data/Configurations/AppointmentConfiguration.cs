@@ -40,6 +40,11 @@ namespace Clinic.Infrastructure.Data.Configurations
                    .HasForeignKey(e => e.ChairId)
                    .OnDelete(DeleteBehavior.Restrict);
 
+            builder.HasOne(e => e.TreatmentItem)
+                   .WithMany()
+                   .HasForeignKey(e => e.TreatmentItemId)
+                   .OnDelete(DeleteBehavior.SetNull);
+
             // Query filter for soft delete
             builder.HasQueryFilter(e => !e.IsDeleted);
         }

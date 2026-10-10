@@ -16,6 +16,7 @@ namespace Clinic.Application.UseCases.Operations
         private readonly IAppointmentRepository _appointmentRepository;
         private readonly IAppointmentTreatmentRepository _appointmentTreatmentRepository;
         private readonly INumberSequenceService _numberSequenceService;
+        private readonly IPaymentRepository _paymentRepository;
         private readonly IUnitOfWork _unitOfWork;
 
         public InvoiceService(
@@ -23,12 +24,14 @@ namespace Clinic.Application.UseCases.Operations
             IAppointmentRepository appointmentRepository,
             IAppointmentTreatmentRepository appointmentTreatmentRepository,
             INumberSequenceService numberSequenceService,
+            IPaymentRepository paymentRepository,
             IUnitOfWork unitOfWork)
         {
             _invoiceRepository = invoiceRepository;
             _appointmentRepository = appointmentRepository;
             _appointmentTreatmentRepository = appointmentTreatmentRepository;
             _numberSequenceService = numberSequenceService;
+            _paymentRepository = paymentRepository;
             _unitOfWork = unitOfWork;
         }
 
@@ -124,6 +127,47 @@ namespace Clinic.Application.UseCases.Operations
 
             // Re-fetch to get includes (like Patient)
             return (await _invoiceRepository.GetByIdAsync(invoice.Id, cancellationToken))!;
+        }
+
+        public async Task<System.Collections.Generic.IEnumerable<InvoiceAdjustment>> GetAdjustmentsByInvoiceIdAsync(Guid invoiceId, CancellationToken cancellationToken = default)
+        {
+            return await _invoiceRepository.GetAdjustmentsByInvoiceIdAsync(invoiceId, cancellationToken);
+        }
+
+        public async Task<InvoiceAdjustment> CreateAdjustmentAsync(Guid invoiceId, decimal amount, string adjustmentType, string? reason, Guid userId, CancellationToken cancellationToken = default)
+        {
+            if (amount <= 0)
+                throw new InvalidOperationException("Adjustment amount must be positive.");
+
+            var invoice = await _invoiceRepository.GetByIdAsync(invoiceId, cancellationToken);
+            if (invoice == null)
+                throw new InvalidOperationException("Invoice not found.");
+
+            // Calculate outstanding
+            var payments = await _paymentRepository.GetPaymentsByInvoiceIdAsync(invoiceId, cancellationToken);
+            var adjustments = await _invoiceRepository.GetAdjustmentsByInvoiceIdAsync(invoiceId, cancellationToken);
+
+            decimal totalPaid = payments.Sum(p => p.Amount - (p.Refunds?.Where(r => !r.IsDeleted).Sum(r => r.Amount) ?? 0m));
+            decimal totalAdjustment = adjustments.Sum(a => a.Amount);
+            decimal outstanding = invoice.TotalAmount - totalPaid - totalAdjustment;
+
+            if (amount > outstanding)
+                throw new InvalidOperationException("Adjustment amount cannot exceed the outstanding invoice balance.");
+
+            var adjustment = new InvoiceAdjustment
+            {
+                InvoiceId = invoiceId,
+                AdjustmentType = adjustmentType,
+                Amount = amount,
+                Reason = reason,
+                AdjustmentDate = DateTime.UtcNow,
+                CreatedBy = userId
+            };
+
+            await _invoiceRepository.AddAdjustmentAsync(adjustment, cancellationToken);
+            await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+            return adjustment;
         }
     }
 }

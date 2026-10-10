@@ -21,9 +21,12 @@ namespace Clinic.Infrastructure.Data.Repositories.Operations
         {
             var query = _context.Appointments
                 .Include(a => a.Patient)
+                .Include(a => a.AppointmentType)
                 .Include(a => a.Doctor)
                 .Include(a => a.Location)
                 .Include(a => a.Chair)
+                .Include(a => a.Assistant)
+                .Include(a => a.TreatmentItem)
                 .Include(a => a.ChiefComplaints)
                 .Include(a => a.VitalSign)
                 .Include(a => a.ClinicalNote)
@@ -41,9 +44,12 @@ namespace Clinic.Infrastructure.Data.Repositories.Operations
         {
             var query = _context.Appointments
                 .Include(a => a.Patient)
+                .Include(a => a.AppointmentType)
                 .Include(a => a.Doctor)
                 .Include(a => a.Location)
                 .Include(a => a.Chair)
+                .Include(a => a.Assistant)
+                .Include(a => a.TreatmentItem)
                 .Include(a => a.ChiefComplaints)
                 .Include(a => a.VitalSign)
                 .Include(a => a.ClinicalNote)
@@ -67,7 +73,7 @@ namespace Clinic.Infrastructure.Data.Repositories.Operations
             _context.Appointments.Update(appointment);
         }
 
-        public async Task<bool> HasOverlappingAppointmentAsync(Guid doctorId, DateTime date, TimeSpan startTime, TimeSpan endTime, Guid? excludeAppointmentId = null)
+        public async Task<bool> HasOverlappingAppointmentAsync(Guid doctorId, DateTime date, TimeSpan startTime, TimeSpan? endTime, Guid? excludeAppointmentId = null)
         {
             // Step 1: Filter by DoctorId + Date in database.
             // Global query filter on Appointment already excludes IsDeleted records.
@@ -86,14 +92,17 @@ namespace Clinic.Infrastructure.Data.Repositories.Operations
                 .Select(a => new { a.StartTime, a.EndTime })
                 .ToListAsync();
 
-            return candidates.Any(a => a.StartTime < endTime && a.EndTime > startTime);
+            var safeEndTime = endTime ?? startTime.Add(TimeSpan.FromMinutes(1)); // Treat missing end time as minimal duration for overlap check
+            return candidates.Any(a => a.StartTime < safeEndTime && (a.EndTime ?? a.StartTime.Add(TimeSpan.FromMinutes(1))) > startTime);
         }
 
-        public async Task<bool> HasChairConflictAsync(Guid chairId, DateTime date, TimeSpan startTime, TimeSpan endTime, Guid? excludeAppointmentId = null)
+        public async Task<bool> HasChairConflictAsync(Guid chairId, DateTime date, TimeSpan startTime, TimeSpan? endTime, Guid? excludeAppointmentId = null)
         {
             // Step 1: Filter by ChairId + Date in database.
             // Global query filter on Appointment already excludes IsDeleted records.
             var query = _context.Appointments
+                .Include(a => a.AppointmentType)
+                .Include(a => a.TreatmentItem)
                 .Where(a => a.ChairId == chairId && a.Date == date);
 
             if (excludeAppointmentId.HasValue)
@@ -105,10 +114,65 @@ namespace Clinic.Infrastructure.Data.Repositories.Operations
             // TimeSpan overlap in application memory (SQLite provider
             // cannot translate TimeSpan comparison operators).
             var candidates = await query
-                .Select(a => new { a.StartTime, a.EndTime })
+                .Select(a => new { 
+                    a.StartTime, 
+                    TypeCode = a.AppointmentType != null ? a.AppointmentType.Code : "",
+                    TypeName = a.AppointmentType != null ? a.AppointmentType.Name : "",
+                    TypeDuration = a.AppointmentType != null ? a.AppointmentType.DurationInMinutes : 0,
+                    TreatmentDuration = a.TreatmentItem != null ? a.TreatmentItem.DurationInMinutes : 0
+                })
                 .ToListAsync();
 
-            return candidates.Any(a => a.StartTime < endTime && a.EndTime > startTime);
+            var safeEndTime = endTime ?? startTime;
+            if (safeEndTime <= startTime) 
+            {
+                safeEndTime = startTime.Add(TimeSpan.FromMinutes(1));
+            }
+            
+            return candidates.Any(a => {
+                bool isTreatment = a.TypeCode == "TREATMENT" || a.TypeName.ToUpper().Contains("TREATMENT");
+                int duration = isTreatment ? a.TreatmentDuration : a.TypeDuration;
+                if (duration <= 0) duration = 1; // safe fallback
+                var existingEffectiveEndTime = a.StartTime.Add(TimeSpan.FromMinutes(duration));
+                return a.StartTime < safeEndTime && existingEffectiveEndTime > startTime;
+            });
+        }
+
+        public async Task<bool> HasPatientConflictAsync(Guid patientId, DateTime date, TimeSpan startTime, TimeSpan? endTime, Guid? excludeAppointmentId = null)
+        {
+            var query = _context.Appointments
+                .Include(a => a.AppointmentType)
+                .Include(a => a.TreatmentItem)
+                .Where(a => a.PatientId == patientId && a.Date == date);
+
+            if (excludeAppointmentId.HasValue)
+            {
+                query = query.Where(a => a.Id != excludeAppointmentId.Value);
+            }
+
+            var candidates = await query
+                .Select(a => new { 
+                    a.StartTime, 
+                    TypeCode = a.AppointmentType != null ? a.AppointmentType.Code : "",
+                    TypeName = a.AppointmentType != null ? a.AppointmentType.Name : "",
+                    TypeDuration = a.AppointmentType != null ? a.AppointmentType.DurationInMinutes : 0,
+                    TreatmentDuration = a.TreatmentItem != null ? a.TreatmentItem.DurationInMinutes : 0
+                })
+                .ToListAsync();
+
+            var safeEndTime = endTime ?? startTime;
+            if (safeEndTime <= startTime) 
+            {
+                safeEndTime = startTime.Add(TimeSpan.FromMinutes(1));
+            }
+            
+            return candidates.Any(a => {
+                bool isTreatment = a.TypeCode == "TREATMENT" || a.TypeName.ToUpper().Contains("TREATMENT");
+                int duration = isTreatment ? a.TreatmentDuration : a.TypeDuration;
+                if (duration <= 0) duration = 1; // safe fallback
+                var existingEffectiveEndTime = a.StartTime.Add(TimeSpan.FromMinutes(duration));
+                return a.StartTime < safeEndTime && existingEffectiveEndTime > startTime;
+            });
         }
 
         public async Task<IEnumerable<Appointment>> GetAppointmentsByDoctorAndDatesAsync(Guid doctorId, IEnumerable<DateTime> dates)
@@ -151,6 +215,11 @@ namespace Clinic.Infrastructure.Data.Repositories.Operations
                 .OrderByDescending(a => a.Date)
                 .ThenByDescending(a => a.StartTime)
                 .ToList();
+        }
+
+        public async Task<Clinic.Domain.Entities.MasterData.AppointmentType?> GetAppointmentTypeByIdAsync(Guid id)
+        {
+            return await _context.AppointmentTypes.FindAsync(id);
         }
     }
 }

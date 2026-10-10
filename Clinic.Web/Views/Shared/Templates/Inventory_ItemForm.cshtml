@@ -1,59 +1,59 @@
-﻿@model Clinic.Application.UI.UIMetadata
-@{
-    
-}
+@model Clinic.Application.DTOs.Operations.InventoryItemDto
 
-<!-- Inventory Item Form Template -->
 <div class="container-fluid py-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2 class="mb-0 fw-bold">@Model.Title</h2>
-        <a href="/Inventory" class="btn btn-outline-secondary shadow-sm"><i class="bi bi-arrow-left me-2"></i>Back to Inventory</a>
+        <h2 class="mb-0 fw-bold">@(Model.Id == Guid.Empty ? "Create Inventory Item" : "Edit Inventory Item")</h2>
+        <a href="/Inventory" class="btn btn-outline-secondary shadow-sm"><i class="bi bi-arrow-left me-1"></i> Back to List</a>
     </div>
 
     <div class="card shadow-sm border-0">
-        <div class="card-header bg-white border-bottom-0 pt-4 pb-0">
-            <h5 class="fw-bold text-primary mb-0"><i class="bi bi-box me-2"></i>Item Details</h5>
-        </div>
         <div class="card-body p-4">
-            <form>
-                <div class="row g-3">
+            <form method="post" action="@(Model.Id == Guid.Empty ? "/Inventory/Create" : $"/Inventory/Edit/{Model.Id}")">
+                @Html.AntiForgeryToken()
+                @if (Model.Id != Guid.Empty)
+                {
+                    <input type="hidden" asp-for="Id" />
+                }
+
+                <div class="row mb-3">
                     <div class="col-md-6">
-                        <label class="form-label fw-bold">Item Code</label>
-                        <input type="text" class="form-control" placeholder="Auto-generated or Manual">
+                        <label class="form-label fw-bold">Item Code <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" asp-for="Code" required placeholder="e.g. ITM-001" />
                     </div>
                     <div class="col-md-6">
-                        <label class="form-label fw-bold">Group</label>
-                        <select class="form-select">
-                            <option>Composite Resins</option>
-                            <option>Anesthetics</option>
-                        </select>
-                    </div>
-                    <div class="col-md-12">
-                        <label class="form-label fw-bold">Description</label>
-                        <input type="text" class="form-control" placeholder="Item Name">
-                    </div>
-                    <div class="col-md-4">
-                        <label class="form-label fw-bold">Unit of Measure (UoM)</label>
-                        <select class="form-select">
-                            <option>Box</option>
-                            <option>Pieces</option>
-                            <option>Vial</option>
-                        </select>
-                    </div>
-                    <div class="col-md-4">
-                        <label class="form-label fw-bold">Minimum Safe Qty</label>
-                        <input type="number" class="form-control" value="5">
-                    </div>
-                    <div class="col-md-4">
-                        <label class="form-label fw-bold">Current Qty</label>
-                        <input type="number" class="form-control" value="0" readonly>
+                        <label class="form-label fw-bold">Item Name <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" asp-for="Name" required placeholder="e.g. Paracetamol 500mg" />
                     </div>
                 </div>
-                
-                <hr class="my-4">
-                <div class="d-flex justify-content-end gap-2">
-                    <a href="/Inventory" class="btn btn-secondary shadow-sm">Cancel</a>
-                    <a href="/Inventory" class="btn btn-primary shadow-sm"><i class="bi bi-save me-2"></i>Save Item</a>
+
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold">Category</label>
+                        <input type="text" class="form-control" asp-for="Category" placeholder="e.g. Medicine, Consumable" />
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold">Unit of Measure <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" asp-for="Unit" required placeholder="e.g. Tablet, Box, Bottle" />
+                    </div>
+                </div>
+
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold">Reorder Level <span class="text-danger">*</span></label>
+                        <input type="number" step="any" min="0" class="form-control" asp-for="ReorderLevel" required placeholder="0" />
+                        <div class="form-text">Minimum stock threshold before reordering is recommended.</div>
+                    </div>
+                    <div class="col-md-6 d-flex align-items-center">
+                        <div class="form-check form-switch mt-4">
+                            <input class="form-check-input" type="checkbox" role="switch" asp-for="IsActive" checked="@(Model.Id == Guid.Empty || Model.IsActive)">
+                            <label class="form-check-label fw-bold" asp-for="IsActive">Is Active Item</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="d-flex justify-content-end border-top pt-3">
+                    <a href="/Inventory" class="btn btn-light me-2">Cancel</a>
+                    <button type="submit" class="btn btn-primary"><i class="bi bi-save me-1"></i> Save Item</button>
                 </div>
             </form>
         </div>

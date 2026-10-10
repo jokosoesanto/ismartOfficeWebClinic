@@ -20,19 +20,22 @@ namespace Clinic.Web.Controllers
         private readonly IDoctorService _doctorService;
         private readonly ILocationService _locationService;
         private readonly IChairService _chairService;
+        private readonly Clinic.Infrastructure.Data.AppDbContext _context;
 
         public AppointmentController(
             IAppointmentService appointmentService,
             IPatientService patientService,
             IDoctorService doctorService,
             ILocationService locationService,
-            IChairService chairService)
+            IChairService chairService,
+            Clinic.Infrastructure.Data.AppDbContext context)
         {
             _appointmentService = appointmentService;
             _patientService = patientService;
             _doctorService = doctorService;
             _locationService = locationService;
             _chairService = chairService;
+            _context = context;
         }
 
         [HttpGet]
@@ -329,10 +332,16 @@ namespace Clinic.Web.Controllers
             var patients = await _patientService.GetAllAsync();
             var doctors = await _doctorService.GetAllAsync();
             var locations = await _locationService.GetAllLocationsAsync();
+            var appointmentTypes = _context.AppointmentTypes.Where(t => !t.IsDeleted).OrderBy(t => t.Name).ToList();
+            var treatments = _context.TreatmentCatalogs.Where(t => !t.IsDeleted && t.IsActive).OrderBy(t => t.TreatmentName).ToList();
+            var assistants = _context.Users.Where(u => !u.IsDeleted && u.IsActive && u.UserRoles.Any(ur => ur.Role.Name == "Nurse")).OrderBy(u => u.FullName).ToList();
 
             ViewBag.Patients = new SelectList(patients, "Id", "FullName");
             ViewBag.Doctors = new SelectList(doctors, "Id", "FullName");
             ViewBag.Locations = new SelectList(locations, "Id", "ClinicName");
+            ViewBag.AppointmentTypes = new SelectList(appointmentTypes, "Id", "Name");
+            ViewBag.Treatments = new SelectList(treatments, "Id", "TreatmentName");
+            ViewBag.Assistants = new SelectList(assistants, "Id", "FullName");
             // Chair will be dynamically loaded in UI, provide an empty list initially
             ViewBag.Chairs = new SelectList(Enumerable.Empty<SelectListItem>(), "Value", "Text");
         }

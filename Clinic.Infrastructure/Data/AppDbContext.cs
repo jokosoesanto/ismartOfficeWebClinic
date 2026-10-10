@@ -38,6 +38,7 @@ namespace Clinic.Infrastructure.Data
         public DbSet<Clinic.Domain.Entities.MasterData.Insurance> Insurances { get; set; } = null!;
         public DbSet<Clinic.Domain.Entities.MasterData.ConditionMaster> ConditionMasters { get; set; } = null!;
         public DbSet<Clinic.Domain.Entities.MasterData.DiagnosisMaster> DiagnosisMasters { get; set; } = null!;
+        public DbSet<Clinic.Domain.Entities.MasterData.Supplier> Suppliers { get; set; } = null!;
         public DbSet<Clinic.Domain.Entities.Operations.Appointment> Appointments { get; set; } = null!;
         public DbSet<Clinic.Domain.Entities.Operations.DoctorLeaveRequest> DoctorLeaveRequests { get; set; } = null!;
         public DbSet<Clinic.Domain.Entities.Operations.DoctorLeaveDate> DoctorLeaveDates { get; set; } = null!;
@@ -47,17 +48,28 @@ namespace Clinic.Infrastructure.Data
         public DbSet<Clinic.Domain.Entities.MasterData.PatientAllergy> PatientAllergies { get; set; } = null!;
         public DbSet<Clinic.Domain.Entities.MasterData.PatientMedicalHistory> PatientSystemicDiseases { get; set; } = null!;
         public DbSet<Clinic.Domain.Entities.MasterData.PatientMedication> PatientMedications { get; set; } = null!;
+        public DbSet<Clinic.Domain.Entities.MasterData.PatientInsurance> PatientInsurances { get; set; } = null!;
+        public DbSet<Clinic.Domain.Entities.MasterData.PatientGuarantor> PatientGuarantors { get; set; } = null!;
         public DbSet<Clinic.Domain.Entities.Operations.AppointmentVitalSign> AppointmentVitalSigns { get; set; } = null!;
         public DbSet<Clinic.Domain.Entities.Operations.AppointmentClinicalNote> AppointmentClinicalNotes { get; set; } = null!;
         public DbSet<Clinic.Domain.Entities.Operations.Invoice> Invoices { get; set; } = null!;
         public DbSet<Clinic.Domain.Entities.Operations.InvoiceLine> InvoiceLines { get; set; } = null!;
         public DbSet<Clinic.Domain.Entities.Operations.Payment> Payments { get; set; } = null!;
+        public DbSet<Clinic.Domain.Entities.Operations.PaymentRefund> PaymentRefunds { get; set; } = null!;
+        public DbSet<Clinic.Domain.Entities.Operations.PaymentAllocation> PaymentAllocations { get; set; } = null!;
+        public DbSet<Clinic.Domain.Entities.Operations.InvoiceAdjustment> InvoiceAdjustments { get; set; } = null!;
+        public DbSet<Clinic.Domain.Entities.Operations.PaymentPlan> PaymentPlans { get; set; } = null!;
+        public DbSet<Clinic.Domain.Entities.Operations.PaymentPlanInstallment> PaymentPlanInstallments { get; set; } = null!;
+        public DbSet<Clinic.Domain.Entities.Operations.PatientCredit> PatientCredits { get; set; } = null!;
 
         public DbSet<Clinic.Domain.Entities.Operations.Prescription> Prescriptions { get; set; } = null!;
         public DbSet<Clinic.Domain.Entities.Operations.PrescriptionItem> PrescriptionItems { get; set; } = null!;
         public DbSet<Clinic.Domain.Entities.Operations.PostTreatmentInstruction> PostTreatmentInstructions { get; set; } = null!;
         public DbSet<Clinic.Domain.Entities.Operations.AppointmentFollowUp> AppointmentFollowUps { get; set; } = null!;
-
+        public DbSet<Clinic.Domain.Entities.MasterData.AppointmentType> AppointmentTypes { get; set; } = null!;
+        public DbSet<Clinic.Domain.Entities.Operations.InventoryItem> InventoryItems { get; set; } = null!;
+        public DbSet<Clinic.Domain.Entities.Operations.InventoryStockTransaction> InventoryStockTransactions { get; set; } = null!;
+        public DbSet<Clinic.Domain.Entities.Operations.InventoryBatch> InventoryBatches { get; set; } = null!;
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.ApplyConfiguration(new Configurations.FileMetadataConfiguration());
@@ -66,6 +78,7 @@ namespace Clinic.Infrastructure.Data
             modelBuilder.ApplyConfiguration(new Configurations.PrescriptionItemConfiguration());
             modelBuilder.ApplyConfiguration(new Configurations.PostTreatmentInstructionConfiguration());
             modelBuilder.ApplyConfiguration(new Configurations.AppointmentFollowUpConfiguration());
+            modelBuilder.ApplyConfiguration(new Configurations.AppointmentTypeConfiguration());
             modelBuilder.ApplyConfiguration(new Configurations.MasterReferenceConfiguration());
             modelBuilder.ApplyConfiguration(new Configurations.TreatmentCategoryConfiguration());
             modelBuilder.ApplyConfiguration(new Configurations.TreatmentSubCategoryConfiguration());
@@ -80,6 +93,7 @@ namespace Clinic.Infrastructure.Data
             modelBuilder.ApplyConfiguration(new Configurations.TreatmentConsentConfiguration());
             modelBuilder.ApplyConfiguration(new Configurations.PatientAllergyConfiguration());
             modelBuilder.ApplyConfiguration(new Configurations.PatientMedicalHistoryConfiguration());
+            modelBuilder.ApplyConfiguration(new Configurations.PatientGuarantorConfiguration());
             modelBuilder.ApplyConfiguration(new Configurations.AppointmentChiefComplaintConfiguration());
             modelBuilder.ApplyConfiguration(new Configurations.AppointmentVitalSignConfiguration());
             modelBuilder.ApplyConfiguration(new Configurations.AppointmentClinicalNoteConfiguration());
@@ -87,6 +101,11 @@ namespace Clinic.Infrastructure.Data
             modelBuilder.ApplyConfiguration(new Configurations.InvoiceConfiguration());
             modelBuilder.ApplyConfiguration(new Configurations.InvoiceLineConfiguration());
             modelBuilder.ApplyConfiguration(new Configurations.PaymentConfiguration());
+            modelBuilder.ApplyConfiguration(new Configurations.PaymentAllocationConfiguration());
+            modelBuilder.ApplyConfiguration(new Configurations.PaymentRefundConfiguration());
+            modelBuilder.ApplyConfiguration(new Configurations.InvoiceAdjustmentConfiguration());
+            modelBuilder.ApplyConfiguration(new Configurations.InventoryBatchConfiguration());
+            modelBuilder.ApplyConfiguration(new Configurations.PatientCreditConfiguration());
 
             modelBuilder.Entity<Clinic.Domain.Entities.Configuration.AppConfiguration>(entity =>
             {
@@ -106,6 +125,11 @@ namespace Clinic.Infrastructure.Data
             });
 
             modelBuilder.Entity<Clinic.Domain.Entities.MasterData.Specialty>(entity =>
+            {
+                entity.HasIndex(e => e.Code).IsUnique();
+            });
+
+            modelBuilder.Entity<Clinic.Domain.Entities.MasterData.Supplier>(entity =>
             {
                 entity.HasIndex(e => e.Code).IsUnique();
             });
@@ -137,6 +161,7 @@ namespace Clinic.Infrastructure.Data
             modelBuilder.Entity<Clinic.Domain.Entities.MasterData.Insurance>().HasQueryFilter(e => !e.IsDeleted);
             modelBuilder.Entity<Clinic.Domain.Entities.MasterData.ConditionMaster>().HasQueryFilter(e => !e.IsDeleted);
             modelBuilder.Entity<Clinic.Domain.Entities.MasterData.DiagnosisMaster>().HasQueryFilter(e => !e.IsDeleted);
+            modelBuilder.Entity<Clinic.Domain.Entities.MasterData.Supplier>().HasQueryFilter(e => !e.IsDeleted);
 
             modelBuilder.Entity<Clinic.Domain.Entities.Operations.DoctorLeaveRequest>().HasQueryFilter(e => !e.IsDeleted);
 

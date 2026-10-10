@@ -16,3 +16,6 @@ cache/
 Storage/
 Temp/Uploads/
 ForensicTest/
+*.broken
+
+smoke_*.html

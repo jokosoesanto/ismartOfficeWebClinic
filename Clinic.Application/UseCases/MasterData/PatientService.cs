@@ -301,5 +301,176 @@ namespace Clinic.Application.UseCases.MasterData
 
             await _unitOfWork.SaveChangesAsync();
         }
+
+        // Insurance Operations
+        public async Task<PatientInsurance> AddInsuranceAsync(Guid patientId, Guid insuranceId, string? memberId, string? groupId, bool isPrimary, Guid userId)
+        {
+            var patient = await _repository.GetByIdAsync(patientId);
+            if (patient == null) throw new Exception("Patient not found.");
+
+            // Primary Rule: A patient may have maximum ONE active Primary insurance.
+            if (isPrimary && patient.Insurances != null)
+            {
+                var existingPrimary = patient.Insurances.FirstOrDefault(i => !i.IsDeleted && i.IsPrimary);
+                if (existingPrimary != null)
+                {
+                    throw new Exception("Patient already has an active Primary insurance. Please change it to Secondary first or remove it.");
+                }
+            }
+
+            var newInsurance = new PatientInsurance
+            {
+                Id = Guid.Empty, // FORENSIC FIX: Ensure EF Core treats this as 'Added'
+                PatientId = patientId,
+                InsuranceId = insuranceId,
+                MemberId = memberId,
+                GroupId = groupId,
+                IsPrimary = isPrimary,
+                CreatedAt = DateTime.UtcNow,
+                CreatedBy = userId
+            };
+
+            patient.Insurances ??= new List<PatientInsurance>();
+            patient.Insurances.Add(newInsurance);
+
+            _repository.Update(patient);
+            await _unitOfWork.SaveChangesAsync();
+
+            return newInsurance;
+        }
+
+        public async Task<PatientInsurance> UpdateInsuranceAsync(Guid patientId, Guid patientInsuranceId, string? memberId, string? groupId, bool isPrimary, Guid userId)
+        {
+            var patient = await _repository.GetByIdAsync(patientId);
+            if (patient == null) throw new Exception("Patient not found.");
+
+            var insurance = patient.Insurances?.FirstOrDefault(i => i.Id == patientInsuranceId && !i.IsDeleted);
+            if (insurance == null) throw new Exception("Patient insurance not found.");
+
+            // Primary Rule: A patient may have maximum ONE active Primary insurance.
+            if (isPrimary && !insurance.IsPrimary)
+            {
+                var existingPrimary = patient.Insurances.FirstOrDefault(i => !i.IsDeleted && i.IsPrimary && i.Id != patientInsuranceId);
+                if (existingPrimary != null)
+                {
+                    throw new Exception("Patient already has an active Primary insurance. Please change it to Secondary first or remove it.");
+                }
+            }
+
+            insurance.MemberId = memberId;
+            insurance.GroupId = groupId;
+            insurance.IsPrimary = isPrimary;
+            insurance.UpdatedAt = DateTime.UtcNow;
+            insurance.UpdatedBy = userId;
+
+            _repository.Update(patient);
+            await _unitOfWork.SaveChangesAsync();
+
+            return insurance;
+        }
+
+        public async Task RemoveInsuranceAsync(Guid patientId, Guid patientInsuranceId, Guid userId)
+        {
+            var patient = await _repository.GetByIdAsync(patientId);
+            if (patient == null) throw new Exception("Patient not found.");
+
+            var insurance = patient.Insurances?.FirstOrDefault(i => i.Id == patientInsuranceId && !i.IsDeleted);
+            if (insurance != null)
+            {
+                insurance.IsDeleted = true;
+                insurance.DeletedAt = DateTime.UtcNow;
+                insurance.DeletedBy = userId;
+
+                _repository.Update(patient);
+                await _unitOfWork.SaveChangesAsync();
+            }
+        }
+        public async Task<PatientGuarantor> AddGuarantorAsync(Guid patientId, PatientGuarantor guarantor, Guid userId)
+        {
+            var patient = await _repository.GetByIdAsync(patientId);
+            if (patient == null) throw new Exception("Patient not found.");
+
+            // Primary Rule: A patient may have maximum ONE active Primary guarantor.
+            if (guarantor.IsPrimary && patient.Guarantors != null)
+            {
+                var existingPrimary = patient.Guarantors.FirstOrDefault(g => !g.IsDeleted && g.IsPrimary);
+                if (existingPrimary != null)
+                {
+                    throw new Exception("Patient already has an active Primary guarantor. Please change it to Secondary first or remove it.");
+                }
+            }
+
+            var newGuarantor = new PatientGuarantor
+            {
+                Id = Guid.Empty, // FORENSIC FIX: Ensure EF Core treats this as 'Added'
+                PatientId = patientId,
+                Name = guarantor.Name,
+                Relationship = guarantor.Relationship,
+                Phone = guarantor.Phone,
+                Email = guarantor.Email,
+                Address = guarantor.Address,
+                IsPrimary = guarantor.IsPrimary,
+                CreatedAt = DateTime.UtcNow,
+                CreatedBy = userId
+            };
+
+            patient.Guarantors ??= new List<PatientGuarantor>();
+            patient.Guarantors.Add(newGuarantor);
+
+            _repository.Update(patient);
+            await _unitOfWork.SaveChangesAsync();
+
+            return newGuarantor;
+        }
+
+        public async Task<PatientGuarantor> UpdateGuarantorAsync(Guid patientId, PatientGuarantor guarantor, Guid userId)
+        {
+            var patient = await _repository.GetByIdAsync(patientId);
+            if (patient == null) throw new Exception("Patient not found.");
+
+            var existingGuarantor = patient.Guarantors?.FirstOrDefault(g => g.Id == guarantor.Id && !g.IsDeleted);
+            if (existingGuarantor == null) throw new Exception("Patient guarantor not found.");
+
+            // Primary Rule: A patient may have maximum ONE active Primary guarantor.
+            if (guarantor.IsPrimary && !existingGuarantor.IsPrimary)
+            {
+                var currentPrimary = patient.Guarantors.FirstOrDefault(g => !g.IsDeleted && g.IsPrimary && g.Id != guarantor.Id);
+                if (currentPrimary != null)
+                {
+                    throw new Exception("Patient already has an active Primary guarantor. Please change it to Secondary first or remove it.");
+                }
+            }
+
+            existingGuarantor.Name = guarantor.Name;
+            existingGuarantor.Relationship = guarantor.Relationship;
+            existingGuarantor.Phone = guarantor.Phone;
+            existingGuarantor.Email = guarantor.Email;
+            existingGuarantor.Address = guarantor.Address;
+            existingGuarantor.IsPrimary = guarantor.IsPrimary;
+            existingGuarantor.UpdatedAt = DateTime.UtcNow;
+            existingGuarantor.UpdatedBy = userId;
+
+            _repository.Update(patient);
+            await _unitOfWork.SaveChangesAsync();
+
+            return existingGuarantor;
+        }
+
+        public async Task RemoveGuarantorAsync(Guid patientId, Guid guarantorId, Guid userId)
+        {
+            var patient = await _repository.GetByIdAsync(patientId);
+            if (patient == null) throw new Exception("Patient not found.");
+
+            var guarantor = patient.Guarantors?.FirstOrDefault(g => g.Id == guarantorId && !g.IsDeleted);
+            if (guarantor != null)
+            {
+                guarantor.IsDeleted = true;
+                guarantor.DeletedAt = DateTime.UtcNow;
+                guarantor.DeletedBy = userId;
+
+                _repository.Update(patient);
+                await _unitOfWork.SaveChangesAsync();
+            }
+        }
     }
 }

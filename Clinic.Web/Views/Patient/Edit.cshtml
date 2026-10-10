@@ -36,6 +36,12 @@
                             <button class="nav-link text-start mb-2" id="v-pills-emergency-tab" data-bs-toggle="pill" data-bs-target="#v-pills-emergency" type="button" role="tab" aria-selected="false">
                                 <i class="bi bi-heart-pulse me-2"></i> Emergency
                             </button>
+                            <button class="nav-link text-start mb-2" id="v-pills-insurance-tab" data-bs-toggle="pill" data-bs-target="#v-pills-insurance" type="button" role="tab" aria-selected="false">
+                                <i class="bi bi-shield-plus me-2"></i> Insurance
+                            </button>
+                            <button class="nav-link text-start mb-2" id="v-pills-guarantor-tab" data-bs-toggle="pill" data-bs-target="#v-pills-guarantor" type="button" role="tab" aria-selected="false">
+                                <i class="bi bi-people me-2"></i> Family / Guarantor
+                            </button>
                             <button class="nav-link text-start" id="v-pills-admin-tab" data-bs-toggle="pill" data-bs-target="#v-pills-admin" type="button" role="tab" aria-selected="false">
                                 <i class="bi bi-shield-check me-2"></i> Administration
                             </button>
@@ -264,6 +270,135 @@
                         </div>
                     </div>
 
+                    <!-- Insurance Tab -->
+                    <div class="tab-pane fade" id="v-pills-insurance" role="tabpanel">
+                        <div class="card shadow-sm border-0 mb-4">
+                            <div class="card-header bg-white border-bottom-0 pt-4 pb-0 d-flex justify-content-between align-items-center">
+                                <h5 class="fw-bold text-primary mb-0"><i class="bi bi-shield-plus me-2"></i>Insurance Coverage</h5>
+                                <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#addInsuranceModal">
+                                    <i class="bi bi-plus"></i> Add Insurance
+                                </button>
+                            </div>
+                            <div class="card-body p-4">
+                                @if (Model.Patient.Insurances != null && Model.Patient.Insurances.Any())
+                                {
+                                    <div class="table-responsive">
+                                        <table class="table table-hover align-middle">
+                                            <thead class="table-light">
+                                                <tr>
+                                                    <th>Insurance Provider</th>
+                                                    <th>Member ID</th>
+                                                    <th>Group ID</th>
+                                                    <th>Type</th>
+                                                    <th class="text-end">Actions</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                @foreach(var ins in Model.Patient.Insurances)
+                                                {
+                                                    <tr>
+                                                        <td class="fw-bold">@ins.InsuranceName</td>
+                                                        <td>@(string.IsNullOrEmpty(ins.MemberId) ? "-" : ins.MemberId)</td>
+                                                        <td>@(string.IsNullOrEmpty(ins.GroupId) ? "-" : ins.GroupId)</td>
+                                                        <td>
+                                                            @if(ins.IsPrimary) {
+                                                                <span class="badge bg-primary">Primary</span>
+                                                            } else {
+                                                                <span class="badge bg-secondary">Secondary</span>
+                                                            }
+                                                        </td>
+                                                        <td class="text-end">
+                                                            <button type="button" class="btn btn-sm btn-light border" onclick="editInsurance('@ins.Id', '@ins.InsuranceId', '@(ins.MemberId?.Replace("'", "\\'"))', '@(ins.GroupId?.Replace("'", "\\'"))', @(ins.IsPrimary.ToString().ToLower()))"><i class="bi bi-pencil"></i></button>
+                                                            <form method="post" action="/Patient/RemoveInsurance" class="d-inline" onsubmit="return confirm('Remove this insurance?');">
+                                                                @Html.AntiForgeryToken()
+                                                                <input type="hidden" name="patientId" value="@Model.Patient.Id" />
+                                                                <input type="hidden" name="patientInsuranceId" value="@ins.Id" />
+                                                                <button type="submit" class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button>
+                                                            </form>
+                                                        </td>
+                                                    </tr>
+                                                }
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                }
+                                else
+                                {
+                                    <div class="text-center py-4 text-muted border rounded bg-light">
+                                        <i class="bi bi-shield-x display-6 mb-2 d-block text-secondary"></i>
+                                        <p class="mb-0">No insurance records found for this patient.</p>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Family / Guarantor Tab -->
+                    <div class="tab-pane fade" id="v-pills-guarantor" role="tabpanel">
+                        <div class="card shadow-sm border-0 mb-4">
+                            <div class="card-header bg-white border-bottom-0 pt-4 pb-0 d-flex justify-content-between align-items-center">
+                                <h5 class="fw-bold text-primary mb-0"><i class="bi bi-people me-2"></i>Family / Guarantor</h5>
+                                <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#addGuarantorModal">
+                                    <i class="bi bi-plus"></i> Add Guarantor
+                                </button>
+                            </div>
+                            <div class="card-body p-4">
+                                @if (Model.Patient.Guarantors != null && Model.Patient.Guarantors.Any())
+                                {
+                                    <div class="table-responsive">
+                                        <table class="table table-hover align-middle">
+                                            <thead class="table-light">
+                                                <tr>
+                                                    <th>Name</th>
+                                                    <th>Relationship</th>
+                                                    <th>Contact</th>
+                                                    <th>Type</th>
+                                                    <th class="text-end">Actions</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                @foreach(var g in Model.Patient.Guarantors)
+                                                {
+                                                    <tr>
+                                                        <td class="fw-bold">@g.Name</td>
+                                                        <td>@(string.IsNullOrEmpty(g.Relationship) ? "-" : g.Relationship)</td>
+                                                        <td>
+                                                            <div><i class="bi bi-telephone text-muted me-1"></i> @(string.IsNullOrEmpty(g.Phone) ? "-" : g.Phone)</div>
+                                                            <div class="text-muted small"><i class="bi bi-envelope me-1"></i> @(string.IsNullOrEmpty(g.Email) ? "-" : g.Email)</div>
+                                                        </td>
+                                                        <td>
+                                                            @if(g.IsPrimary) {
+                                                                <span class="badge bg-primary">Primary</span>
+                                                            } else {
+                                                                <span class="badge bg-secondary">Secondary</span>
+                                                            }
+                                                        </td>
+                                                        <td class="text-end">
+                                                            <button type="button" class="btn btn-sm btn-light border" onclick="editGuarantor('@g.Id', '@(g.Name?.Replace("'", "\\'"))', '@(g.Relationship?.Replace("'", "\\'"))', '@(g.Phone?.Replace("'", "\\'"))', '@(g.Email?.Replace("'", "\\'"))', '@(g.Address?.Replace("'", "\\'").Replace("\r\n", "\\n").Replace("\n", "\\n"))', @(g.IsPrimary.ToString().ToLower()))"><i class="bi bi-pencil"></i></button>
+                                                            <form method="post" action="/Patient/RemoveGuarantor" class="d-inline" onsubmit="return confirm('Remove this guarantor?');">
+                                                                @Html.AntiForgeryToken()
+                                                                <input type="hidden" name="patientId" value="@Model.Patient.Id" />
+                                                                <input type="hidden" name="guarantorId" value="@g.Id" />
+                                                                <button type="submit" class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button>
+                                                            </form>
+                                                        </td>
+                                                    </tr>
+                                                }
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                }
+                                else
+                                {
+                                    <div class="text-center py-4 text-muted border rounded bg-light">
+                                        <i class="bi bi-people display-6 mb-2 d-block text-secondary"></i>
+                                        <p class="mb-0">No family or guarantor records found.</p>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    </div>
+
                     <!-- Administration Tab -->
                     <div class="tab-pane fade" id="v-pills-admin" role="tabpanel">
                         <div class="card shadow-sm border-0 mb-4">
@@ -332,6 +467,180 @@
     </form>
 </div>
 
+<!-- Add Insurance Modal -->
+<div class="modal fade" id="addInsuranceModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <form method="post" action="/Patient/AddInsurance" class="modal-content needs-validation" novalidate>
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="PatientId" value="@Model.Patient.Id" />
+            <div class="modal-header">
+                <h5 class="modal-title">Add Insurance</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Insurance Provider <span class="text-danger">*</span></label>
+                    <select class="form-select" name="InsuranceId" asp-items="Model.AvailableInsurances" required>
+                        <option value="">-- Select Provider --</option>
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Member ID</label>
+                    <input type="text" class="form-control" name="MemberId" />
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Group ID</label>
+                    <input type="text" class="form-control" name="GroupId" />
+                </div>
+                <div class="mb-3 form-check">
+                    <input type="checkbox" class="form-check-input" name="IsPrimary" id="addIsPrimary" value="true">
+                    <label class="form-check-label fw-bold" for="addIsPrimary">Set as Primary Insurance</label>
+                </div>
+            </div>
+            <div class="modal-footer d-flex justify-content-between">
+                <button type="button" class="btn btn-light border" data-bs-dismiss="modal">Cancel</button>
+                <button type="submit" class="btn btn-primary"><i class="bi bi-plus me-2"></i>Add Provider</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Edit Insurance Modal -->
+<div class="modal fade" id="editInsuranceModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <form method="post" action="/Patient/UpdateInsurance" class="modal-content needs-validation" novalidate>
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="PatientId" value="@Model.Patient.Id" />
+            <input type="hidden" name="Id" id="editInsId" />
+            <input type="hidden" name="InsuranceId" id="editInsProviderIdHidden" />
+            <div class="modal-header">
+                <h5 class="modal-title">Edit Insurance</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Insurance Provider <span class="text-danger">*</span></label>
+                    <select class="form-select bg-light" id="editInsProviderId" asp-items="Model.AvailableInsurances" disabled>
+                        <option value="">-- Select Provider --</option>
+                    </select>
+                    <div class="form-text">Provider cannot be changed. Add a new one instead.</div>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Member ID</label>
+                    <input type="text" class="form-control" name="MemberId" id="editInsMemberId" />
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Group ID</label>
+                    <input type="text" class="form-control" name="GroupId" id="editInsGroupId" />
+                </div>
+                <div class="mb-3 form-check">
+                    <input type="checkbox" class="form-check-input" name="IsPrimary" id="editIsPrimary" value="true">
+                    <label class="form-check-label fw-bold" for="editIsPrimary">Set as Primary Insurance</label>
+                </div>
+            </div>
+            <div class="modal-footer d-flex justify-content-between">
+                <button type="button" class="btn btn-light border" data-bs-dismiss="modal">Cancel</button>
+                <button type="submit" class="btn btn-primary"><i class="bi bi-save me-2"></i>Save Changes</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Add Guarantor Modal -->
+<div class="modal fade" id="addGuarantorModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <form method="post" action="/Patient/AddGuarantor" class="modal-content needs-validation" novalidate>
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="patientId" value="@Model.Patient.Id" />
+            <div class="modal-header">
+                <h5 class="modal-title">Add Guarantor</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Name <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control" name="Name" required />
+                    <div class="invalid-feedback">Name is required.</div>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Relationship</label>
+                    <select class="form-select" name="Relationship" asp-items="Model.Relationships">
+                        <option value="">-- Select Relationship --</option>
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Phone</label>
+                    <input type="text" class="form-control" name="Phone" />
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Email</label>
+                    <input type="email" class="form-control" name="Email" />
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Address</label>
+                    <textarea class="form-control" name="Address" rows="2"></textarea>
+                </div>
+                <div class="mb-3 form-check">
+                    <input type="checkbox" class="form-check-input" name="IsPrimary" id="addGuarantorIsPrimary" value="true">
+                    <label class="form-check-label fw-bold" for="addGuarantorIsPrimary">Set as Primary Guarantor</label>
+                </div>
+            </div>
+            <div class="modal-footer d-flex justify-content-between">
+                <button type="button" class="btn btn-light border" data-bs-dismiss="modal">Cancel</button>
+                <button type="submit" class="btn btn-primary"><i class="bi bi-plus me-2"></i>Add Guarantor</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Edit Guarantor Modal -->
+<div class="modal fade" id="editGuarantorModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <form method="post" action="/Patient/UpdateGuarantor" class="modal-content needs-validation" novalidate>
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="patientId" value="@Model.Patient.Id" />
+            <input type="hidden" name="Id" id="editGuarantorId" />
+            <div class="modal-header">
+                <h5 class="modal-title">Edit Guarantor</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Name <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control" name="Name" id="editGuarantorName" required />
+                    <div class="invalid-feedback">Name is required.</div>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Relationship</label>
+                    <select class="form-select" name="Relationship" id="editGuarantorRelationship" asp-items="Model.Relationships">
+                        <option value="">-- Select Relationship --</option>
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Phone</label>
+                    <input type="text" class="form-control" name="Phone" id="editGuarantorPhone" />
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Email</label>
+                    <input type="email" class="form-control" name="Email" id="editGuarantorEmail" />
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Address</label>
+                    <textarea class="form-control" name="Address" id="editGuarantorAddress" rows="2"></textarea>
+                </div>
+                <div class="mb-3 form-check">
+                    <input type="checkbox" class="form-check-input" name="IsPrimary" id="editGuarantorIsPrimary" value="true">
+                    <label class="form-check-label fw-bold" for="editGuarantorIsPrimary">Set as Primary Guarantor</label>
+                </div>
+            </div>
+            <div class="modal-footer d-flex justify-content-between">
+                <button type="button" class="btn btn-light border" data-bs-dismiss="modal">Cancel</button>
+                <button type="submit" class="btn btn-primary"><i class="bi bi-save me-2"></i>Save Changes</button>
+            </div>
+        </form>
+    </div>
+</div>
+
 @section Scripts {
 <script>
 document.addEventListener("DOMContentLoaded", function() {
@@ -376,6 +685,31 @@ function previewImage(input) {
         }
         reader.readAsDataURL(input.files[0]);
     }
+}
+
+function editInsurance(id, providerId, memberId, groupId, isPrimary) {
+    document.getElementById('editInsId').value = id;
+    document.getElementById('editInsProviderId').value = providerId;
+    document.getElementById('editInsProviderIdHidden').value = providerId;
+    document.getElementById('editInsMemberId').value = memberId || '';
+    document.getElementById('editInsGroupId').value = groupId || '';
+    document.getElementById('editIsPrimary').checked = isPrimary;
+    
+    var modal = new bootstrap.Modal(document.getElementById('editInsuranceModal'));
+    modal.show();
+}
+
+function editGuarantor(id, name, relationship, phone, email, address, isPrimary) {
+    document.getElementById('editGuarantorId').value = id;
+    document.getElementById('editGuarantorName').value = name || '';
+    document.getElementById('editGuarantorRelationship').value = relationship || '';
+    document.getElementById('editGuarantorPhone').value = phone || '';
+    document.getElementById('editGuarantorEmail').value = email || '';
+    document.getElementById('editGuarantorAddress').value = address || '';
+    document.getElementById('editGuarantorIsPrimary').checked = isPrimary;
+    
+    var modal = new bootstrap.Modal(document.getElementById('editGuarantorModal'));
+    modal.show();
 }
 </script>
 }

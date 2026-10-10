@@ -38,6 +38,30 @@
                     </div>
 
                     <div class="col-md-6 mb-3">
+                        <label class="form-label fw-bold">Assistant</label>
+                        <select class="form-select" name="AssistantId" asp-items="@ViewBag.Assistants" asp-for="AssistantId">
+                            <option value="">No Assistant</option>
+                        </select>
+                        <div class="form-text">Optional. Only clinical assistants/nurses are shown.</div>
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-bold">Appointment Type <span class="text-danger">*</span></label>
+                        <select class="form-select" name="AppointmentTypeId" required asp-items="@ViewBag.AppointmentTypes" asp-for="AppointmentTypeId">
+                            <option value="">Select Appointment Type...</option>
+                        </select>
+                        <div class="invalid-feedback">Appointment Type is required.</div>
+                    </div>
+
+                    <div class="col-md-6 mb-3" id="treatmentSelectionDiv" style="display: none;">
+                        <label class="form-label fw-bold">Treatment <span class="text-danger">*</span></label>
+                        <select class="form-select" name="TreatmentItemId" asp-items="@ViewBag.Treatments" asp-for="TreatmentItemId">
+                            <option value="">Select Treatment...</option>
+                        </select>
+                        <div class="invalid-feedback">Treatment is required for TREATMENT appointments.</div>
+                    </div>
+
+                    <div class="col-md-6 mb-3">
                         <label class="form-label fw-bold">Location <span class="text-danger">*</span></label>
                         <select class="form-select" id="LocationId" name="LocationId" required asp-items="@ViewBag.Locations" asp-for="LocationId">
                             <option value="">Select Location...</option>
@@ -66,9 +90,9 @@
                     </div>
 
                     <div class="col-md-4 mb-3">
-                        <label class="form-label fw-bold">End Time <span class="text-danger">*</span></label>
-                        <input type="time" class="form-control" name="EndTime" required value="@Model.EndTime.ToString(@"hh\:mm")">
-                        <div class="invalid-feedback">End Time is required.</div>
+                        <label class="form-label fw-bold">End Time</label>
+                        <input type="time" class="form-control bg-light" name="EndTime" value="@(Model.EndTime?.ToString(@"hh\:mm") ?? "")" readonly tabindex="-1">
+                        <div class="form-text">System calculated</div>
                     </div>
                     
                     <div class="col-md-12 mb-3">
@@ -143,6 +167,27 @@
         // Initial load if a location is already selected
         if (locationSelect.value) {
             loadChairs(selectedChairId);
+        }
+
+        var appointmentTypeSelect = document.querySelector('select[name="AppointmentTypeId"]');
+        var treatmentSelectionDiv = document.getElementById('treatmentSelectionDiv');
+        var treatmentSelect = document.querySelector('select[name="TreatmentItemId"]');
+
+        function toggleTreatmentSelection() {
+            var selectedOption = appointmentTypeSelect.options[appointmentTypeSelect.selectedIndex];
+            if (selectedOption && selectedOption.text.toUpperCase().includes("TREATMENT")) {
+                treatmentSelectionDiv.style.display = 'block';
+                treatmentSelect.setAttribute('required', 'required');
+            } else {
+                treatmentSelectionDiv.style.display = 'none';
+                treatmentSelect.removeAttribute('required');
+                treatmentSelect.value = '';
+            }
+        }
+
+        appointmentTypeSelect.addEventListener('change', toggleTreatmentSelection);
+        if (appointmentTypeSelect.value) {
+            toggleTreatmentSelection();
         }
     });
 </script>

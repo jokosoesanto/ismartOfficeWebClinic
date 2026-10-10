@@ -54,14 +54,16 @@ namespace Clinic.Web.Controllers
                 .Include(p => p.Invoice)
                 .ThenInclude(i => i!.Appointment)
                 .ThenInclude(a => a!.Patient)
+                .Include(p => p.Refunds)
                 .Where(p => !p.IsDeleted && p.PaymentDate >= from && p.PaymentDate < nextDay)
                 .OrderByDescending(p => p.PaymentDate)
                 .ToListAsync();
 
-            var totalCollection = payments.Sum(p => p.Amount);
+            var totalCollection = payments.Sum(p => p.Amount - (p.Refunds?.Where(r => !r.IsDeleted).Sum(r => r.Amount) ?? 0m));
             var formattedTotal = await _currencyService.FormatAmountAsync(totalCollection);
 
             // Format amounts for each payment
+
             foreach (var payment in payments)
             {
                 ViewData[$"FormattedAmount_{payment.Id}"] = await _currencyService.FormatAmountAsync(payment.Amount);

@@ -32,6 +32,15 @@ namespace Clinic.Application.Interfaces.MasterData
         Task<PatientMedicalHistory> AddSystemicDiseaseAsync(Guid patientId, string condition, string? notes, Guid userId);
         Task RemoveSystemicDiseaseAsync(Guid patientId, Guid diseaseId, Guid userId);
 
+        // Insurance Operations
+        Task<PatientInsurance> AddInsuranceAsync(Guid patientId, Guid insuranceId, string? memberId, string? groupId, bool isPrimary, Guid userId);
+        Task<PatientInsurance> UpdateInsuranceAsync(Guid patientId, Guid patientInsuranceId, string? memberId, string? groupId, bool isPrimary, Guid userId);
+        Task RemoveInsuranceAsync(Guid patientId, Guid patientInsuranceId, Guid userId);
+
+        // Guarantor Operations
+        Task<PatientGuarantor> AddGuarantorAsync(Guid patientId, PatientGuarantor guarantor, Guid userId);
+        Task<PatientGuarantor> UpdateGuarantorAsync(Guid patientId, PatientGuarantor guarantor, Guid userId);
+        Task RemoveGuarantorAsync(Guid patientId, Guid guarantorId, Guid userId);
 
         // Expose logic to check duplicates before saving
         Task<bool> IsDuplicateCandidateAsync(string? nationalId, string? mobile, string name, DateTime? birthDate);

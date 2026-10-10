@@ -1,87 +1,474 @@
-﻿@model Clinic.Application.UI.UIMetadata
-@{
-    
-}
+@model List<Clinic.Application.DTOs.Operations.InventoryItemDto>
 
-<!-- Inventory List Template (Parity with frmInventoryList.cs) -->
 <div class="container-fluid py-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h2 class="mb-0 fw-bold">Inventory Management</h2>
         <div>
-            <a href="/Inventory/CreateItem" class="btn btn-primary shadow-sm"><i class="bi bi-box-seam me-1"></i> Add Item</a>
-            <a href="/Inventory/CreateGroup" class="btn btn-outline-secondary shadow-sm ms-2"><i class="bi bi-folder-plus me-1"></i> Add Group</a>
+            <a href="/Inventory/ExpiryMonitoring" class="btn btn-outline-warning shadow-sm me-2"><i class="bi bi-exclamation-circle me-1"></i> Expiry Monitoring</a>
+            <a href="/Inventory/StockMovement" class="btn btn-outline-info shadow-sm me-2"><i class="bi bi-arrow-left-right me-1"></i> Stock Movement</a>
+            <a href="/Inventory/Create" class="btn btn-primary shadow-sm"><i class="bi bi-box-seam me-1"></i> Add Item</a>
         </div>
     </div>
 
-    <div class="row g-4 h-100">
-        <!-- TreeView for Inventory Groups -->
-        <div class="col-md-3">
-            <div class="card shadow-sm border-0 h-100">
-                <div class="card-header bg-white border-bottom-0 pt-4 pb-0">
-                    <h6 class="fw-bold text-muted text-uppercase mb-0">Inventory Groups</h6>
-                </div>
-                <div class="card-body">
-                    <div class="list-group list-group-flush border rounded">
-                        <a href="#" class="list-group-item list-group-item-action active fw-bold"><i class="bi bi-folder2-open me-2"></i>All Items</a>
-                        <a href="#" class="list-group-item list-group-item-action ps-4"><i class="bi bi-folder me-2"></i>Dental Supplies</a>
-                        <a href="#" class="list-group-item list-group-item-action ps-5 text-muted"><i class="bi bi-file-earmark me-2"></i>Composite Resins</a>
-                        <a href="#" class="list-group-item list-group-item-action ps-5 text-muted"><i class="bi bi-file-earmark me-2"></i>Anesthetics</a>
-                        <a href="#" class="list-group-item list-group-item-action ps-4"><i class="bi bi-folder me-2"></i>Office Supplies</a>
-                        <a href="#" class="list-group-item list-group-item-action ps-4"><i class="bi bi-folder me-2"></i>Equipment</a>
-                    </div>
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="bi bi-check-circle-fill me-2"></i>@TempData["Success"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="bi bi-exclamation-triangle-fill me-2"></i>@TempData["Error"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    <div class="card shadow-sm border-0 h-100">
+        <div class="card-header bg-white border-bottom-0 pt-4 pb-0 d-flex justify-content-between align-items-center">
+            <h6 class="fw-bold text-muted text-uppercase mb-0">Stock Ledger Overview</h6>
+            <div class="d-flex align-items-center gap-2">
+                <select class="form-select form-select-sm" id="stockStatusFilter" style="width: 140px;">
+                    <option value="">All Status</option>
+                    <option value="In Stock">In Stock</option>
+                    <option value="Low Stock">Low Stock</option>
+                    <option value="Out of Stock">Out of Stock</option>
+                </select>
+                <div class="input-group" style="width: 250px;">
+                    <input type="text" class="form-control form-control-sm" id="inventorySearch" placeholder="Search item...">
+                    <button class="btn btn-outline-secondary btn-sm" type="button"><i class="bi bi-search"></i></button>
                 </div>
             </div>
         </div>
-
-        <!-- ListView for Inventory Items -->
-        <div class="col-md-9">
-            <div class="card shadow-sm border-0 h-100">
-                <div class="card-header bg-white border-bottom-0 pt-4 pb-0 d-flex justify-content-between align-items-center">
-                    <h6 class="fw-bold text-muted text-uppercase mb-0">Items</h6>
-                    <div class="input-group" style="width: 250px;">
-                        <input type="text" class="form-control form-control-sm" placeholder="Search item...">
-                        <button class="btn btn-outline-secondary btn-sm" type="button"><i class="bi bi-search"></i></button>
-                    </div>
-                </div>
-                <div class="card-body">
-                    <div class="table-responsive">
-                        <table class="table table-hover align-middle">
-                            <thead class="table-light">
-                                <tr>
-                                    <th>Item Code</th>
-                                    <th>Description</th>
-                                    <th>Group</th>
-                                    <th class="text-end">Qty on Hand</th>
-                                    <th>UoM</th>
-                                    <th class="text-center">Action</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td class="fw-bold">ITM-001</td>
-                                    <td>Composite Resin (Shade A2)</td>
-                                    <td>Dental Supplies / Composite Resins</td>
-                                    <td class="text-end text-danger fw-bold">2</td>
-                                    <td>Box</td>
-                                    <td class="text-center">
-                                        <a href="/Inventory/1" class="btn btn-sm btn-outline-info"><i class="bi bi-eye"></i></a>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td class="fw-bold">ITM-002</td>
-                                    <td>Lidocaine 2%</td>
-                                    <td>Dental Supplies / Anesthetics</td>
-                                    <td class="text-end text-success fw-bold">45</td>
-                                    <td>Vial</td>
-                                    <td class="text-center">
-                                        <a href="/Inventory/2" class="btn btn-sm btn-outline-info"><i class="bi bi-eye"></i></a>
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle" id="inventoryTable">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Code</th>
+                            <th>Name</th>
+                            <th>Category</th>
+                            <th>Status</th>
+                            <th class="text-end">Current Stock</th>
+                            <th>Unit</th>
+                            <th class="text-end">Reorder Level</th>
+                            <th class="text-center">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model)
+                        {
+                            <tr>
+                                <td class="fw-bold">@item.Code</td>
+                                <td>@item.Name</td>
+                                <td>@(string.IsNullOrEmpty(item.Category) ? "-" : item.Category)</td>
+                                <td>
+                                    @if (item.StockStatus == "In Stock")
+                                    {
+                                        <span class="badge bg-success-subtle text-success border border-success-subtle"><i class="bi bi-check-circle-fill me-1"></i>In Stock</span>
+                                    }
+                                    else if (item.StockStatus == "Low Stock")
+                                    {
+                                        <span class="badge bg-warning-subtle text-warning border border-warning-subtle"><i class="bi bi-exclamation-triangle-fill me-1"></i>Low Stock</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-danger-subtle text-danger border border-danger-subtle"><i class="bi bi-dash-circle-fill me-1"></i>Out of Stock</span>
+                                    }
+                                    @if (!item.IsActive)
+                                    {
+                                        <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle ms-1">Inactive</span>
+                                    }
+                                </td>
+                                <td class="text-end fw-bold @(item.StockStatus == "In Stock" ? "text-success" : item.StockStatus == "Low Stock" ? "text-warning" : "text-danger")">
+                                    @item.CurrentStock.ToString("N0")
+                                </td>
+                                <td>@item.Unit</td>
+                                <td class="text-end text-muted">@item.ReorderLevel.ToString("G")</td>
+                                <td class="text-center">
+                                    <div class="dropdown">
+                                        <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                            Actions
+                                        </button>
+                                        <ul class="dropdown-menu dropdown-menu-end shadow-sm">
+                                            <li><a class="dropdown-item" href="/Inventory/Edit/@item.Id"><i class="bi bi-pencil me-2 text-secondary"></i>Edit</a></li>
+                                            <li><a class="dropdown-item" href="/Inventory/Batches/@item.Id"><i class="bi bi-boxes me-2 text-primary"></i>Manage Batches</a></li>
+                                            <li><hr class="dropdown-divider"></li>
+                                            <li><button class="dropdown-item" type="button" onclick="openStockModal('in', '@item.Id', '@item.Name', '@item.Unit', @item.CurrentStock.ToString(System.Globalization.CultureInfo.InvariantCulture), '@Uri.EscapeDataString(System.Text.Json.JsonSerializer.Serialize(item.Batches.Select(b => new { id = b.Id, batchNumber = b.BatchNumber, currentStock = b.CurrentStock })))')"><i class="bi bi-box-arrow-in-down me-2 text-success"></i>Stock In</button></li>
+                                            <li><button class="dropdown-item" type="button" onclick="openStockModal('out', '@item.Id', '@item.Name', '@item.Unit', @item.CurrentStock.ToString(System.Globalization.CultureInfo.InvariantCulture), '@Uri.EscapeDataString(System.Text.Json.JsonSerializer.Serialize(item.Batches.Select(b => new { id = b.Id, batchNumber = b.BatchNumber, currentStock = b.CurrentStock })))')"><i class="bi bi-box-arrow-up me-2 text-danger"></i>Stock Out</button></li>
+                                            <li><button class="dropdown-item" type="button" onclick="openStockModal('adjust', '@item.Id', '@item.Name', '@item.Unit', @item.CurrentStock.ToString(System.Globalization.CultureInfo.InvariantCulture), '@Uri.EscapeDataString(System.Text.Json.JsonSerializer.Serialize(item.Batches.Select(b => new { id = b.Id, batchNumber = b.BatchNumber, currentStock = b.CurrentStock })))')"><i class="bi bi-sliders me-2 text-warning"></i>Adjustment</button></li>
+                                            <li><button class="dropdown-item" type="button" onclick="openBalanceModal('@item.Id', '@item.Name', '@item.Unit')"><i class="bi bi-play-circle me-2 text-primary"></i>Opening Balance</button></li>
+                                            <li><hr class="dropdown-divider"></li>
+                                            <li><button class="dropdown-item" type="button" onclick="openHistoryModal('history-@item.Id')"><i class="bi bi-clock-history me-2 text-info"></i>History</button></li>
+                                        </ul>
+                                    </div>
+                                    <div id="history-@item.Id" class="d-none">
+                                        @foreach(var h in item.History)
+                                        {
+                                            <div class="history-row" data-date="@h.TransactionDate.ToString("yyyy-MM-dd HH:mm")" data-type="@h.TransactionTypeName" data-qty="@h.Quantity" data-notes="@h.Notes" data-created="@h.CreatedBy" data-supplier="@h.SupplierName"></div>
+                                        }
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
             </div>
         </div>
     </div>
 </div>
+
+<!-- Opening Balance Modal -->
+<div class="modal fade" id="openingBalanceModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <form method="post" action="/Inventory/OpeningBalance">
+            @Html.AntiForgeryToken()
+            <input type="hidden" id="balanceItemId" name="id" />
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title"><i class="bi bi-box-seam me-2"></i>Set Opening Balance</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="text-muted small mb-3">Initialize stock for this item. This will create an <strong>OpeningBalance</strong> ledger transaction.</p>
+                    
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Item</label>
+                        <input type="text" class="form-control bg-light" id="balanceItemName" readonly />
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Quantity</label>
+                        <div class="input-group">
+                            <input type="number" class="form-control" name="quantity" required min="1" step="any" placeholder="0" />
+                            <span class="input-group-text bg-light" id="balanceItemUnit">Unit</span>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Notes</label>
+                        <textarea class="form-control" name="notes" rows="2" placeholder="Optional notes..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Balance</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Stock Operation Modal -->
+<div class="modal fade" id="stockOperationModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <form method="post" action="/Inventory/StockOperation" id="stockOperationForm">
+            @Html.AntiForgeryToken()
+            <input type="hidden" id="stockOpItemId" name="InventoryItemId" />
+            <div class="modal-content">
+                <div class="modal-header text-white" id="stockOpHeader">
+                    <h5 class="modal-title" id="stockOpTitle"><i class="bi bi-box-seam me-2"></i>Stock Operation</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Item</label>
+                        <input type="text" class="form-control bg-light" id="stockOpItemName" readonly />
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Current Stock</label>
+                            <input type="text" class="form-control bg-light fw-bold" id="stockOpCurrentStock" readonly />
+                        </div>
+                        <div class="col-md-6" id="stockOpTypeContainer">
+                            <label class="form-label fw-bold">Transaction Type</label>
+                            <select class="form-select" id="stockOpType" name="TransactionType" required>
+                                <option value="2">Stock In</option>
+                                <option value="3">Stock Out</option>
+                                <option value="4">Adjustment Increase</option>
+                                <option value="5">Adjustment Decrease</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Quantity <span class="text-danger">*</span></label>
+                            <div class="input-group">
+                                <input type="number" class="form-control" name="Quantity" id="stockOpQuantity" required min="0.0001" step="any" placeholder="0" />
+                                <span class="input-group-text bg-light" id="stockOpItemUnit">Unit</span>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Transaction Date <span class="text-danger">*</span></label>
+                            <input type="date" class="form-control" name="TransactionDate" id="stockOpDate" required value="@DateTime.Now.ToString("yyyy-MM-dd")" />
+                        </div>
+                    </div>
+
+                    <div class="mb-3" id="stockOpBatchContainer" style="display:none;">
+                        <label class="form-label fw-bold">Select Batch</label>
+                        <select class="form-select" name="InventoryBatchId" id="stockOpBatch">
+                            <option value="">-- No Batch (General Stock) --</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3" id="stockOpSupplierContainer" style="display:none;">
+                        <label class="form-label fw-bold">Supplier (Optional)</label>
+                        <select class="form-select" name="SupplierId" id="stockOpSupplier">
+                            <option value="">-- No Supplier --</option>
+                            @if (ViewBag.ActiveSuppliers != null)
+                            {
+                                foreach (var supplier in ViewBag.ActiveSuppliers as IEnumerable<Clinic.Domain.Entities.MasterData.Supplier>)
+                                {
+                                    <option value="@supplier.Id">@supplier.Code &mdash; @supplier.Name</option>
+                                }
+                            }
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Notes <span class="text-danger" id="stockOpNotesReq">*</span></label>
+                        <textarea class="form-control" name="Notes" id="stockOpNotes" rows="2" placeholder="Required for adjustments..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer border-top-0 pt-0">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary" id="stockOpSubmitBtn">Save Transaction</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Transaction History Modal -->
+<div class="modal fade" id="historyModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-info text-white">
+                <h5 class="modal-title"><i class="bi bi-clock-history me-2"></i>Transaction History</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover table-striped mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Date</th>
+                                <th>Type</th>
+                                <th class="text-end">Quantity</th>
+                                <th>Supplier</th>
+                                <th>Notes</th>
+                                <th>Created By</th>
+                            </tr>
+                        </thead>
+                        <tbody id="historyTableBody">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Fix for dropdown clipping inside table-responsive
+    document.addEventListener('show.bs.dropdown', function (e) {
+        var tableResponsive = e.target.closest('.table-responsive');
+        if (tableResponsive) {
+            // Unset overflow to allow dropdown to break out of container
+            tableResponsive.style.overflow = 'visible';
+        }
+    });
+
+    document.addEventListener('hide.bs.dropdown', function (e) {
+        var tableResponsive = e.target.closest('.table-responsive');
+        if (tableResponsive) {
+            // Restore original overflow
+            tableResponsive.style.overflow = '';
+        }
+    });
+
+    function openBalanceModal(id, name, unit) {
+        document.getElementById('balanceItemId').value = id;
+        document.getElementById('balanceItemName').value = name;
+        document.getElementById('balanceItemUnit').textContent = unit;
+        var modal = new bootstrap.Modal(document.getElementById('openingBalanceModal'));
+        modal.show();
+    }
+    
+    function openStockModal(mode, id, name, unit, currentStock, batchesJsonRaw) {
+        document.getElementById('stockOpItemId').value = id;
+        document.getElementById('stockOpItemName').value = name;
+        document.getElementById('stockOpCurrentStock').value = currentStock;
+        document.getElementById('stockOpItemUnit').textContent = unit;
+        document.getElementById('stockOpQuantity').value = '';
+        document.getElementById('stockOpNotes').value = '';
+        
+        var header = document.getElementById('stockOpHeader');
+        var title = document.getElementById('stockOpTitle');
+        var typeSelect = document.getElementById('stockOpType');
+        var notesField = document.getElementById('stockOpNotes');
+        var notesReq = document.getElementById('stockOpNotesReq');
+        var typeContainer = document.getElementById('stockOpTypeContainer');
+        var submitBtn = document.getElementById('stockOpSubmitBtn');
+        var batchContainer = document.getElementById('stockOpBatchContainer');
+        var batchSelect = document.getElementById('stockOpBatch');
+        var supplierContainer = document.getElementById('stockOpSupplierContainer');
+        var supplierSelect = document.getElementById('stockOpSupplier');
+        
+        // Handle batches
+        window.currentStockOpItemTotalStock = currentStock;
+        window.currentStockOpBatches = [];
+        batchSelect.innerHTML = '<option value="">-- No Batch (General Stock) --</option>';
+        if (batchesJsonRaw && batchesJsonRaw !== '[]' && batchesJsonRaw !== '%5B%5D') {
+            try {
+                var decoded = decodeURIComponent(batchesJsonRaw);
+                var batches = JSON.parse(decoded);
+                if (batches && batches.length > 0) {
+                    window.currentStockOpBatches = batches;
+                    batchContainer.style.display = 'block';
+                    batches.forEach(function(b) {
+                        var opt = document.createElement('option');
+                        opt.value = b.id;
+                        opt.textContent = b.batchNumber + ' (Stock: ' + b.currentStock + ')';
+                        // Keep track of stock as data attribute
+                        opt.setAttribute('data-stock', b.currentStock);
+                        batchSelect.appendChild(opt);
+                    });
+                } else {
+                    batchContainer.style.display = 'none';
+                }
+            } catch (e) {
+                console.error("Failed to parse batches", e);
+                batchContainer.style.display = 'none';
+            }
+        } else {
+            batchContainer.style.display = 'none';
+        }
+        
+        // Remove existing listener to avoid duplicates
+        batchSelect.removeEventListener('change', updateStockOpCurrentStock);
+        batchSelect.addEventListener('change', updateStockOpCurrentStock);
+
+        // Reset defaults
+        header.className = 'modal-header text-white';
+        typeContainer.style.display = 'none';
+        notesField.required = false;
+        notesReq.style.display = 'none';
+        supplierContainer.style.display = 'none';
+        supplierSelect.value = '';
+        
+        if (mode === 'in') {
+            header.classList.add('bg-success');
+            title.innerHTML = '<i class="bi bi-box-arrow-in-down me-2"></i>Stock In';
+            typeSelect.value = '2'; // StockIn
+            submitBtn.className = 'btn btn-success';
+            supplierContainer.style.display = 'block';
+        } else if (mode === 'out') {
+            header.classList.add('bg-danger');
+            title.innerHTML = '<i class="bi bi-box-arrow-up me-2"></i>Stock Out';
+            typeSelect.value = '3'; // StockOut
+            submitBtn.className = 'btn btn-danger';
+        } else if (mode === 'adjust') {
+            header.classList.add('bg-warning', 'text-dark');
+            title.innerHTML = '<i class="bi bi-sliders me-2"></i>Stock Adjustment';
+            typeSelect.value = '4'; // Default to AdjustmentIncrease
+            typeContainer.style.display = 'block';
+            notesField.required = true;
+            notesReq.style.display = 'inline';
+            submitBtn.className = 'btn btn-warning';
+        }
+        
+        var modal = new bootstrap.Modal(document.getElementById('stockOperationModal'));
+        modal.show();
+    }
+    
+    function openHistoryModal(containerId) {
+        var container = document.getElementById(containerId);
+        var tbody = document.getElementById('historyTableBody');
+        tbody.innerHTML = '';
+        
+        var rows = container.querySelectorAll('.history-row');
+        if (rows.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted py-4">No transactions found.</td></tr>';
+        } else {
+            rows.forEach(function(r) {
+                var tr = document.createElement('tr');
+                var badgeClass = 'bg-secondary';
+                var type = r.getAttribute('data-type');
+                if (type === 'StockIn' || type === 'OpeningBalance' || type === 'AdjustmentIncrease') {
+                    badgeClass = 'bg-success';
+                } else if (type === 'StockOut' || type === 'AdjustmentDecrease') {
+                    badgeClass = 'bg-danger';
+                }
+                
+                tr.innerHTML = `
+                    <td>${r.getAttribute('data-date')}</td>
+                    <td><span class="badge ${badgeClass}">${type}</span></td>
+                    <td class="text-end fw-bold">${parseFloat(r.getAttribute('data-qty')).toLocaleString()}</td>
+                    <td>${r.getAttribute('data-supplier') || '-'}</td>
+                    <td>${r.getAttribute('data-notes') || '-'}</td>
+                    <td class="text-muted small">${r.getAttribute('data-created') || '-'}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+        
+        var modal = new bootstrap.Modal(document.getElementById('historyModal'));
+        modal.show();
+    }
+
+    function updateStockOpCurrentStock() {
+        var batchSelect = document.getElementById('stockOpBatch');
+        var selectedOption = batchSelect.options[batchSelect.selectedIndex];
+        if (selectedOption && selectedOption.value !== "") {
+            document.getElementById('stockOpCurrentStock').value = selectedOption.getAttribute('data-stock');
+        } else {
+            document.getElementById('stockOpCurrentStock').value = window.currentStockOpItemTotalStock;
+        }
+    }
+
+    document.getElementById('stockOperationForm').addEventListener('submit', function(e) {
+        var type = document.getElementById('stockOpType').value;
+        var qty = parseFloat(document.getElementById('stockOpQuantity').value);
+        var curr = parseFloat(document.getElementById('stockOpCurrentStock').value);
+        
+        if (type === '3' || type === '5') { // StockOut or AdjustmentDecrease
+            if (qty > curr) {
+                e.preventDefault();
+                var isBatch = document.getElementById('stockOpBatch').value !== "";
+                var target = isBatch ? "batch" : "item";
+                alert('Transaction rejected: resulting ' + target + ' stock would be negative. You cannot remove more stock than currently available.');
+            }
+        }
+    });
+
+    // Simple client-side search and filter
+    function filterInventory() {
+        var searchVal = document.getElementById('inventorySearch').value.toLowerCase();
+        var statusFilter = document.getElementById('stockStatusFilter');
+        var statusVal = statusFilter ? statusFilter.value : "";
+        
+        var rows = document.querySelectorAll('#inventoryTable tbody tr');
+        rows.forEach(function(row) {
+            var text = row.textContent.toLowerCase();
+            var statusCell = row.cells[3].textContent.trim();
+            
+            var matchesSearch = text.indexOf(searchVal) > -1;
+            var matchesStatus = statusVal === "" || statusCell.indexOf(statusVal) > -1;
+            
+            row.style.display = (matchesSearch && matchesStatus) ? '' : 'none';
+        });
+    }
+
+    document.getElementById('inventorySearch').addEventListener('keyup', filterInventory);
+    if(document.getElementById('stockStatusFilter')) {
+        document.getElementById('stockStatusFilter').addEventListener('change', filterInventory);
+    }
+</script>

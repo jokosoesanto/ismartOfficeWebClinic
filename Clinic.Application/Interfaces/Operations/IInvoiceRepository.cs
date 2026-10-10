@@ -12,5 +12,8 @@ namespace Clinic.Application.Interfaces.Operations
         Task<Invoice?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
         Task AddAsync(Invoice invoice, CancellationToken cancellationToken = default);
         void Update(Invoice invoice);
+        Task<InvoiceLine?> GetInvoiceLineByIdAsync(Guid invoiceLineId, CancellationToken cancellationToken = default);
+        Task AddAdjustmentAsync(InvoiceAdjustment adjustment, CancellationToken cancellationToken = default);
+        Task<System.Collections.Generic.IEnumerable<InvoiceAdjustment>> GetAdjustmentsByInvoiceIdAsync(Guid invoiceId, CancellationToken cancellationToken = default);
     }
 }

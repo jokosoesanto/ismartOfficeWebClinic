@@ -80,7 +80,19 @@
     <!-- Calendar View -->
     <div id="calendarViewContainer" class="card shadow-sm border-0 d-none">
         <div class="card-body">
+            <div id="monthViewFilters" class="d-none mb-3 text-center">
+                <div class="btn-group shadow-sm" role="group" aria-label="Month View Filters">
+                    <input type="radio" class="btn-check month-filter" name="monthFilter" id="monthApptOnly" value="appt" autocomplete="off" checked>
+                    <label class="btn btn-outline-primary btn-sm" for="monthApptOnly"><i class="bi bi-calendar-check me-1"></i> Appointments Only</label>
+                  
+                    <input type="radio" class="btn-check month-filter" name="monthFilter" id="monthSchedOnly" value="sched" autocomplete="off">
+                    <label class="btn btn-outline-primary btn-sm" for="monthSchedOnly"><i class="bi bi-clock-history me-1"></i> Doctor Schedule Only</label>
+                </div>
+            </div>
             <div id="calendar"></div>
+            <div id="customDayGrid" class="mt-3" style="display:none;">
+                <div id="parallelBoard" class="d-flex flex-column gap-4"></div>
+            </div>
         </div>
     </div>
     <!-- Appointment Detail Modal -->
@@ -197,6 +209,16 @@
         box-shadow: none !important;
     }
     
+    /* ScheduleBoard Month View Filters */
+    #calendar.month-mode-appt .doctor-schedule-event {
+        display: none !important;
+    }
+    #calendar.month-mode-sched .appointment-event {
+        display: none !important;
+    }
+    
+
+    
     /* Hover effects for custom events */
     .fc-event.custom-ui-event:hover {
         opacity: 0.95;
@@ -237,7 +259,6 @@
     
     /* Icon-only view controls (Requirement 01) */
     .fc-toolbar .fc-button.fc-dayGridMonth-button,
-    .fc-toolbar .fc-button.fc-timeGridWeek-button,
     .fc-toolbar .fc-button.fc-timeGridDay-button {
         font-size: 0 !important;
         background-color: transparent !important;
@@ -247,12 +268,10 @@
         padding: 0.25rem 0.5rem !important;
     }
     .fc-toolbar .fc-button.fc-dayGridMonth-button i,
-    .fc-toolbar .fc-button.fc-timeGridWeek-button i,
     .fc-toolbar .fc-button.fc-timeGridDay-button i {
         font-size: 1.25rem !important;
     }
     .fc-toolbar .fc-button.fc-dayGridMonth-button.fc-button-active,
-    .fc-toolbar .fc-button.fc-timeGridWeek-button.fc-button-active,
     .fc-toolbar .fc-button.fc-timeGridDay-button.fc-button-active {
         color: #0d6efd !important;
         background-color: transparent !important;
@@ -463,18 +482,21 @@
                 if (!calendarRendered) {
                     var calendarEl = document.getElementById('calendar');
                     calendar = new FullCalendar.Calendar(calendarEl, {
-                        initialView: 'timeGridWeek',
-                        slotEventOverlap: false,
+                        initialView: 'dayGridMonth',
+                        height: 'auto', // Allow internal height calculation without stretching
+                        slotEventOverlap: true, // Allow appointments to overlap doctor schedules
                         allDaySlot: false, // Req 07
                         slotLabelFormat: { hour: '2-digit', minute: '2-digit', hour12: false }, // Req 06
                         eventTimeFormat: { hour: '2-digit', minute: '2-digit', hour12: false }, // Req 06
+                        slotMinTime: '08:00:00', // Week View bounds
+                        slotMaxTime: '18:00:00',
                         buttonText: {
                             today: 'Today'
                         },
                         headerToolbar: {
                             left: 'prev,next today',
                             center: 'title',
-                            right: 'dayGridMonth,timeGridWeek,timeGridDay'
+                            right: 'dayGridMonth,timeGridDay'
                         },
                         eventDrop: function(info) {
                             if (!info.event.extendedProps.isAppointment) {
@@ -515,10 +537,35 @@
                                 }
                             });
                         },
-                        datesSet: function() {
+                        datesSet: function(info) {
+                            if (info.view.type === 'timeGridDay') {
+                                $('.fc-view-harness').hide();
+                                $('#customDayGrid').show();
+                                $('#monthViewFilters').addClass('d-none');
+                                renderParallelBoard(info.startStr.split('T')[0]);
+                            } else {
+                                var wasHidden = $('.fc-view-harness').is(':hidden');
+                                $('.fc-view-harness').show();
+                                $('#customDayGrid').hide();
+                                
+                                if (info.view.type === 'dayGridMonth') {
+                                    $('#monthViewFilters').removeClass('d-none');
+                                    var mode = $('input[name="monthFilter"]:checked').val() || 'appt';
+                                    $('#calendar').removeClass('month-mode-appt month-mode-sched').addClass('month-mode-' + mode);
+                                } else {
+                                    $('#monthViewFilters').addClass('d-none');
+                                }
+                                
+                                if (wasHidden) {
+                                    // Fix FullCalendar layout 0-height bug after showing the hidden harness
+                                    setTimeout(function() {
+                                        if (calendar) calendar.updateSize();
+                                    }, 0);
+                                }
+                            }
+
                             // Inject icons for view buttons and initialize tooltips (Req 01)
                             $('.fc-dayGridMonth-button').html('<i class="bi bi-calendar-month"></i>').attr('title', 'Month view').attr('data-bs-toggle', 'tooltip');
-                            $('.fc-timeGridWeek-button').html('<i class="bi bi-calendar-week"></i>').attr('title', 'Week view').attr('data-bs-toggle', 'tooltip');
                             $('.fc-timeGridDay-button').html('<i class="bi bi-calendar-day"></i>').attr('title', 'Day view').attr('data-bs-toggle', 'tooltip');
                             
                             var tooltipTriggerList = [].slice.call(document.querySelectorAll('.fc-toolbar-chunk [data-bs-toggle="tooltip"]'));
@@ -541,7 +588,18 @@
                                 },
                                 success: function(data) {
                                     var events = [];
+                                    var leaves = data.filter(function(d) { return d.status === 'DoctorLeave'; });
+
                                     data.forEach(function(item) {
+                                        // Priority rule: exclude doctor schedule if doctor leave exists for same date
+                                        if (!item.isAppointment && item.status !== 'DoctorLeave') {
+                                            var dateOnly = item.eventStart.split('T')[0];
+                                            var hasLeave = leaves.some(function(l) {
+                                                return l.doctorId === item.doctorId && l.eventStart.split('T')[0] === dateOnly;
+                                            });
+                                            if (hasLeave) return; // Skip base schedule!
+                                        }
+
                                         var title = item.isAppointment 
                                             ? item.patientName 
                                             : item.doctorName;
@@ -554,7 +612,7 @@
                                             editable: item.isAppointment,
                                             backgroundColor: 'transparent',
                                             borderColor: 'transparent',
-                                            className: 'custom-ui-event',
+                                            className: 'custom-ui-event ' + (item.status === 'DoctorLeave' ? '' : (item.isAppointment ? 'appointment-event' : 'doctor-schedule-event')),
                                             extendedProps: {
                                                 specialty: item.specialty,
                                                 location: item.locationName,
@@ -629,9 +687,11 @@
                             var dateOpts = { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' };
                             var timeOpts = { hour: '2-digit', minute:'2-digit', hour12: false };
                             var dateOnlyString = arg.event.start.toLocaleDateString(undefined, dateOpts);
-                            var timeString = dateOnlyString + ' ' + 
-                                             arg.event.start.toLocaleTimeString(undefined, timeOpts) + ' - ' + 
-                                             arg.event.end.toLocaleTimeString(undefined, timeOpts);
+                            var timeString = dateOnlyString + ' ' + arg.event.start.toLocaleTimeString(undefined, timeOpts);
+                            
+                            if (arg.event.end) {
+                                timeString += ' - ' + arg.event.end.toLocaleTimeString(undefined, timeOpts);
+                            }
                             
                             if (isAppt) {
                                 $('#modalApptPatient').text(props.patientName);
@@ -666,9 +726,185 @@
                 }
             });
 
+            function renderParallelBoard(targetDate) {
+                var container = $('#parallelBoard');
+                container.html('<div class="text-center p-5"><div class="spinner-border text-primary" role="status"></div></div>');
+                
+                targetDate = targetDate || $('#filterDate').val() || new Date().toISOString().split('T')[0];
+                var locationId = $('#filterLocation').val();
+                
+                // Fetch chairs for the location
+                $.ajax({
+                    url: '/ScheduleBoard/GetLocationChairs',
+                    type: 'GET',
+                    cache: false,
+                    data: { locationId: locationId },
+                    success: function(chairs) {
+                        
+                        $.ajax({
+                            url: '/ScheduleBoard/GetCalendarData',
+                            type: 'GET',
+                            cache: false,
+                            data: {
+                                start: targetDate,
+                                end: targetDate,
+                                locationId: locationId,
+                                specialtyId: $('#filterSpecialty').val(),
+                                availability: $('#filterAvailability').val()
+                            },
+                            success: function(events) {
+                                container.empty();
+                                
+                                var appointments = events.filter(d => d.isAppointment);
+                                
+                                // Group appointments by chair
+                                var chairAppts = {};
+                                // Group chairs by location
+                                var locGroups = {};
+                                chairs.forEach(function(c) {
+                                    if (!locGroups[c.locationName]) locGroups[c.locationName] = [];
+                                    locGroups[c.locationName].push(c);
+                                    chairAppts[c.name] = [];
+                                });
+                                
+                                appointments.forEach(function(item) {
+                                    var chairName = item.chair && item.chair !== '-' ? item.chair : null;
+                                    if (chairName && chairAppts[chairName] !== undefined) {
+                                        chairAppts[chairName].push(item);
+                                    }
+                                });
+                                
+                                var minMinutes = 8 * 60; // 08:00
+                                var maxMinutes = 17 * 60; // 17:00
+                                var pixelsPerMinute = 1.2; // Compact time density
+                                var gridPaddingTop = 20; // Prevent top label cutoff
+                                var gridPaddingBottom = 20; // Sufficient bottom spacing
+                                var gridHeightPx = ((maxMinutes - minMinutes) * pixelsPerMinute) + gridPaddingTop + gridPaddingBottom;
+                                
+                                var docHtml = '<div class="d-flex bg-white shadow-sm rounded border overflow-hidden">';
+                                
+                                // Time Column (Vertical)
+                                docHtml += '<div style="width: 80px; flex-shrink: 0;" class="border-end bg-light">';
+                                docHtml += '<div style="height: 50px;" class="border-bottom p-2 text-center text-muted fw-bold d-flex align-items-center justify-content-center bg-white sticky-top z-3">Time</div>';
+                                docHtml += '<div class="position-relative" style="height: ' + gridHeightPx + 'px;">';
+                                
+                                for(var h = 8; h <= 17; h++) {
+                                    var topPx = ((h * 60) - minMinutes) * pixelsPerMinute + gridPaddingTop;
+                                    docHtml += '<div class="position-absolute w-100 text-center text-muted" style="top: ' + topPx + 'px; margin-top: -10px; font-size: 0.75rem;">' + String(h).padStart(2,'0') + ':00</div>';
+                                }
+                                docHtml += '</div></div>';
+                                
+                                // Chairs Container (Horizontal)
+                                docHtml += '<div class="d-flex flex-grow-1 overflow-auto">';
+                                
+                                if (chairs.length === 0) {
+                                    docHtml += '<div class="p-5 text-center text-muted w-100">No chairs found for the selected location.</div>';
+                                } else {
+                                    Object.keys(locGroups).sort().forEach(function(locName) {
+                                        var locChairs = locGroups[locName];
+                                        
+                                        docHtml += '<div class="d-flex flex-column border-end">';
+                                        // Location Header
+                                        docHtml += '<div class="border-bottom p-1 text-center fw-bold text-white bg-secondary sticky-top z-3 d-flex align-items-center justify-content-center text-truncate" style="height: 25px; font-size: 0.8rem;" title="' + locName + '">' + locName + '</div>';
+                                        
+                                        docHtml += '<div class="d-flex flex-grow-1">';
+                                        locChairs.forEach(function(chair) {
+                                            var chairName = chair.name;
+                                            docHtml += '<div style="min-width: 250px; flex: 1;" class="border-end position-relative">';
+                                            // Chair Header
+                                            docHtml += '<div style="height: 25px;" class="border-bottom p-1 text-center fw-bold text-dark bg-light sticky-top z-3 d-flex align-items-center justify-content-center text-truncate" title="' + chairName + '">' + chairName + '</div>';
+                                            
+                                            // Grid and Appointments
+                                            docHtml += '<div class="position-relative" style="height: ' + gridHeightPx + 'px;">';
+                                            
+                                            // Background lines
+                                            for(var h = 8; h <= 17; h++) {
+                                                var topPx = ((h * 60) - minMinutes) * pixelsPerMinute + gridPaddingTop;
+                                                docHtml += '<div class="position-absolute w-100" style="top: ' + topPx + 'px; border-bottom: 1px solid #f0f0f0;"></div>';
+                                            }
+                                            
+                                            // Events
+                                            chairAppts[chairName].forEach(function(item) {
+                                                var startDt = new Date(item.eventStart);
+                                                var endDt = new Date(item.eventEnd);
+                                                var startMins = startDt.getHours() * 60 + startDt.getMinutes();
+                                                var endMins = endDt.getHours() * 60 + endDt.getMinutes();
+                                                
+                                                if (endMins <= startMins) endMins = startMins + 30; // Min visual fallback
+                                                
+                                                var visualStart = Math.max(startMins, minMinutes);
+                                                var visualEnd = Math.min(endMins, maxMinutes);
+                                                var duration = visualEnd - visualStart;
+                                                
+                                                if (duration > 0 && visualEnd > minMinutes && visualStart < maxMinutes) {
+                                                    var topPx = (visualStart - minMinutes) * pixelsPerMinute + gridPaddingTop;
+                                                    var heightPx = duration * pixelsPerMinute;
+                                                    
+                                                    var formatOpts = { hour: '2-digit', minute:'2-digit', hour12: false };
+                                                    var sTime = startDt.toLocaleTimeString([], formatOpts);
+                                                    var eTime = endDt.toLocaleTimeString([], formatOpts);
+                                                    
+                                                    var bgClass = item.appointmentStatus === 'Completed' ? 'bg-secondary' : 'bg-primary';
+                                                    var docColor = item.color || '#0d6efd';
+                                                    var apptTypeStr = item.appointmentTypeName || 'Appointment';
+                                                    
+                                                    docHtml += '<div class="position-absolute w-100 px-1 custom-appt" style="top: ' + topPx + 'px; height: ' + heightPx + 'px; z-index: 2;" ' +
+                                                               'data-props=\'' + JSON.stringify(item).replace(/'/g, "&#39;") + '\'>' +
+                                                               '<div class="rounded shadow-sm p-1 text-white overflow-hidden h-100" style="background-color: ' + docColor + '; font-size: 0.75rem; line-height: 1.15; border: 1px solid rgba(0,0,0,0.1); cursor: pointer;" ' +
+                                                               'title="' + item.patientName + ' (' + sTime + ' - ' + eTime + ')\nType: ' + apptTypeStr + '\nDoctor: ' + item.doctorName + '">' +
+                                                               '<div class="fw-bold text-truncate">' + item.patientName + '</div>' +
+                                                               '<div class="text-truncate fw-semibold" style="font-size: 0.7rem; opacity: 0.9;">' + apptTypeStr + '</div>' +
+                                                               '<div class="opacity-75 text-truncate" style="font-size: 0.65rem;">' + sTime + ' - ' + eTime + '</div>' +
+                                                               '</div></div>';
+                                                }
+                                            });
+                                            
+                                            docHtml += '</div></div>';
+                                        });
+                                        docHtml += '</div></div>';
+                                    });
+                                }
+                                
+                                docHtml += '</div></div>';
+                                container.append(docHtml);
+                                
+                                // Bind click event
+                                $('.custom-appt').click(function() {
+                                    var props = JSON.parse($(this).attr('data-props').replace(/&#39;/g, "'"));
+                                    var startDt = new Date(props.eventStart);
+                                    var endDt = new Date(props.eventEnd);
+                                    
+                                    var dateOpts = { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' };
+                                    var timeOpts = { hour: '2-digit', minute:'2-digit', hour12: false };
+                                    var dateOnlyString = startDt.toLocaleDateString(undefined, dateOpts);
+                                    var timeString = dateOnlyString + ' ' + startDt.toLocaleTimeString(undefined, timeOpts) + ' - ' + endDt.toLocaleTimeString(undefined, timeOpts);
+                                    
+                                    $('#modalApptPatient').text(props.patientName);
+                                    $('#modalApptDoctor').text(props.doctorName);
+                                    $('#modalApptTime').text(timeString);
+                                    $('#modalApptChair').text(props.chair !== "-" ? props.chair : "Not Assigned");
+                                    $('#modalApptLocation').text(props.locationName || props.location);
+                                    $('#appointmentDetailModal .modal-header').removeClass('bg-primary').css('background-color', props.color || '#0d6efd').addClass('text-white');
+                                    var modal = new bootstrap.Modal(document.getElementById('appointmentDetailModal'));
+                                    modal.show();
+                                });
+                                
+                            },
+                            error: function() {
+                                container.html('<div class="alert alert-danger border-0 shadow-sm"><i class="bi bi-exclamation-triangle me-2"></i>Failed to load parallel schedule.</div>');
+                            }
+                        });
+                    },
+                    error: function() {
+                        container.html('<div class="alert alert-danger border-0 shadow-sm"><i class="bi bi-exclamation-triangle me-2"></i>Failed to load chairs for location.</div>');
+                    }
+                });
+            }
+
             $('#btnSearch').click(function () {
                 table.ajax.reload();
                 if (calendarRendered) calendar.refetchEvents();
+                if (!$('#parallelViewContainer').hasClass('d-none')) renderParallelBoard();
             });
 
             $('#btnReset').click(function () {
@@ -678,6 +914,13 @@
                 $('#filterAvailability').val('');
                 table.ajax.reload();
                 if (calendarRendered) calendar.refetchEvents();
+                if (!$('#parallelViewContainer').hasClass('d-none')) renderParallelBoard();
+            });
+            
+            // Month View Filter Switch logic
+            $(document).on('change', '.month-filter', function() {
+                var mode = $('input[name="monthFilter"]:checked').val();
+                $('#calendar').removeClass('month-mode-appt month-mode-sched month-mode-current').addClass('month-mode-' + mode);
             });
         });
     </script>
